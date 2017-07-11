@@ -5,13 +5,22 @@
  */
 
 $(document).ready(function(){
-    $("button").click(function(){
-        $.get("http://localhost:8080/?location=test&id=yep", function(data){
+    $("send-get").click(function(){
+        $.get("http://localhost:8080/data-api/?location=test&id=yep", function(data){
             //alert("Data: " + data);
             document.getElementById("py_data").value = data;
-            //$("#py_data").value=data;
         });
-        
     });
 });
 
+function sendData($rec_object) {
+    $.ajax({
+        url: 'http://localhost:8080/data-api',
+        type: 'POST',
+        data: JSON.stringify($rec_object),
+        dataType: 'json',
+        success: function ( data ) {
+            $('#py_data').val(data);
+        }
+    });
+}
