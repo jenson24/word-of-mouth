@@ -18,9 +18,8 @@ function sendData($rec_object) {
         url: 'http://localhost:8080/data-api',
         type: 'POST',
         data: JSON.stringify($rec_object),
-        dataType: 'json',
-        success: function ( data ) {
+        dataType: 'json'
+    }).then(function(data) {
             $('#py_data').val(data);
-        }
     });
 }
