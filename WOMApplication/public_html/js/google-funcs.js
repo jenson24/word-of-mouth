@@ -4,6 +4,7 @@
  * and open the template in the editor.
  */
 
+//------------------------------------------
 function handleLocationError(browserHasGeolocation, infoWindow, pos) {
     infoWindow.setPosition(pos);
     infoWindow.setContent(browserHasGeolocation ?
@@ -13,28 +14,30 @@ function handleLocationError(browserHasGeolocation, infoWindow, pos) {
 };
 
 var rec_object = {};
-function initAutocomplete() {
+function initAutocomplete(event) {
     var map, infoWindow;
     map = new google.maps.Map(document.getElementById('map'), {
-      center: {lat: -34.397, lng: 150.644},
-      zoom: 11
+        center: {lat: -34.397, lng: 150.644},
+        zoom: 11
     });
     infoWindow = new google.maps.InfoWindow;
+    var clickHandler = new ClickEventHandler(map, origin, infoWindow);    
 
+    fixInfoWindow();
     // Try HTML5 geolocation.
     if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(function(position) {
-        var pos = {
-          lat: position.coords.latitude,
-          lng: position.coords.longitude
-        };
-        map.setCenter(pos);
-      }, function() {
-        handleLocationError(true, infoWindow, map.getCenter());
-      });
+        navigator.geolocation.getCurrentPosition(function(position) {
+            var pos = {
+                lat: position.coords.latitude,
+                lng: position.coords.longitude
+            };
+            map.setCenter(pos);
+        }, function() {
+            handleLocationError(true, infoWindow, map.getCenter());
+        });
     } else {
-      // Browser doesn't support Geolocation
-      handleLocationError(false, infoWindow, map.getCenter());
+        // Browser doesn't support Geolocation
+        handleLocationError(false, infoWindow, map.getCenter());
     }
 
     // Create the search box and link it to the UI element.
@@ -44,77 +47,117 @@ function initAutocomplete() {
 
     // Bias the SearchBox results towards current map's viewport.
     map.addListener('bounds_changed', function() {
-      searchBox.setBounds(map.getBounds());
+        searchBox.setBounds(map.getBounds());
     });
 
     var markers = [];
     // Listen for the event fired when the user selects a prediction and retrieve
     // more details for that place.
     searchBox.addListener('places_changed', function() {
-      var places = searchBox.getPlaces();
-      if (places.length === 0) {
-        return;
-      } else if (places.length === 1) {
-          rec_object = {
-            g_formatted_address: places[0].formatted_address,
-            g_lat: places[0].geometry.location.lat(),
-            g_lon: places[0].geometry.location.lng(),
-            g_id: places[0].id,
-            g_place_id: places[0].place_id,
-            g_rating: places[0].rating,
-            g_name: places[0].name,
-            g_types: places[0].types,
-            g_website: places[0].website                          
-          };
-      }
+        var places = searchBox.getPlaces();
+        if (places.length === 0) {
+            return;
+        } else if (places.length === 1) {
+            rec_object = set_rec_object(places[0]);
 
-      // Clear out the old markers.
-      markers.forEach(function(marker) {
-        marker.setMap(null);
-      });
-      markers = [];
-
-      // For each place, get the icon, name and location.
-      var bounds = new google.maps.LatLngBounds();
-      places.forEach(function(place) {
-        if (!place.geometry) {
-          console.log("Returned place contains no geometry");
-          return;
+            // Clear out the old markers.
+            markers.forEach(function(marker) {
+                marker.setMap(null);
+            });
+            markers = [];
         }
 
-        //var icon = {
-        //  url: place.icon,
-        //  size: new google.maps.Size(71, 71),
-        //  origin: new google.maps.Point(0, 0),
-        //  anchor: new google.maps.Point(17, 34),
-        //  scaledSize: new google.maps.Size(25, 25)
-        //};
-        // Create a marker for each place.
-        //markers.push(new google.maps.Marker({
-        //  map: map,
-        //  icon: icon,
-        //  title: place.name,
-        //  position: place.geometry.location
-        //}));
+        // For each place, get the icon, name and location.
+        var bounds = new google.maps.LatLngBounds();
+        places.forEach(function(place) {
+            if (!place.geometry) {
+                console.log("Returned place contains no geometry");
+            return;
+            }
 
-        if (place.geometry.viewport) {
-          // Only geocodes have viewport.
-          bounds.union(place.geometry.viewport);
-        } else {
-          bounds.extend(place.geometry.location);
-        }
-      });
-      map.fitBounds(bounds);
+            if (place.geometry.viewport) {
+                // Only geocodes have viewport.
+                bounds.union(place.geometry.viewport);
+            } else {
+                bounds.extend(place.geometry.location);
+            }
+        });
+        map.fitBounds(bounds);
 
     });        
 
     google.maps.event.addListener(map, "click", function(event) {
-     // get lat/lon of click
-     var clickLat = event.latLng.lat();
-     var clickLon = event.latLng.lng();                
-     // show in input box
-     document.getElementById("lat").value = clickLat.toFixed(5);
-     document.getElementById("lon").value = clickLon.toFixed(5);
+        // get lat/lon of click
+        var clickLat = event.latLng.lat();
+        var clickLon = event.latLng.lng();                
+        // show in input box
+        document.getElementById("lat").value = clickLat.toFixed(5);
+        document.getElementById("lon").value = clickLon.toFixed(5);
+        // Clear out the old markers.
+        markers.forEach(function(marker) {
+            marker.setMap(null);
+        });
+        markers = [];
+    });
+};
 
+function set_rec_object(place) {
+    rec_object = {
+        g_formatted_address: place.formatted_address,
+        g_lat: place.geometry.location.lat(),
+        g_lon: place.geometry.location.lng(),
+        g_id: place.id,
+        g_place_id: place.place_id,
+        g_rating: place.rating,
+        g_name: place.name,
+        g_types: place.types,
+        g_website: place.website                          
+    };
+    return rec_object;
+};
+
+function fixInfoWindow() {
+    //Here we redefine set() method.
+    //If it is called for map option, we hide InfoWindow, if "noSupress" option isnt true.
+    //As Google doesn't know about this option, its InfoWindows will not be opened.
+    var set = google.maps.InfoWindow.prototype.set;
+    google.maps.InfoWindow.prototype.set = function (key, val) {
+        var self = this;
+        if (key === "map") {
+            if (!this.get("noSupress") && !this.get("externalLinkAlreadyAdded")) {
+                //var link = $("<a href='#'>add to map</a>");
+                var link = $("<p><a id='myLink' href='#' onclick='sendData();'>Add Recommendation</a></p>");
+                link.click(function() {
+                    console.log("link clicked",self,self.getContent(),self.content);
+                });
+                $(this.content).find("div.address").append($("<div>").append(link).append($("</div>")));
+                this.set("externalLinkAlreadyAdded",true);
+            }
+        }
+        set.apply(this,arguments);
+    }
+};
+
+var ClickEventHandler = function(map, origin, infoWindow) {
+    this.origin = origin;
+    this.map = map;
+    this.infowindow = infoWindow;
+    this.placesService = new google.maps.places.PlacesService(map);
+
+    // Listen for clicks on the map.
+    this.map.addListener('click', this.handleClick.bind(this));
+};
+
+ClickEventHandler.prototype.handleClick = function(event) {
+    if (event.placeId) {
+        this.getPlaceInformation(event.placeId);
+    }
+};
+ClickEventHandler.prototype.getPlaceInformation = function(placeId) {
+    var me = this;
+    this.placesService.getDetails({placeId: placeId}, function(place, status) {
+        if (status === 'OK') {
+            rec_object = set_rec_object(place);
+        }
     });
 };

@@ -13,12 +13,14 @@ $(document).ready(function(){
     });
 });
 
-function sendData($rec_object) {
+//function sendData($rec_object) {
+function sendData() {
+    //console.log(rec_object)
     $.ajax({
         url: 'http://localhost:8080/data-api',
         type: 'POST',
-        data: JSON.stringify($rec_object),
-        dataType: 'json'
+        data: JSON.stringify(rec_object),
+        dataType: 'text'
     }).then(function(data) {
             $('#py_data').val(data);
     });
