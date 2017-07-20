@@ -24,4 +24,9 @@ function sendData() {
     }).then(function(data) {
             $('#py_data').val(data);
     });
-}
+};
+
+function openAddRecModal() {
+    console.log("Open Modal");
+    $('#modal').modal("show");
+};

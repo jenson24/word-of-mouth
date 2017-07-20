@@ -125,8 +125,8 @@ function fixInfoWindow() {
         var self = this;
         if (key === "map") {
             if (!this.get("noSupress") && !this.get("externalLinkAlreadyAdded")) {
-                //var link = $("<a href='#'>add to map</a>");
-                var link = $("<p><a id='myLink' href='#' onclick='sendData();'>Add Recommendation</a></p>");
+                var link = $("<p></p><button type=\"button\" class=\"btn btn-info btn-lg\" data-toggle=\"modal\" data-target=\"#myModal\">Add Recommendation</button><p></p>");
+                //var link = $("<p><a id='myLink' href='#' data-toggle=\"modal\"'>Add Recommendation</a></p>");
                 link.click(function() {
                     console.log("link clicked",self,self.getContent(),self.content);
                 });
