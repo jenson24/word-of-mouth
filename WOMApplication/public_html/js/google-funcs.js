@@ -17,7 +17,7 @@ var rec_object = {};
 function initAutocomplete(event) {
     var map, infoWindow;
     map = new google.maps.Map(document.getElementById('map'), {
-        center: {lat: -34.397, lng: 150.644},
+        center: {lat: 33.174, lng: -117.06757},
         zoom: 11
     });
     infoWindow = new google.maps.InfoWindow;
@@ -111,8 +111,10 @@ function set_rec_object(place) {
         g_rating: place.rating,
         g_name: place.name,
         g_types: place.types,
-        g_website: place.website                          
+        g_website: place.website,    
+        g_price: place.price_level
     };
+    console.log(rec_object);
     return rec_object;
 };
 
@@ -122,15 +124,35 @@ function fixInfoWindow() {
     //As Google doesn't know about this option, its InfoWindows will not be opened.
     var set = google.maps.InfoWindow.prototype.set;
     google.maps.InfoWindow.prototype.set = function (key, val) {
-        var self = this;
+        //var self = this;
         if (key === "map") {
             if (!this.get("noSupress") && !this.get("externalLinkAlreadyAdded")) {
-                var link = $("<p></p><button type=\"button\" class=\"btn btn-info btn-lg\" data-toggle=\"modal\" data-target=\"#myModal\">Add Recommendation</button><p></p>");
-                //var link = $("<p><a id='myLink' href='#' data-toggle=\"modal\"'>Add Recommendation</a></p>");
-                link.click(function() {
-                    console.log("link clicked",self,self.getContent(),self.content);
+                var like_link = $("<p></p><button type=\"button\" id=\"addRec\" class=\"fa fa-thumbs-up\" data-toggle=\"modal\" data-target=\"#myModal\"> Like</button>");
+                var dislike_link = $("<button type=\"button\" id=\"addRec\" class=\"fa fa-thumbs-down\" data-toggle=\"modal\" data-target=\"#myModal\"> Dislike</button><p></p>");
+                var divider = $("<div class=\"divider\"/>");
+                like_link.click(function() {
+                    //console.log("link clicked",self,self.getContent(),self.content);
+                    rec_object["r_type"] = 1;
+                    $('.temp-modal-title').empty();
+                    $("<h3 class=\"modal-title fa fa-thumbs-up\" id=\"modal-title\"></h3>").appendTo(".temp-modal-title");
+                    $('.modal-title').append("   ");
+                    $('.modal-title').append(rec_object["g_name"]);
+                    $('#modal-body').empty();
+                    $('#modal-body').append("Save a comment...");
+                    $('#modal-body').append("<textarea rows=\"4\" id=\"rec-comment\" placeholder=\"What do you like about this place?\">");
                 });
-                $(this.content).find("div.address").append($("<div>").append(link).append($("</div>")));
+                dislike_link.click(function() {
+                    //console.log("link clicked",self,self.getContent(),self.content);
+                    rec_object["r_type"] = -1;
+                    $('.temp-modal-title').empty();
+                    $("<h3 class=\"modal-title fa fa-thumbs-down\" id=\"modal-title\"></h3>").appendTo(".temp-modal-title");
+                    $('.modal-title').append("   ");
+                    $('.modal-title').append(rec_object["g_name"]);
+                    $('#modal-body').empty();
+                    $('#modal-body').append("Save a comment...");
+                    $('#modal-body').append("<textarea rows=\"4\" id=\"rec-comment\" placeholder=\"What don't you like about this place?\">");
+                });
+                $(this.content).find("div.address").append($("<div>")).append(divider).append(like_link).append(divider).append(dislike_link).append($("</div>"));
                 this.set("externalLinkAlreadyAdded",true);
             }
         }
@@ -154,7 +176,7 @@ ClickEventHandler.prototype.handleClick = function(event) {
     }
 };
 ClickEventHandler.prototype.getPlaceInformation = function(placeId) {
-    var me = this;
+    //var me = this;
     this.placesService.getDetails({placeId: placeId}, function(place, status) {
         if (status === 'OK') {
             rec_object = set_rec_object(place);

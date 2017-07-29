@@ -19,49 +19,106 @@ and open the template in the editor.
     overflow: auto; /* Enable scroll if needed */
     background-color: rgb(0,0,0); /* Fallback color */
     background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+    font-family: Arial;
+
 }
 .modal-content {
-    background-color: #fefefe;
-    margin: 15% auto; /* 15% from the top and centered */
-    padding: 20px;
-    border: 1px solid #888;
-    width: 80%; /* Could be more or less, depending on screen size */
+    font-family: inherit;
+
+}
+#place-name {
+    font-weight: bold;
 }
 .modal-header {
-    padding: 15px;
     border-bottom: 1px solid #e5e5e5;
+    font-family: inherit;
 }
 .modal-body {
     position: relative;
     padding: 15px;
+    font-family: inherit;
 }
 .modal-footer {
-    margin-bottom: 0;
-    margin-left: 5px;
+    margin: 0;
+    padding: 5px;
+    margin-right: 5px;
+    position: relative;
+    font-family: inherit;
 }
 .modal-dialog {
-    
+    background-color: #fefefe;
+    margin: 10% auto; /* 15% from the top and centered */
+    padding: 10px;
+    border: 1px solid #888;
+    width: 33%; /* Could be more or less, depending on screen size */
+    position: relative;
+    font-family: inherit;
+}
+.temp-modal-title {
+    text-align: center;
+    font-size: 20px;
+    font-family: inherit;
+    margin-top: 3px;
+    margin-bottom: 3px;
 }
 .modal-title {
-    
+    text-align: center;
+    font-size: 20px;
+    font-family: inherit;
+    margin-top: 3px;
+    margin-bottom: 3px;
+}
+.close-modal {
+    font-size: 18px;
+    text-decoration: none;
+    font-weight: 700;
+    color: #000;
+    opacity: .5;
+    float: right;
+    border: none;
+    background: none;
+    //margin-right: -5px;
+    //margin-top: -25px;
+    //&:hover{
+    //   color: darken(gray-light, 10%);
+    //}
 }
 .btn {
     display: inline-block;
     padding: 6px 12px;
-    margin-bottom: 0;
+    margin-bottom: 10px;
     font-size: 14px;
     font-weight: 400;
     line-height: 1.42857143;
     text-align: center;
     white-space: nowrap;
-    vertical-align: middle;
     cursor: pointer;
     background-image: none;
     border: 1px solid transparent;
     border-radius: 4px;
+    font-family: inherit;
 }
-.btn-primary {
+.btn-save {
     color: #fff;
     background-color: #337ab7;
     border-color: #2e6da4;
+    margin-left: 20px;
+    width: 85px;
+}
+.btn-cancel {
+    margin-left: 20px;
+    width: 85px;
+}
+#rec-comment {
+    width: 100%;
+    resize: vertical;
+    padding: 2px;
+}
+.divider {
+    width:5px;
+    height:auto;
+    display:inline-block;
+}
+.fa {
+    height: 30px;
 }
