@@ -2,7 +2,9 @@
  * element that contains the map. */
 #wrapper {
   height: 100%;
+  width: 100%;
   overflow: hidden;
+  position: absolute;
 }
 #map {
   float: left;
@@ -43,11 +45,14 @@
 }
 
 #scroll {
-  background-color: red;
+  /*background-color: red;*/
   position: fixed;
   height: 90%;
   width: 30%;
   bottom: 0;
+}
+#scroll:hover {
+    overflow: auto;
 }
 /* Optional: Makes the sample page fill the window. */
 html, body {
@@ -127,4 +132,8 @@ html, body {
 }
 .controls {
 
+}
+.content-header {
+    background-color: white;
+    //text-align: center;
 }

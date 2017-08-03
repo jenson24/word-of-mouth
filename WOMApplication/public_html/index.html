@@ -2,7 +2,8 @@
 <html>
   <head>
     <link rel="stylesheet" href="css/style.css" type="text/css"/>
-    <link rel="stylesheet" href="css/addREcModal.css" type="text/css"/>
+    <link rel="stylesheet" href="css/addRecModal.css" type="text/css"/>
+    <link rel="stylesheet" href="css/stream-items.css" type="text/css"/>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <link rel="icon" type="image/png" href="img/favicon-32x32.png" sizes="32x32" />
     <link rel="icon" type="image/png" href="img/favicon-16x16.png" sizes="16x16" />
@@ -25,18 +26,18 @@
         <div id="rec-list">
             <div id="header">
                 <div class="icon-bar">
-                    <a href="#"><i class="fa fa-globe"></i></a>
+                    <a href="#"><i class="fa fa-globe" onClick="get_recommendations('global')"></i></a>
                     <a href="#"><i class="fa fa-search"></i></a> 
                     <a href="#"><i class="fa fa-envelope"></i></a> 
-                    <a href="#"><i class="fa fa-user"></i></a>
+                    <a href="#"><i class="fa fa-user" onClick="get_recommendations('local')"></i></a>
                 </div>
                 <div id="scroll">
-                    <h1>Text</h1>
-                    <input type="text" id="lat">
+                    <div class="content-header"></div>
+                    <!--<input type="text" id="lat">
                     <input type="text" id="lon">
                     <button id="send-get">Send GET</button>
                     <input type="text" id="py_data">
-                    <button id="send-object" onClick="sendData(rec_object)">Send to Python</button>
+                    <button id="send-object" onClick="get_recommendations('13', 'local')">Send to Python</button> -->
                 </div>
             </div>
         </div>

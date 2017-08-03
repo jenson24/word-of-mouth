@@ -1,0 +1,47 @@
+/*
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+*/
+/* 
+    Created on : Aug 2, 2017, 10:48:41 PM
+    Author     : Jenson
+*/
+
+.stream-items {
+    
+}
+.js-stream-items {
+    
+}
+.rec-item {
+    
+}
+.stream-item-context {
+    
+}
+.stream-item-header {
+    
+}
+.FullName {
+    
+}
+li {
+    display: list-item;
+    border-style: solid;
+    border-width: 1px;
+    width: 100%;
+    padding: 12px;
+    margin-left: 0px;
+    list-style-position: inside;
+}
+ol {
+    display: block;
+    list-style: none;
+    margin-left: 0px;
+    padding: 0px;
+}
+span {
+    display: block;
+    word-wrap: break-word;
+}
