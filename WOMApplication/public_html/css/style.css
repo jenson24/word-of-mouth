@@ -29,7 +29,7 @@
     width: 100%; /* Full-width */
     height: 100%;
     background-color: #555; /* Dark-grey background */
-    overflow: auto; /* Overflow due to float */
+    overflow: hidden; /* Overflow due to float */
 }
 .icon-bar a {
     float: left; /* Float links side by side */
@@ -45,14 +45,13 @@
 }
 
 #scroll {
-  /*background-color: red;*/
   position: fixed;
   height: 90%;
   width: 30%;
   bottom: 0;
-}
-#scroll:hover {
-    overflow: auto;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 16px;
 }
 /* Optional: Makes the sample page fill the window. */
 html, body {
@@ -135,5 +134,5 @@ html, body {
 }
 .content-header {
     background-color: white;
-    //text-align: center;
+    text-align: center;
 }

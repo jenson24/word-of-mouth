@@ -14,8 +14,9 @@ function handleLocationError(browserHasGeolocation, infoWindow, pos) {
 };
 
 var rec_object = {};
+var map;
 function initAutocomplete(event) {
-    var map, infoWindow;
+    var infoWindow;
     map = new google.maps.Map(document.getElementById('map'), {
         center: {lat: 33.174, lng: -117.06757},
         zoom: 11
@@ -91,8 +92,8 @@ function initAutocomplete(event) {
         var clickLat = event.latLng.lat();
         var clickLon = event.latLng.lng();                
         // show in input box
-        document.getElementById("lat").value = clickLat.toFixed(5);
-        document.getElementById("lon").value = clickLon.toFixed(5);
+        //document.getElementById("lat").value = clickLat.toFixed(5);
+        //document.getElementById("lon").value = clickLon.toFixed(5);
         // Clear out the old markers.
         markers.forEach(function(marker) {
             marker.setMap(null);

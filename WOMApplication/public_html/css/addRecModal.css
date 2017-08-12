@@ -11,7 +11,6 @@ and open the template in the editor.
 #myModal {
     display: none; /* Hidden by default */
     position: fixed; /* Stay in place */
-    z-index: 1; /* Sit on top */
     left: 0;
     top: 0;
     width: 100%; /* Full width */
@@ -20,11 +19,10 @@ and open the template in the editor.
     background-color: rgb(0,0,0); /* Fallback color */
     background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
     font-family: Arial;
-
 }
 .modal-content {
     font-family: inherit;
-
+    z-index: 1; /* Sit on top */
 }
 #place-name {
     font-weight: bold;
@@ -48,7 +46,6 @@ and open the template in the editor.
 .modal-dialog {
     background-color: #fefefe;
     margin: 10% auto; /* 15% from the top and centered */
-    padding: 10px;
     border: 1px solid #888;
     width: 33%; /* Could be more or less, depending on screen size */
     position: relative;
@@ -56,20 +53,13 @@ and open the template in the editor.
 }
 .temp-modal-title {
     text-align: center;
-    font-size: 20px;
-    font-family: inherit;
-    margin-top: 3px;
-    margin-bottom: 3px;
-}
-.modal-title {
-    text-align: center;
-    font-size: 20px;
+    font-size: 28px;
     font-family: inherit;
     margin-top: 3px;
     margin-bottom: 3px;
 }
 .close-modal {
-    font-size: 18px;
+    font-size: 26px;
     text-decoration: none;
     font-weight: 700;
     color: #000;
@@ -77,11 +67,8 @@ and open the template in the editor.
     float: right;
     border: none;
     background: none;
-    //margin-right: -5px;
-    //margin-top: -25px;
-    //&:hover{
-    //   color: darken(gray-light, 10%);
-    //}
+    margin-right: -5px;
+    margin-top: -10px;
 }
 .btn {
     display: inline-block;
