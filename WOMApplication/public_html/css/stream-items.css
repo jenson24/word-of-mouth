@@ -9,7 +9,7 @@ and open the template in the editor.
 */
 
 .stream-items {
-    
+    overflow: auto;
 }
 .js-stream-item {
     display: list-item;
@@ -49,9 +49,6 @@ and open the template in the editor.
     background-color: #f1f1f1;
     opacity: 10%;
 }
-li {
-
-}
 ol {
     display: block;
     list-style: none;
@@ -64,11 +61,12 @@ ol {
 }
 .rec-section-header {
     font-style: italic;
-    font-size: 16pt;
-    text-align: center;
+    font-size: 14pt;
+    padding-left: 20px;
+    float: left;
 }
 .content-header {
-    text-align: left;
+    height: 32px;
 }
 .rec-footer-content {
     display: block;

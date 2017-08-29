@@ -17,6 +17,11 @@ window.onload = function(){
     username = getCookie('username');
     if (user_id !== "") {
         setRecommendations('global');
+        login_html = "<span>Logged in as </span><a href=\"http://localhost:8383/WOMApplication/login.html\" class=\"login-link\">"+username+"</a>"
+        $('.login-info-bar').append(login_html);
+    } else {
+        login_html = "<a href=\"http://localhost:8383/WOMApplication/login.html\" class=\"login-link\">Login</a>"
+        $('.login-info-bar').append(login_html);
     };
 };
 
@@ -25,9 +30,11 @@ function setRecommendations(rec_type) {
     get_recommendations(rec_type);
     temp_obj = recommendations["recommendations"];
     if (rec_type === 'global') {
-        html_start = "<div class=\"rec-section-header\"><span>What people are recommending...</span></div><ol class=\"stream-items\">";
+        html_head = "<div class=\"rec-section-header\"><span>What people are recommending...</span></div><div class=\"filter-bar\"><a href=\"#\"><i class=\"fa fa-filter\" onClick=\"showFilters()\"></i></a></div>";
+        html_start = "<div class=\"list-container\"><ol class=\"stream-items\">";
     } else if (rec_type === 'local') {
-        html_start = "<div class=\"rec-section-header\"><span>My recommendations...</span></div><ol class=\"stream-items\">";
+        html_head = "<div class=\"rec-section-header\"><span>My recommendations...</span></div>";
+        html_start = "<div class=\"list-container\"><ol class=\"stream-items\">";
     };
     deleteMarkers();
     html_body = "";
@@ -57,9 +64,11 @@ function setRecommendations(rec_type) {
         map.fitBounds(bounds);        
     }
     
-    html_end = "</ol>"
+    html_end = "</ol></div>"
     $('.content-header').empty();
-    $('.content-header').append(html_start+html_body+html_end);
+    $('.content-header').append(html_head);
+    $('#scroll').empty();
+    $('#scroll').append(html_start+html_body+html_end);
 }
 
 function getCardHtml(recObj,i) {
@@ -127,7 +136,7 @@ function addMarkers(marker_list) {
         markers.push(marker);
         var infowindow = new google.maps.InfoWindow();
         content = "<p>Test Content - "+marker_list[id]["name"]+"</p>";
-        console.log(content);
+        //console.log(content);
         google.maps.event.addListener(marker,'click', (function(marker,content,infowindow){ 
             return function() {
                 closeInfos();
@@ -259,3 +268,32 @@ function get_recommendations(lookup_type) {
         async: false
     });
 };
+
+function showFilters() {
+    if ( $('.filter-content').css('display') === 'none' ) {
+        $('.filter-content').css('display','block');
+        type_list = getTypes();
+        var options = $("#type-list");
+        $.each(type_list, function(type) {
+            options.append($("<option />").val(type).text(type));
+        });
+    } else {
+        $('.filter-content').css('display','none');
+    }
+};
+
+function getTypes() {
+    temp_obj = recommendations["recommendations"];
+    type_list = [];
+    for (var i = 0; i < temp_obj.length; i++) {
+        types_string = temp_obj[i]["r_type"];
+        types_array = types_string.split(', ');
+        for (var j = 0; j < types_array.length; j++) {
+            if ( type_list.indexOf(types_array[j]) === -1 ) {
+                type_list.append(types_array[j])
+            }
+        }
+    }
+    console.log(type_list);
+    return type_list;
+}

@@ -1,138 +1,245 @@
 /* Always set the map height explicitly to define the size of the div
  * element that contains the map. */
 #wrapper {
-  height: 100%;
-  width: 100%;
-  overflow: hidden;
-  position: absolute;
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+    position: absolute;
 }
 #map {
-  float: left;
-  width: 70%;
-  height: 100%
+    float: left;
+    width: 70%;
+    height: 100%
 }
 #rec-list {
-  float: right;
-  height: 100%;
-  width: 30%;
-}
-.clear {
-  height: 0%;
+    float: right;
+    height: 100%;
+    width: 30%;
 }
 #header {
-  position: absolute;
-  top: 0;
-  width: 30%;
-  height: 10%;
+    width: 100%;
+    top: 0;
+    display: inline-block;
+}
+.login-info-bar {
+    height: 16px;
+    background-color: #555; /* Dark-grey background */
+    color: white;
+    font-size: 11pt;
+    width: 100%;
+    float: right;
+    text-align: right;
+}
+.login-link {
+    color: white;
+}
+.login-link:hover {
+    color: #58D68D;
 }
 .icon-bar {
     width: 100%; /* Full-width */
-    height: 100%;
+    height: 76px;
     background-color: #555; /* Dark-grey background */
     overflow: hidden; /* Overflow due to float */
 }
 .icon-bar a {
     float: left; /* Float links side by side */
     text-align: center; /* Center-align text */
-    width: 25%; /* Equal width (5 icons with 20% width each = 100%) */
+    width: 25%; /* Equal width (4 icons with 25% width each = 100%) */
     padding: 12px 0; /* Some top and bottom padding */
     transition: all 0.3s ease; /* Add transition for hover effects */
     color: white; /* White text color */
     font-size: 36px; /* Increased font size */
 }
 .icon-bar a:hover {
+    color: #58D68D;
     background-color: #000; /* Add a hover color */
 }
 
 #scroll {
-  position: fixed;
-  height: 90%;
-  width: 30%;
-  bottom: 0;
-  overflow-y: auto;
-  overflow-x: hidden;
-  padding-right: 16px;
+    position: relative;
+    display: inline-block;
+    height: calc( 100% - 92px - 32px );
+    overflow: auto;
+}
+.list-container {
+    overflow: auto;    
 }
 /* Optional: Makes the sample page fill the window. */
 html, body {
-  height: 100%;
-  margin: 0;
-  padding: 0;
+    height: 100%;
+    margin: 0;
+    padding: 0;
 }
 #description {
-  font-family: Roboto;
-  font-size: 15px;
-  font-weight: 300;
+    font-family: Roboto;
+    font-size: 15px;
+    font-weight: 300;
 }
 
 #infowindow-content .title {
-  font-weight: bold;
+    font-weight: bold;
 }
 
 #infowindow-content {
-  display: none;
+    display: none;
 }
 
 #map #infowindow-content {
-  display: inline;
+    display: inline;
 }
 
 .pac-card {
-  margin: 10px 10px 0 0;
-  border-radius: 2px 0 0 2px;
-  box-sizing: border-box;
-  -moz-box-sizing: border-box;
-  outline: none;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
-  background-color: #fff;
-  font-family: Roboto;
+    margin: 10px 10px 0 0;
+    border-radius: 2px 0 0 2px;
+    box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    outline: none;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+    background-color: #fff;
+    font-family: Roboto;
 }
 
 #pac-container {
-  padding-bottom: 12px;
-  margin-right: 12px;
+    padding-bottom: 12px;
+    margin-right: 12px;
 }
 
 .pac-controls {
-  display: inline-block;
-  padding: 5px 11px;
+    display: inline-block;
+    padding: 5px 11px;
 }
 
 .pac-controls label {
-  font-family: Roboto;
-  font-size: 13px;
-  font-weight: 300;
+    font-family: Roboto;
+    font-size: 13px;
+    font-weight: 300;
 }
 
 #pac-input {
-  background-color: #fff;
-  font-family: Roboto;
-  font-size: 15px;
-  font-weight: 300;
-  margin-left: 12px;
-  padding: 0 11px 0 13px;
-  text-overflow: ellipsis;
-  width: 400px;
+    background-color: #fff;
+    font-family: Roboto;
+    font-size: 15px;
+    font-weight: 300;
+    margin-left: 12px;
+    padding: 0 11px 0 13px;
+    text-overflow: ellipsis;
+    width: 400px;
 }
 
 #pac-input:focus {
-  border-color: #4d90fe;
+    border-color: #4d90fe;
 }
 
 #title {
-  color: #fff;
-  background-color: #4d90fe;
-  font-size: 25px;
-  font-weight: 500;
-  padding: 6px 12px;
+    color: #fff;
+    background-color: #4d90fe;
+    font-size: 25px;
+    font-weight: 500;
+    padding: 6px 12px;
 }
 #target {
-  width: 345px;
+    width: 345px;
 }
 .controls {
 
 }
-.content-header {
-    background-color: white;
-    text-align: center;
+.filter-bar {
+    font-size: 18pt;
+    padding-right: 15px;
+    float: right;
 }
+.fa-filter:hover {
+    color: #58D68D;
+}
+.fa-filter {
+    color: #555;
+}
+.filter-content {
+    width: 100%;
+    height: 20px;
+    display: none;
+}
+.filter-content div {
+    display: inline-block;
+    float: left;
+}
+.price-filter {
+    height: 100%;
+    width: 25%;
+    padding-left: 10px;
+}
+.rating-filter {
+    height: 100%;
+    padding-left: 0px;
+    width: 35%;
+}
+.type-filter {
+    height: 100%;
+    width: 40%;
+}
+.type-list {
+    width: 70%;
+}
+.filter-headers {
+    list-style: none;
+    padding-left: 0px;
+}
+.price-filter-label {
+    float: left;
+    font-size: 11pt;
+}
+.price-list {
+    float: left;
+    list-style: none;
+    padding-left: 0px;
+}
+.price-list li {
+    float: left;
+    list-style: none;
+    text-align: center;
+    background-color: white;
+    color: #000;
+    line-height: 20px;
+    font-size: 11pt;
+    display: inline-block;
+    margin-right: 1px;
+    
+}
+
+.rating-filter-label {
+    float: left;
+}
+.rating { 
+    border: none;
+    float: left;
+}
+.rating input { 
+    display: none; 
+} 
+.rating label { 
+    color: #ddd; 
+    float: right; 
+}
+.rating label:before { 
+    margin-left: 3px;
+    font-size: 1.1em;
+    font-family: FontAwesome;
+    display: inline-block;
+    content: "\f005";
+}
+
+.rating .half:before { 
+    content: "\f089";
+    position: absolute;
+}
+
+/***** CSS Magic to Highlight Stars on Hover *****/
+.rating > input:checked ~ label, /* show gold star when clicked */
+.rating:not(:checked) > label:hover, /* hover current star */
+.rating:not(:checked) > label:hover ~ label { color: #FFD700;  } /* hover previous stars in list */
+
+.rating > input:checked + label:hover, /* hover current star when changing rating */
+.rating > input:checked ~ label:hover,
+.rating > label:hover ~ input:checked ~ label, /* lighten current selection */
+.rating > input:checked ~ label:hover ~ label { color: #FFED85;  }
