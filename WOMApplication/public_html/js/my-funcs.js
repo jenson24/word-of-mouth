@@ -7,38 +7,71 @@
 var user_id = 0;
 var username = '';
 var recommendations = {};
+var fetched_all_recommendations = [];
+var fetched_my_recommendations = [];
 var active_menu = 'global';
 var markers = [];
 var infos = [];
+var typeSelection = '';
+var page_size = 10;
+var marker_list = {};
     
-//$(document).ready(function(){
 window.onload = function(){
     user_id = getCookie('user_id');
     username = getCookie('username');
     if (user_id !== "") {
-        setRecommendations('global');
+        page = 1;
+        //get_recommendations('global', page);
+        //temp_obj = recommendations["recommendations"];
+        setRecommendations('global','new','new');
         login_html = "<span>Logged in as </span><a href=\"http://localhost:8383/WOMApplication/login.html\" class=\"login-link\">"+username+"</a>"
         $('.login-info-bar').append(login_html);
+        $('a.icon-select.global').addClass('active')
     } else {
         login_html = "<a href=\"http://localhost:8383/WOMApplication/login.html\" class=\"login-link\">Login</a>"
         $('.login-info-bar').append(login_html);
     };
 };
 
-function setRecommendations(rec_type) {
+function setRecommendations(rec_type, temp_obj, marker_flag) {
+    if (temp_obj === 'new') {
+        if (rec_type === 'global' && fetched_all_recommendations.length > 0) {
+            temp_obj = fetched_all_recommendations;
+        } else if (rec_type === 'local' && fetched_my_recommendations.length > 0) {
+            temp_obj = fetched_my_recommendations;
+        } else {
+            page = 1;
+            get_recommendations(rec_type, page);
+            temp_obj = recommendations["recommendations"];            
+            jQuery('#scroll').animate({scrollTop:0},0);
+        }
+        clearFilters();
+    }
     active_menu = rec_type;
-    get_recommendations(rec_type);
-    temp_obj = recommendations["recommendations"];
     if (rec_type === 'global') {
-        html_head = "<div class=\"rec-section-header\"><span>What people are recommending...</span></div><div class=\"filter-bar\"><a href=\"#\"><i class=\"fa fa-filter\" onClick=\"showFilters()\"></i></a></div>";
-        html_start = "<div class=\"list-container\"><ol class=\"stream-items\">";
+        html_head = "<div class=\"rec-section-header\"><span>What people are recommending...</span></div><div class=\"filter-bar\"><a href=\"#\"><i class=\"fa fa-ban\" onClick=\"removeFilters()\"></i></a><a href=\"#\"><i class=\"fa fa-filter\" onClick=\"showFilters()\"></i></a></div>";
     } else if (rec_type === 'local') {
-        html_head = "<div class=\"rec-section-header\"><span>My recommendations...</span></div>";
-        html_start = "<div class=\"list-container\"><ol class=\"stream-items\">";
+        html_head = "<div class=\"rec-section-header\"><span>My recommendations...</span></div><div class=\"filter-bar\"><a href=\"#\"><i class=\"fa fa-ban\" onClick=\"removeFilters()\"></i></a><a href=\"#\"><i class=\"fa fa-filter\" onClick=\"showFilters()\"></i></a></div>";
     };
-    deleteMarkers();
+    html_start = "<div class=\"list-container\"><ol class=\"stream-items\">";
+    getMarkerInfo(temp_obj,marker_flag);
     html_body = "";
-    marker_list = {};
+    for (var i = 0; i < temp_obj.length; i++) {
+        html_body += getCardHtml(temp_obj[i],i);
+    }
+    
+    html_end = "</ol></div>";
+    $('.content-header').empty();
+    $('.content-header').append(html_head);
+    $('#scroll').empty();
+    $('#scroll').append(html_start+html_body+html_end);
+}
+
+function getMarkerInfo(temp_obj,type) {
+    if (type === 'new') {
+        deleteMarkers();
+        marker_list = {};        
+    }
     for (var i = 0; i < temp_obj.length; i++) {
         if (temp_obj[i]["r_google_place_id"] in marker_list) {
             if (temp_obj[i]["r_type"] !== marker_list[temp_obj[i]["r_google_place_id"]]["type"]) {
@@ -53,7 +86,6 @@ function setRecommendations(rec_type) {
             marker_list[temp_obj[i]["r_google_place_id"]]["name"] = temp_obj[i]["r_name"];
             marker_list[temp_obj[i]["r_google_place_id"]]["type"] = temp_obj[i]["r_type"];            
         }
-        html_body += getCardHtml(temp_obj[i],i);
     };
     if (Object.keys(marker_list).length > 0) {
         addMarkers(marker_list);    
@@ -63,12 +95,16 @@ function setRecommendations(rec_type) {
         }
         map.fitBounds(bounds);        
     }
-    
-    html_end = "</ol></div>"
-    $('.content-header').empty();
-    $('.content-header').append(html_head);
-    $('#scroll').empty();
-    $('#scroll').append(html_start+html_body+html_end);
+}
+
+function addRecToList(recObj) {
+    if (active_menu === 'local') {
+        rec_num = fetched_my_recommendations.length;            
+    } else {
+        rec_num = fetched_all_recommendations.length;    
+    }
+    card_html = getCardHtml(recObj,rec_num);
+    $('.stream-items').prepend(card_html);
 }
 
 function getCardHtml(recObj,i) {
@@ -86,8 +122,8 @@ function getCardHtml(recObj,i) {
     card_html += "</div>";
     card_html += "</div>";
     card_html += "<div class=\"stream-item-footer\">";
-    card_html += "<button class=\"fa fa-angle-down\" data-toggle=\"collapse\" data-target=\"#stream-item-collapse-"+i.toString()+"\"></button>"
-    card_html += "<div id=\"stream-item-collapse-"+i.toString()+"\" class=\"collapse\">"
+    card_html += "<button class=\"fa fa-angle-down\" data-toggle=\"collapse\" data-target=\"#stream-item-collapse-"+i.toString()+"\"></button>";
+    card_html += "<div id=\"stream-item-collapse-"+i.toString()+"\" class=\"collapse\">";
     if ( recObj["r_price"] ) {
         price_string = "";
         for (i = 0; i < recObj["r_price"]; i++) {
@@ -102,19 +138,15 @@ function getCardHtml(recObj,i) {
         card_html += "<span class=\"rec-footer-content\">Type: "+recObj["r_google_type"].replace(/_/g," ")+"</span>";
     }
     if ( recObj["r_website"] ) {
-        card_html += "<span class=\"rec-footer-content\">Website: "+recObj["r_website"]+"</span>";
+        //card_html += "<span class=\"rec-footer-content\">Website: "+recObj["r_website"]+"</span>";
+        card_html += "<span>Website: </span><a href=\""+recObj["r_website"]+"\" class=\"website-footer-content\">"+recObj["r_website"]+"</a>";
     }
     card_html += "</div>";
     card_html += "</div>";
     card_html += "</div>";
     card_html += "</div>";
     card_html += "</li>";
-    return card_html
-}
-
-function addRecToList(recObj) {
-    card_html = getCardHtml(recObj);
-    $('.stream-items').prepend(card_html);
+    return card_html;
 }
 
 function addMarkers(marker_list) {
@@ -136,7 +168,6 @@ function addMarkers(marker_list) {
         markers.push(marker);
         var infowindow = new google.maps.InfoWindow();
         content = "<p>Test Content - "+marker_list[id]["name"]+"</p>";
-        //console.log(content);
         google.maps.event.addListener(marker,'click', (function(marker,content,infowindow){ 
             return function() {
                 closeInfos();
@@ -213,9 +244,9 @@ function sendData() {
             //console.log(jqXHR);
             if (jqXHR.status === 0) {
                 $.notify("Error: No Connection to Database", {className: "error", position: "bottom center"});
-            } else if (jqXHR.status == 404) {
+            } else if (jqXHR.status === 404) {
                 $.notify("Requested page not found", {className: "error", position: "bottom center"});
-            } else if (jqXHR.status == 500) {
+            } else if (jqXHR.status === 500) {
                 $.notify("Error: Internal Server Error", {className: "error", position: "bottom center"});
             } else if (exception === 'parsererror') {
                 $.notify("Error: JSON parse failed", {className: "error", position: "bottom center"});
@@ -230,10 +261,11 @@ function sendData() {
     });
 };
 
-function get_recommendations(lookup_type) {
+function get_recommendations(lookup_type, page) {
     post_data = {
         uid: user_id,
-        lookup_type: lookup_type
+        lookup_type: lookup_type,
+        page: page
     };
     $.ajax({
         url: 'http://localhost:8080/getRecs',
@@ -245,15 +277,22 @@ function get_recommendations(lookup_type) {
             recommendations = {
                 "recommendations": temp_obj
             };
+            for (var i = 0; i < recommendations["recommendations"].length; i++) {
+                if (lookup_type === 'global') {
+                    fetched_all_recommendations.push(recommendations["recommendations"][i]);                                 
+                } else if (lookup_type === 'local') {
+                    fetched_my_recommendations.push(recommendations["recommendations"][i]);                                    
+                }
+            }
             $.notify("Found data", {className: "success", position: "bottom center"});
         },
         error: function(jqXHR, exception) {
             //console.log(jqXHR);
             if (jqXHR.status === 0) {
                 $.notify("Error: No Connection to Database", {className: "error", position: "bottom center"});
-            } else if (jqXHR.status == 404) {
+            } else if (jqXHR.status === 404) {
                 $.notify("Requested page not found", {className: "error", position: "bottom center"});
-            } else if (jqXHR.status == 500) {
+            } else if (jqXHR.status === 500) {
                 $.notify("Error: Internal Server Error", {className: "error", position: "bottom center"});
             } else if (exception === 'parsererror') {
                 $.notify("Error: JSON parse failed", {className: "error", position: "bottom center"});
@@ -271,29 +310,218 @@ function get_recommendations(lookup_type) {
 
 function showFilters() {
     if ( $('.filter-content').css('display') === 'none' ) {
+        $('.fa-ban').css('visibility','visible');
         $('.filter-content').css('display','block');
+        $('#scroll').css("height","calc( 100% - 92px - 32px - 24px )");
         type_list = getTypes();
         var options = $("#type-list");
-        $.each(type_list, function(type) {
-            options.append($("<option />").val(type).text(type));
-        });
+        options.empty();
+        options.append($("<option />").val("None").text(""));            
+        for (var i = 0; i < type_list.length; i++) {
+            options.append($("<option />").val(type_list[i]).text(type_list[i].replace(/_/g," ")));            
+        }
+        if (typeSelection !== "") {
+            var element = document.getElementById('type-list');
+            element.value = typeSelection;            
+        }
     } else {
+        $('.fa-ban').css('visibility','hidden');
+        typeSelection = document.getElementById("type-list").value;
         $('.filter-content').css('display','none');
+        $('#scroll').css("height","calc( 100% - 92px - 32px )");
     }
 };
 
 function getTypes() {
-    temp_obj = recommendations["recommendations"];
-    type_list = [];
+    if (active_menu === 'global') {
+        temp_obj = fetched_all_recommendations;        
+    } else if (active_menu === 'local') {
+        temp_obj = fetched_my_recommendations;
+    }    
+    var type_list = [];
     for (var i = 0; i < temp_obj.length; i++) {
-        types_string = temp_obj[i]["r_type"];
-        types_array = types_string.split(', ');
+        types_string = temp_obj[i]["r_google_type"];
+        var types_array = types_string.split(', ');
         for (var j = 0; j < types_array.length; j++) {
             if ( type_list.indexOf(types_array[j]) === -1 ) {
-                type_list.append(types_array[j])
+                type_list.push(types_array[j]);
             }
         }
     }
-    console.log(type_list);
     return type_list;
+}
+
+function filter_by_type(all_recs, recType) {
+    if (recType !== "None") {
+        new_filtered_objects = [];
+        for (var i = 0; i < all_recs.length; i++) {
+            if (all_recs[i]["r_google_type"].indexOf(recType) !== -1) {
+                new_filtered_objects.push(all_recs[i]);
+            }
+        }
+        return new_filtered_objects;
+    } else {
+        return all_recs;
+    }
+}
+
+function filter_by_rating(all_recs, rating) {
+    new_filtered_objects = [];
+    for (var i = 0; i < all_recs.length; i++) {
+        if (parseFloat(all_recs[i]["r_google_rating"]) > rating) {
+            new_filtered_objects.push(all_recs[i]);
+        }
+    }
+    return new_filtered_objects;
+}
+
+function filter_by_price(all_recs, price) {
+    new_filtered_objects = [];
+    for (var i = 0; i < all_recs.length; i++) {
+        if ('r_price' in all_recs[i] && all_recs[i]["r_price"] === price) {
+            new_filtered_objects.push(all_recs[i]);
+        } else if (all_recs[i]["r_price"] === null && price === 1) {
+            new_filtered_objects.push(all_recs[i]);
+        }
+    }
+    return new_filtered_objects;
+}
+function filter_controller(price, rating, type) {
+    if (active_menu === 'global') {
+        all_recs = fetched_all_recommendations;        
+    } else if (active_menu === 'local') {
+        all_recs = fetched_my_recommendations;
+    }    
+    if (price === "") {
+        price_filter = 0;
+        dollar_ids = ["dollar1","dollar2","dollar3","dollar4"];
+        for (var i = 0; i < dollar_ids.length; i++) {
+            if($("#"+dollar_ids[i]).is(':checked')) { 
+                price_filter = i+1; 
+            }
+        }
+        if (price_filter !== 0) {
+            price_filtered_objects = filter_by_price(all_recs, price_filter);
+        } else {
+            price_filtered_objects = all_recs;
+        }
+    } else {
+        price_filtered_objects = filter_by_price(all_recs, price);
+    }
+    if (rating === "") {
+        rating_filter = 0;
+        star_ids = ["starhalf","star1","star1half","star2","star2half","star3","star3half","star4","star4half","star5"];
+        star_vals = [0.5,1.0,1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0];
+        for (var i = 0; i < star_ids.length; i++) {
+            if($("#"+star_ids[i]).is(':checked')) { 
+                rating_filter = star_vals[i]; 
+            }
+        }
+        if (rating_filter !== 0) {
+            rating_filtered_objects = filter_by_rating(price_filtered_objects, rating_filter);
+        } else {
+            rating_filtered_objects = price_filtered_objects;
+        }
+    } else {
+        rating_filtered_objects = filter_by_rating(price_filtered_objects, rating);
+    }
+    if (type === "") {
+        typeFilter = $('#type-list option:selected').val();
+        if (typeFilter !== "None") {
+            type_filtered_objects = filter_by_type(rating_filtered_objects, typeFilter);
+        } else {
+            type_filtered_objects = rating_filtered_objects;
+        }
+    } else {
+        type_filtered_objects = filter_by_type(rating_filtered_objects, type);        
+    }
+    setRecommendations(active_menu,type_filtered_objects,'new');
+    $('.fa-ban').css('visibility','visible');
+}
+ 
+$(document).ready(function() {
+    $('#scroll').scroll(function() {
+        var div = $(this);
+        if (Math.round(div[0].scrollHeight - div.scrollTop()) === Math.round(div.height())) { // If scroll to bottom, load next page
+            console.log("Reached the bottom!");
+            filt = checkFilters();
+            if (filt === false) {
+                next_page = getPage();
+                if (next_page !== 'None') {
+                    //console.log(next_page);
+                    get_recommendations(active_menu,next_page);
+                    addRecsToPage();                
+                }                
+            }
+        } 
+    });
+    $('.icon-select').click(function(){
+        $('.icon-select').removeClass("active");
+        $(this).addClass("active");
+    });
+});
+
+function checkFilters() {
+    filt = false;
+    dollar_ids = ["dollar1","dollar2","dollar3","dollar4"];
+    for (var i = 0; i < dollar_ids.length; i++) {
+        if($("#"+dollar_ids[i]).is(':checked')) { 
+            filt = true; 
+        }
+    }
+    star_ids = ["starhalf","star1","star1half","star2","star2half","star3","star3half","star4","star4half","star5"];
+    for (var i = 0; i < star_ids.length; i++) {
+        if($("#"+star_ids[i]).is(':checked')) { 
+            filt = true; 
+        }
+    }
+    typeFilter = $('#type-list option:selected').val();
+    if (typeof typeFilter === 'undefined' || !typeFilter){
+        //test = 'test';
+    } else {
+        if (typeFilter !== "None") {
+            filt = true;
+        }   
+    }
+    return filt;
+}
+function getPage() {
+    if (active_menu === 'global') {
+        rec_length = fetched_all_recommendations.length;
+    } else if (active_menu === 'local') {
+        rec_length = fetched_my_recommendations.length;
+    }    
+    if (rec_length % page_size !== 0) {
+        page = 'None';
+    } else {
+        page = (rec_length / page_size) + 1;    
+    }
+    return page;
+}
+function addRecsToPage() {
+    new_recs = recommendations["recommendations"];
+    getMarkerInfo(new_recs,'continue');
+    if (active_menu === 'local') {
+        rec_num = fetched_my_recommendations.length - new_recs.length;            
+    } else {
+        rec_num = fetched_all_recommendations.length - new_recs.length;    
+    }
+    html_body = "";
+    for (var i = 0; i < new_recs.length; i++) {
+        html_body += getCardHtml(new_recs[i],i+rec_num);
+    }
+    $('.stream-items').append(html_body);
+}
+function clearFilters() {
+    $('.price-radio').prop('checked', false);
+    $('.rating-radio').prop('checked', false);
+    $(".type-list").val("None");
+}
+function removeFilters() {
+    clearFilters();
+    if (active_menu === 'local') {
+        setRecommendations('local',fetched_my_recommendations,'new');
+    } else {
+        setRecommendations(active_menu,fetched_all_recommendations,'new');
+    }
 }

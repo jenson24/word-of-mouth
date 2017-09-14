@@ -29,49 +29,46 @@
             <div id="header">
                 <div class="login-info-bar"></div>
                 <div class="icon-bar">
-                    <a href="#"><i class="fa fa-globe" onClick="setRecommendations('global')"></i></a>
-                    <a href="#"><i class="fa fa-search"></i></a> 
-                    <a href="#"><i class="fa fa-envelope"></i></a> 
-                    <a href="#"><i class="fa fa-user" onClick="setRecommendations('local')"></i></a>
+                    <a href="#" class="icon-select global"><i class="fa fa-globe" onClick="setRecommendations('global','new','new')"></i></a>
+                    <a href="#" class="icon-select"><i class="fa fa-search"></i></a> 
+                    <a href="#" class="icon-select"><i class="fa fa-envelope"></i></a> 
+                    <a href="#" class="icon-select local"><i class="fa fa-user" onClick="setRecommendations('local','new','new')"></i></a>
                 </div>
             </div>
-            <div class="content-header"></div>
-            <div class="filter-content" id="filter-content">
-                <div class="price-filter">
-                    <ul class="filter-headers">
-                        <li class="price-filter-list">
-                            <ul class="price-list">
-                                <span class="price-filter-label">Price: </span>
-                                <li><a href="#">$</a></li>
-                                <li><a href="#">$</a></li>
-                                <li><a href="#">$</a></li>
-                                <li><a href="#">$</a></li>                        
-                            </ul>
-                        </li>
-                    </ul>
-                </div>
-                <div class="rating-filter">
-                    <span class="rating-filter-label">Rating: </span>
-                    <fieldset class="rating">
-                        <input type="radio" id="star5" name="rating" value="5" /><label class = "full" for="star5" title="Awesome!"></label>
-                        <input type="radio" id="star4half" name="rating" value="4 and a half" /><label class="half" for="star4half" title="Pretty good!"></label>
-                        <input type="radio" id="star4" name="rating" value="4" /><label class = "full" for="star4" title="Pretty good!"></label>
-                        <input type="radio" id="star3half" name="rating" value="3 and a half" /><label class="half" for="star3half" title="Meh..."></label>
-                        <input type="radio" id="star3" name="rating" value="3" /><label class = "full" for="star3" title="Meh..."></label>
-                        <input type="radio" id="star2half" name="rating" value="2 and a half" /><label class="half" for="star2half" title="Kinda bad"></label>
-                        <input type="radio" id="star2" name="rating" value="2" /><label class = "full" for="star2" title="Kinda bad"></label>
-                        <input type="radio" id="star1half" name="rating" value="1 and a half" /><label class="half" for="star1half" title="Not good"></label>
-                        <input type="radio" id="star1" name="rating" value="1" /><label class = "full" for="star1" title="Not good"></label>
-                        <input type="radio" id="starhalf" name="rating" value="half" /><label class="half" for="starhalf" title="Really bad"></label>
-                    </fieldset>
-                </div>
-                <div class="type-filter">
-                    <form>
-                        <span class="type-list-label">Type: </span>
-                        <select class="type-list" id="type-list">
-                            <option>Test</option>
-                        </select>
-                    </form>
+            <div class="scroll-wrapper">
+                <div class="content-header"></div>
+                <div class="filter-content" id="filter-content">
+                    <div class="price-filter">
+                        <span class="price-filter-label">Price: </span>
+                        <fieldset class="price">
+                            <input type="radio" id="dollar4" class="price-radio" name="price" value="4" onchange="filter_controller(4,'','')"/><label class = "full" for="dollar4" title="$$$$"></label>
+                            <input type="radio" id="dollar3" class="price-radio" name="price" value="3" onchange="filter_controller(3,'','')"/><label class = "full" for="dollar3" title="$$$"></label>
+                            <input type="radio" id="dollar2" class="price-radio" name="price" value="2" onchange="filter_controller(2,'','')"/><label class = "full" for="dollar2" title="$$"></label>
+                            <input type="radio" id="dollar1" class="price-radio" name="price" value="1" onchange="filter_controller(1,'','')"/><label class = "full" for="dollar1" title="$"></label>
+                        </fieldset>
+                    </div>
+                    <div class="rating-filter">
+                        <span class="rating-filter-label">Rating: </span>
+                        <fieldset class="rating">
+                            <input type="radio" class="rating-radio" id="star5" name="rating" value="5" onchange="filter_controller('',5.0,'')"/><label class = "full" for="star5" title="Awesome!"></label>
+                            <input type="radio" class="rating-radio" id="star4half" name="rating" value="4 and a half" onchange="filter_controller('',4.5,'')"/><label class="half" for="star4half" title="Pretty good!"></label>
+                            <input type="radio" class="rating-radio" id="star4" name="rating" value="4" onchange="filter_controller('',4.0,'')"/><label class = "full" for="star4" title="Pretty good!"></label>
+                            <input type="radio" class="rating-radio" id="star3half" name="rating" value="3 and a half" onchange="filter_controller('',3.5,'')"/><label class="half" for="star3half" title="Meh..."></label>
+                            <input type="radio" class="rating-radio" id="star3" name="rating" value="3" onchange="filter_controller('',3.0,'')"/><label class = "full" for="star3" title="Meh..."></label>
+                            <input type="radio" class="rating-radio" id="star2half" name="rating" value="2 and a half" onchange="filter_controller('',2.5,'')"/><label class="half" for="star2half" title="Kinda bad"></label>
+                            <input type="radio" class="rating-radio" id="star2" name="rating" value="2" onchange="filter_controller('',2.0,'')"/><label class = "full" for="star2" title="Kinda bad"></label>
+                            <input type="radio" class="rating-radio" id="star1half" name="rating" value="1 and a half" onchange="filter_controller('',1.5,'')"/><label class="half" for="star1half" title="Not good"></label>
+                            <input type="radio" class="rating-radio" id="star1" name="rating" value="1" onchange="filter_controller('',1.0,'')"/><label class = "full" for="star1" title="Not good"></label>
+                            <input type="radio" class="rating-radio" id="starhalf" name="rating" value="half" onchange="filter_controller('',0.5,'')"/><label class="half" for="starhalf" title="Really bad"></label>
+                        </fieldset>
+                    </div>
+                    <div class="type-filter">
+                        <form>
+                            <span class="type-list-label">Type: </span>
+                            <select class="type-list" id="type-list" onchange="filter_controller('','',this.value)">
+                            </select>
+                        </form>
+                    </div>
                 </div>
             </div>
             <div id="scroll"></div>

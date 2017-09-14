@@ -71,3 +71,6 @@ ol {
 .rec-footer-content {
     display: block;
 }
+.website-footer-content {
+    display: inline-block;
+}
