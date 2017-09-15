@@ -266,3 +266,10 @@ html, body {
 .price > input:checked ~ label:hover,
 .price > label:hover ~ input:checked ~ label, /* lighten current selection */
 .price > input:checked ~ label:hover ~ label { color: green;  }
+
+.loc-info {
+    display: block;
+}
+.marker-comment {
+    display: block;
+}

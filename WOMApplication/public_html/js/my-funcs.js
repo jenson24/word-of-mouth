@@ -74,6 +74,8 @@ function getMarkerInfo(temp_obj,type) {
     }
     for (var i = 0; i < temp_obj.length; i++) {
         if (temp_obj[i]["r_google_place_id"] in marker_list) {
+            marker_list[temp_obj[i]["r_google_place_id"]]["comment"].push(temp_obj[i]["r_comment"]);
+            marker_list[temp_obj[i]["r_google_place_id"]]["username"].push(temp_obj[i]["username"]);
             if (temp_obj[i]["r_type"] !== marker_list[temp_obj[i]["r_google_place_id"]]["type"]) {
                 marker_list[temp_obj[i]["r_google_place_id"]]["type"] = 0;
             }
@@ -84,6 +86,10 @@ function getMarkerInfo(temp_obj,type) {
             marker_list[temp_obj[i]["r_google_place_id"]]["lat"] = lat;
             marker_list[temp_obj[i]["r_google_place_id"]]["long"] = long;
             marker_list[temp_obj[i]["r_google_place_id"]]["name"] = temp_obj[i]["r_name"];
+            marker_list[temp_obj[i]["r_google_place_id"]]["comment"] = [temp_obj[i]["r_comment"]];
+            marker_list[temp_obj[i]["r_google_place_id"]]["username"] = [temp_obj[i]["username"]];
+            marker_list[temp_obj[i]["r_google_place_id"]]["address"] = temp_obj[i]["r_address"];
+            marker_list[temp_obj[i]["r_google_place_id"]]["website"] = temp_obj[i]["r_website"];
             marker_list[temp_obj[i]["r_google_place_id"]]["type"] = temp_obj[i]["r_type"];            
         }
     };
@@ -166,16 +172,18 @@ function addMarkers(marker_list) {
             icon: marker_icon
         });
         markers.push(marker);
-        var infowindow = new google.maps.InfoWindow();
-        content = "<p>Test Content - "+marker_list[id]["name"]+"</p>";
-        google.maps.event.addListener(marker,'click', (function(marker,content,infowindow){ 
+        var infowindow = new google.maps.InfoWindow({
+            maxWidth: 250
+        });
+        marker_content = getMarkerContent(marker_list[id]);
+        google.maps.event.addListener(marker,'click', (function(marker,marker_content,infowindow){ 
             return function() {
                 closeInfos();
-                infowindow.setContent(content);
+                infowindow.setContent(marker_content);
                 infowindow.open(map,marker);
                 infos[0]=infowindow;
             };
-        })(marker,content,infowindow));
+        })(marker,marker_content,infowindow));
     }
 }
 
@@ -524,4 +532,28 @@ function removeFilters() {
     } else {
         setRecommendations(active_menu,fetched_all_recommendations,'new');
     }
+}
+function getMarkerContent(obj) {
+    marker_html = "";
+    //marker_html += "<div class=\"rec-item\">";
+    marker_html += "<div class=\"marker-item-context\">";
+    marker_html += "<div class=\"marker-item-header\">";
+    marker_html += "<span class=\"loc-info\"><strong>"+obj["name"]+"</strong></span>";
+    marker_html += "<span class=\"loc-info\">"+obj["address"].replace(',', '<br>')+"</span>";
+    marker_html += "<a href=\""+obj["website"]+"\" class=\"website-footer-content\">"+obj["website"]+"</a>";
+    marker_html += "</div>";
+    marker_html += "<div class=\"marker-item-container\">";
+    for (var i=0; i<obj["comment"].length; i++) {
+        marker_html +="<br>";
+        marker_html += "<span class=\"marker-comment\"><i>"+obj["comment"][i]+"</i></span>";
+        marker_html += "<span class=\"marker-comment\" style=\"float:right\">"+obj["username"][i]+"</span>";
+        marker_html +="<br>";
+    }
+    //marker_html += "<span class=\"rec-name\"><strong class=\"recName\">"+recObj["r_name"]+"</strong></span>";
+    //marker_html += "<span class=\"rec-comment\">"+recObj["r_comment"]+"</span>";
+    //marker_html += "<span class=\"rec-date\" style=\"float:right\">"+recObj["r_date"].slice(0,recObj["r_date"].indexOf(" "))+"</span>";
+    marker_html += "</div>";
+    marker_html += "</div>";
+    //content = "<p>Test Content - "+obj["name"]+"</p>";
+    return marker_html;
 }
