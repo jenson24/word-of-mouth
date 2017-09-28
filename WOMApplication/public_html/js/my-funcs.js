@@ -15,6 +15,7 @@ var infos = [];
 var typeSelection = '';
 var page_size = 10;
 var marker_list = {};
+var search_rec_results = [];
     
 window.onload = function(){
     user_id = getCookie('user_id');
@@ -450,15 +451,27 @@ function filter_controller(price, rating, type) {
 $(document).ready(function() {
     $('#scroll').scroll(function() {
         var div = $(this);
-        if (Math.round(div[0].scrollHeight - div.scrollTop()) === Math.round(div.height())) { // If scroll to bottom, load next page
-            console.log("Reached the bottom!");
-            filt = checkFilters();
-            if (filt === false) {
+        //console.log(Math.ceil(div[0].scrollHeight - div.scrollTop()));
+        //console.log(Math.ceil(div.height()));
+        if (Math.ceil(div[0].scrollHeight - div.scrollTop()) <= Math.ceil(div.height())) { // If scroll to bottom, load next page
+            //console.log("Reached the bottom!");
+            if (active_menu === 'searchRecs') {
                 next_page = getPage();
-                if (next_page !== 'None') {
-                    //console.log(next_page);
-                    get_recommendations(active_menu,next_page);
-                    addRecsToPage();                
+                term = $('.search-input').val();
+                if (term.length > 3) {
+                    if (next_page !== 'None') {
+                        searchRecs(term,next_page);
+                    }
+                }
+            } else {
+                filt = checkFilters();
+                if (filt === false) {
+                    next_page = getPage();
+                    if (next_page !== 'None') {
+                        //console.log(next_page);
+                        get_recommendations(active_menu,next_page);
+                        addRecsToPage();                
+                    }                
                 }                
             }
         } 
@@ -467,7 +480,7 @@ $(document).ready(function() {
         $('.icon-select').removeClass("active");
         $(this).addClass("active");
     });
-});
+ });
 
 function checkFilters() {
     filt = false;
@@ -498,7 +511,10 @@ function getPage() {
         rec_length = fetched_all_recommendations.length;
     } else if (active_menu === 'local') {
         rec_length = fetched_my_recommendations.length;
-    }    
+    } else if (active_menu === 'searchRecs') {
+        rec_length = search_rec_results.length;
+    }
+    //console.log(rec_length % page_size);
     if (rec_length % page_size !== 0) {
         page = 'None';
     } else {
@@ -549,11 +565,77 @@ function getMarkerContent(obj) {
         marker_html += "<span class=\"marker-comment\" style=\"float:right\">"+obj["username"][i]+"</span>";
         marker_html +="<br>";
     }
-    //marker_html += "<span class=\"rec-name\"><strong class=\"recName\">"+recObj["r_name"]+"</strong></span>";
-    //marker_html += "<span class=\"rec-comment\">"+recObj["r_comment"]+"</span>";
-    //marker_html += "<span class=\"rec-date\" style=\"float:right\">"+recObj["r_date"].slice(0,recObj["r_date"].indexOf(" "))+"</span>";
     marker_html += "</div>";
     marker_html += "</div>";
-    //content = "<p>Test Content - "+obj["name"]+"</p>";
     return marker_html;
+}
+function enableSearch() {
+    active_menu = 'searchRecs';
+    $('#scroll').empty();
+    $('.content-header').empty();
+    html_search = "<form autocomplete=\"on\"><input type=\"text\" placeholder=\"Search your network's recommendations...\" id=\"search-input\" class=\"search-input\" onchange=searchController($(this).val())></form>";
+    $('.content-header').append(html_search);
+}
+function searchRecs(term,page) {
+    post_data = {
+        uid: user_id,
+        term: term,
+        page: page
+    };
+    $.ajax({
+        url: 'http://localhost:8080/searchRecs',
+        type: 'POST',
+        data: JSON.stringify(post_data),
+        dataType: 'json',
+        success: function(search_results) {
+            //console.log(search_results);
+            addSearchResultsToList(search_results);
+            search_rec_results.push(search_results);
+            $.notify("Found search results", {className: "success", position: "bottom center"});
+        },
+        error: function(jqXHR, exception) {
+            if (jqXHR.status === 0) {
+                $.notify("Error: No Connection to Database", {className: "error", position: "bottom center"});
+            } else if (jqXHR.status === 404) {
+                $.notify("Requested page not found", {className: "error", position: "bottom center"});
+            } else if (jqXHR.status === 500) {
+                $.notify("Error: Internal Server Error", {className: "error", position: "bottom center"});
+            } else if (exception === 'parsererror') {
+                $.notify("Error: JSON parse failed", {className: "error", position: "bottom center"});
+            } else if (exception === 'timeout') {
+                $.notify("Error: Timeout", {className: "error", position: "bottom center"});
+            } else if (exception === 'abort') {
+                $.notify("Error: Ajax request aborted", {className: "error", position: "bottom center"});
+            } else {
+                $.notify("Error: Unknown Error" + jqXHR.responseText, {className: "error", position: "bottom center"});
+            }
+        },
+        async: false
+    });
+}
+function searchController(term) {
+   console.log(term);
+    if (term.length > 3) {
+        search_rec_results = [];
+        $('#scroll').empty();
+        if (search_rec_results.length === 0) {
+            searchRecs(term,1);
+        } else {
+            next_page = getPage();
+            if (next_page !== 'None') {
+                searchRecs(term,next_page);
+            }
+        }
+        //searchRecs(term);    
+    }
+}
+function addSearchResultsToList(search_results) {
+    html_body = "";
+    for (var i = 0; i < search_results.length; i++) {
+        html_body += getCardHtml(search_results[i],i);
+    }
+    //$('.stream-items').append(html_body);
+    html_start = "<div class=\"list-container\"><ol class=\"stream-items\">";
+    html_end = "</ol></div>";
+    $('#scroll').append(html_start+html_body+html_end);
 }
