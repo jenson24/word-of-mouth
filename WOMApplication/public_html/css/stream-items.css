@@ -7,7 +7,16 @@ and open the template in the editor.
     Created on : Aug 2, 2017, 10:48:41 PM
     Author     : Jenson
 */
+#scroll {
+    position: relative;
+    display: inline-block;
+    height: calc( 100% - 92px - 32px );
+    overflow: auto;
+    width: 100%;
+}
+.list-container {
 
+}
 .stream-items {
     overflow: auto;
 }
@@ -40,6 +49,7 @@ and open the template in the editor.
 }
 .UserName {
     font-size:  11pt;
+    display: block;
 }
 .fa-angle-down {
     align-content: center;
@@ -58,15 +68,6 @@ ol {
 .rec-comment {
     display: block;
     word-wrap: break-word;
-}
-.rec-section-header {
-    font-style: italic;
-    font-size: 14pt;
-    padding-left: 20px;
-    float: left;
-}
-.content-header {
-    height: 32px;
 }
 .rec-footer-content {
     display: block;

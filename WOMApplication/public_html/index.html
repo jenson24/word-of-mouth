@@ -4,6 +4,7 @@
     <link rel="stylesheet" href="css/style.css" type="text/css"/>
     <link rel="stylesheet" href="css/addRecModal.css" type="text/css"/>
     <link rel="stylesheet" href="css/stream-items.css" type="text/css"/>
+    <link rel="stylesheet" href="css/map-items.css" type="text/css"/>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
     <link rel="icon" type="image/png" href="img/favicon-32x32.png" sizes="32x32" />
@@ -25,14 +26,14 @@
     <div id="wrapper">
         <div id="map">
         </div>
-        <div id="rec-list">
+        <div id="rec-panel">
             <div id="header">
                 <div class="login-info-bar"></div>
                 <div class="icon-bar">
                     <a href="#" class="icon-select global"><i class="fa fa-globe" onClick="setRecommendations('global','new','new')"></i></a>
                     <a href="#" class="icon-select"><i class="fa fa-search" onClick="enableSearch()"></i></a> 
-                    <a href="#" class="icon-select"><i class="fa fa-envelope"></i></a> 
-                    <a href="#" class="icon-select local"><i class="fa fa-user" onClick="setRecommendations('local','new','new')"></i></a>
+                    <a href="#" class="icon-select"><i class="fa fa-envelope" onClick="getMessages()"></i></a> 
+                    <a href="#" class="icon-select local"><i class="fa fa-user" onClick="loadDefaultProfile()"></i></a>
                 </div>
             </div>
             <div class="scroll-wrapper">
@@ -89,8 +90,9 @@
                     <h4 id="place-name"></h4>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-cancel" data-dismiss="modal">Cancel</button>
+                    <!--<button type="button" class="btn btn-cancel" data-dismiss="modal">Cancel</button>
                     <button type="button" class="btn btn-save" data-dismiss="modal" onClick="sendData()">Save</button>
+                    -->
                 </div>
             </div>
         </div>

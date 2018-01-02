@@ -141,6 +141,9 @@ function fixInfoWindow() {
                     $('#modal-body').empty();
                     $('#modal-body').append("Save a comment...");
                     $('#modal-body').append("<textarea rows=\"4\" id=\"rec-comment\" placeholder=\"What do you like about this place?\">");
+                    $('.modal-footer').empty();
+                    $('.modal-footer').append("<button type=\"button\" class=\"btn btn-cancel\" data-dismiss=\"modal\">Cancel</button>");
+                    $('.modal-footer').append("<button type=\"button\" class=\"btn btn-save\" data-dismiss=\"modal\" onClick=\"sendData()\">Send</button>");
                 });
                 dislike_link.click(function() {
                     //console.log("link clicked",self,self.getContent(),self.content);
@@ -152,6 +155,9 @@ function fixInfoWindow() {
                     $('#modal-body').empty();
                     $('#modal-body').append("Save a comment...");
                     $('#modal-body').append("<textarea rows=\"4\" id=\"rec-comment\" placeholder=\"What don't you like about this place?\">");
+                    $('.modal-footer').empty();
+                    $('.modal-footer').append("<button type=\"button\" class=\"btn btn-cancel\" data-dismiss=\"modal\">Cancel</button>");
+                    $('.modal-footer').append("<button type=\"button\" class=\"btn btn-save\" data-dismiss=\"modal\" onClick=\"sendData()\">Send</button>");
                 });
                 $(this.content).find("div.address").append($("<div>")).append(divider).append(like_link).append(divider).append(dislike_link).append($("</div>"));
                 this.set("externalLinkAlreadyAdded",true);

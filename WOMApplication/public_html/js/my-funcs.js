@@ -5,6 +5,7 @@
  */
 
 var user_id = 0;
+var current_user = 0;
 var username = '';
 var recommendations = {};
 var fetched_all_recommendations = [];
@@ -16,14 +17,14 @@ var typeSelection = '';
 var page_size = 10;
 var marker_list = {};
 var search_rec_results = [];
+var profile_info = {};
     
 window.onload = function(){
     user_id = getCookie('user_id');
+    current_user = user_id;
     username = getCookie('username');
     if (user_id !== "") {
         page = 1;
-        //get_recommendations('global', page);
-        //temp_obj = recommendations["recommendations"];
         setRecommendations('global','new','new');
         login_html = "<span>Logged in as </span><a href=\"http://localhost:8383/WOMApplication/login.html\" class=\"login-link\">"+username+"</a>"
         $('.login-info-bar').append(login_html);
@@ -33,39 +34,73 @@ window.onload = function(){
         $('.login-info-bar').append(login_html);
     };
 };
-
+function loadDefaultProfile() {
+    current_user = user_id;
+    fetched_my_recommendations = [];
+    setRecommendations('local','new','new');
+}
 function setRecommendations(rec_type, temp_obj, marker_flag) {
+    recs = temp_obj;
     if (temp_obj === 'new') {
         if (rec_type === 'global' && fetched_all_recommendations.length > 0) {
-            temp_obj = fetched_all_recommendations;
+            recs = fetched_all_recommendations;
         } else if (rec_type === 'local' && fetched_my_recommendations.length > 0) {
-            temp_obj = fetched_my_recommendations;
+            recs = fetched_my_recommendations;
         } else {
             page = 1;
             get_recommendations(rec_type, page);
-            temp_obj = recommendations["recommendations"];            
+            recs = recommendations["recommendations"];            
             jQuery('#scroll').animate({scrollTop:0},0);
         }
         clearFilters();
     }
-    active_menu = rec_type;
     if (rec_type === 'global') {
         html_head = "<div class=\"rec-section-header\"><span>What people are recommending...</span></div><div class=\"filter-bar\"><a href=\"#\"><i class=\"fa fa-ban\" onClick=\"removeFilters()\"></i></a><a href=\"#\"><i class=\"fa fa-filter\" onClick=\"showFilters()\"></i></a></div>";
+        $('.content-header').css("height","32px");
+        $('#scroll').css("height","calc( 100% - 92px - 32px)");        
     } else if (rec_type === 'local') {
         html_head = "<div class=\"rec-section-header\"><span>My recommendations...</span></div><div class=\"filter-bar\"><a href=\"#\"><i class=\"fa fa-ban\" onClick=\"removeFilters()\"></i></a><a href=\"#\"><i class=\"fa fa-filter\" onClick=\"showFilters()\"></i></a></div>";
+        $('.content-header').css("height","84px");        
+        $('#scroll').css("height","calc( 100% - 92px - 32px - 52px)");            
     };
     html_start = "<div class=\"list-container\"><ol class=\"stream-items\">";
-    getMarkerInfo(temp_obj,marker_flag);
+    getMarkerInfo(recs,marker_flag);
     html_body = "";
-    for (var i = 0; i < temp_obj.length; i++) {
-        html_body += getCardHtml(temp_obj[i],i);
+    for (var i = 0; i < recs.length; i++) {
+        html_body += getCardHtml(recs[i],i);
     }
     
     html_end = "</ol></div>";
-    $('.content-header').empty();
-    $('.content-header').append(html_head);
     $('#scroll').empty();
     $('#scroll').append(html_start+html_body+html_end);
+    if (rec_type !== active_menu || temp_obj === 'new') {
+        clearFilters();
+        $('.filter-content').css('display','none');
+        active_menu = rec_type;    
+        $('.content-header').empty();
+        if (rec_type === 'local') {
+            profile_html = getProfileHTML(current_user);
+            $('.content-header').append(profile_html);    
+        }
+        $('.content-header').append(html_head);
+    }
+}
+
+function getProfileHTML(uid) {
+    temp_profile_info = getProfile(uid);
+    profile_info = temp_profile_info["responseJSON"];
+    var followers_count = profile_info["followers"].toString();
+    var following_count = profile_info["following"].toString();
+    var first_name = profile_info["first_name"];
+    var last_name = profile_info["last_name"];
+    var rec_count = profile_info["recommendations"].toString();
+    profile_html = '';
+    profile_html += "<div class=\"profile-header\">";
+    profile_html += "<span class=\"full-name\">"+first_name+" "+last_name+"</span>";
+    profile_html += "<span class=\"profile-follow-content\">Following: </span><a href=\"#\" onclick=\"showFollowing("+uid.toString()+")\">"+following_count+"</a>";
+    profile_html += "<span class=\"profile-follow-content\">Followers: </span><a href=\"#\" onclick=\"showFollowers("+uid.toString()+")\">"+followers_count+"</a>";
+    profile_html += "<span class=\"profile-follow-content\">Recommendations: </span><a href=\"#\" onclick=\"setRecommendations('local','new','new')\">"+rec_count.toString()+"</a></div>";
+    return profile_html;
 }
 
 function getMarkerInfo(temp_obj,type) {
@@ -123,6 +158,7 @@ function getCardHtml(recObj,i) {
     card_html += "<div class=\"stream-item-header\">";
     card_html += "<span class=\"UserName\"><strong class=\"userName\">"+recObj["username"]+"</strong></span>";
     card_html += "<div class=\"stream-item-container\">";
+    card_html += "<div class=\"message-button\"><button class=\"fa fa-envelope send-message\" data-toggle=\"modal\" data-target=\"#myModal\" onClick=\"composeMessage("+user_id.toString()+","+recObj["user_id"]+",'"+recObj["username"]+"',"+recObj["r_id"]+")\"></button></div>";
     card_html += "<span class=\"rec-name\"><strong class=\"recName\">"+recObj["r_name"]+"</strong></span>";
     card_html += "<span class=\"rec-comment\">"+recObj["r_comment"]+"</span>";
     card_html += "<span class=\"rec-date\" style=\"float:right\">"+recObj["r_date"].slice(0,recObj["r_date"].indexOf(" "))+"</span>";
@@ -250,29 +286,14 @@ function sendData() {
             }
         },
         error: function(jqXHR, exception) {
-            //console.log(jqXHR);
-            if (jqXHR.status === 0) {
-                $.notify("Error: No Connection to Database", {className: "error", position: "bottom center"});
-            } else if (jqXHR.status === 404) {
-                $.notify("Requested page not found", {className: "error", position: "bottom center"});
-            } else if (jqXHR.status === 500) {
-                $.notify("Error: Internal Server Error", {className: "error", position: "bottom center"});
-            } else if (exception === 'parsererror') {
-                $.notify("Error: JSON parse failed", {className: "error", position: "bottom center"});
-            } else if (exception === 'timeout') {
-                $.notify("Error: Timeout", {className: "error", position: "bottom center"});
-            } else if (exception === 'abort') {
-                $.notify("Error: Ajax request aborted", {className: "error", position: "bottom center"});
-            } else {
-                $.notify("Error: Unknown Error" + jqXHR.responseText, {className: "error", position: "bottom center"});
-            }
+            errorHandling(jqXHR, exception);
         }
     });
 };
 
 function get_recommendations(lookup_type, page) {
     post_data = {
-        uid: user_id,
+        uid: current_user,
         lookup_type: lookup_type,
         page: page
     };
@@ -296,22 +317,71 @@ function get_recommendations(lookup_type, page) {
             $.notify("Found data", {className: "success", position: "bottom center"});
         },
         error: function(jqXHR, exception) {
-            //console.log(jqXHR);
-            if (jqXHR.status === 0) {
-                $.notify("Error: No Connection to Database", {className: "error", position: "bottom center"});
-            } else if (jqXHR.status === 404) {
-                $.notify("Requested page not found", {className: "error", position: "bottom center"});
-            } else if (jqXHR.status === 500) {
-                $.notify("Error: Internal Server Error", {className: "error", position: "bottom center"});
-            } else if (exception === 'parsererror') {
-                $.notify("Error: JSON parse failed", {className: "error", position: "bottom center"});
-            } else if (exception === 'timeout') {
-                $.notify("Error: Timeout", {className: "error", position: "bottom center"});
-            } else if (exception === 'abort') {
-                $.notify("Error: Ajax request aborted", {className: "error", position: "bottom center"});
-            } else {
-                $.notify("Error: Unknown Error" + jqXHR.responseText, {className: "error", position: "bottom center"});
-            }
+            errorHandling(jqXHR, exception);
+        },
+        async: false
+    });
+};
+
+function getProfile(uid) {
+    post_data = {
+        uid: uid
+    };
+    return $.ajax({
+        url: 'http://localhost:8080/getProfile',
+        type: 'POST',
+        data: JSON.stringify(post_data),
+        dataType: 'json',
+        success: function(profile_data) {
+            console.log(profile_data);
+            $.notify("Found profile", {className: "success", position: "bottom center"});
+        },
+        error: function(jqXHR, exception) {
+            errorHandling(jqXHR, exception);
+        },
+        async: false
+    });
+};
+
+function get_following(user_id,page) {
+    post_data = {
+        uid: user_id,
+        page: page
+    };
+    return $.ajax({
+        url: 'http://localhost:8080/getFollowing',
+        type: 'POST',
+        data: JSON.stringify(post_data),
+        dataType: 'json',
+        success: function(following_data) {
+            console.log(following_data);
+            //return following_data;
+            $.notify("Found following", {className: "success", position: "bottom center"});
+        },
+        error: function(jqXHR, exception) {
+            errorHandling(jqXHR, exception);
+        },
+        async: false
+    });
+};
+
+function get_followers(user_id,page) {
+    post_data = {
+        uid: user_id,
+        page: page
+    };
+    return $.ajax({
+        url: 'http://localhost:8080/getFollowers',
+        type: 'POST',
+        data: JSON.stringify(post_data),
+        dataType: 'json',
+        success: function(follower_data) {
+            console.log(follower_data);
+            //return follower_data;
+            $.notify("Found following", {className: "success", position: "bottom center"});
+        },
+        error: function(jqXHR, exception) {
+            errorHandling(jqXHR, exception);
         },
         async: false
     });
@@ -319,9 +389,13 @@ function get_recommendations(lookup_type, page) {
 
 function showFilters() {
     if ( $('.filter-content').css('display') === 'none' ) {
-        $('.fa-ban').css('visibility','visible');
+        //$('.fa-ban').css('visibility','visible');
         $('.filter-content').css('display','block');
-        $('#scroll').css("height","calc( 100% - 92px - 32px - 24px )");
+        if (active_menu === 'local') {
+            $('#scroll').css("height","calc( 100% - 92px - 32px - 52px - 24px )");            
+        } else {
+            $('#scroll').css("height","calc( 100% - 92px - 32px - 24px )");        
+        }
         type_list = getTypes();
         var options = $("#type-list");
         options.empty();
@@ -337,7 +411,11 @@ function showFilters() {
         $('.fa-ban').css('visibility','hidden');
         typeSelection = document.getElementById("type-list").value;
         $('.filter-content').css('display','none');
-        $('#scroll').css("height","calc( 100% - 92px - 32px )");
+        if (active_menu === 'local') {
+            $('#scroll').css("height","calc( 100% - 92px - 32px - 52px)");            
+        } else {
+            $('#scroll').css("height","calc( 100% - 92px - 32px)");        
+        }
     }
 };
 
@@ -416,6 +494,7 @@ function filter_controller(price, rating, type) {
         }
     } else {
         price_filtered_objects = filter_by_price(all_recs, price);
+        $('.fa-ban').css('visibility','visible');
     }
     if (rating === "") {
         rating_filter = 0;
@@ -433,6 +512,7 @@ function filter_controller(price, rating, type) {
         }
     } else {
         rating_filtered_objects = filter_by_rating(price_filtered_objects, rating);
+        $('.fa-ban').css('visibility','visible');
     }
     if (type === "") {
         typeFilter = $('#type-list option:selected').val();
@@ -443,9 +523,9 @@ function filter_controller(price, rating, type) {
         }
     } else {
         type_filtered_objects = filter_by_type(rating_filtered_objects, type);        
+        $('.fa-ban').css('visibility','visible');
     }
     setRecommendations(active_menu,type_filtered_objects,'new');
-    $('.fa-ban').css('visibility','visible');
 }
  
 $(document).ready(function() {
@@ -514,7 +594,6 @@ function getPage() {
     } else if (active_menu === 'searchRecs') {
         rec_length = search_rec_results.length;
     }
-    //console.log(rec_length % page_size);
     if (rec_length % page_size !== 0) {
         page = 'None';
     } else {
@@ -540,6 +619,7 @@ function clearFilters() {
     $('.price-radio').prop('checked', false);
     $('.rating-radio').prop('checked', false);
     $(".type-list").val("None");
+    $('.fa-ban').css('visibility','hidden');
 }
 function removeFilters() {
     clearFilters();
@@ -571,9 +651,10 @@ function getMarkerContent(obj) {
 }
 function enableSearch() {
     active_menu = 'searchRecs';
+    $('.filter-content').css('display','none');
     $('#scroll').empty();
     $('.content-header').empty();
-    html_search = "<form autocomplete=\"on\"><input type=\"text\" placeholder=\"Search your network's recommendations...\" id=\"search-input\" class=\"search-input\" onchange=searchController($(this).val())></form>";
+    html_search = "<form autocomplete=\"on\"><input type=\"text\" placeholder=\"Search Word of Mouth...\" id=\"search-input\" class=\"search-input\" onchange=searchController($(this).val())></form>";
     $('.content-header').append(html_search);
 }
 function searchRecs(term,page) {
@@ -583,32 +664,20 @@ function searchRecs(term,page) {
         page: page
     };
     $.ajax({
-        url: 'http://localhost:8080/searchRecs',
+        url: 'http://localhost:8080/search',
         type: 'POST',
         data: JSON.stringify(post_data),
         dataType: 'json',
         success: function(search_results) {
             //console.log(search_results);
             addSearchResultsToList(search_results);
-            search_rec_results.push(search_results);
+            for (i=0;i<search_results.length;i++) {
+                search_rec_results.push(search_results[i]);
+            }
             $.notify("Found search results", {className: "success", position: "bottom center"});
         },
         error: function(jqXHR, exception) {
-            if (jqXHR.status === 0) {
-                $.notify("Error: No Connection to Database", {className: "error", position: "bottom center"});
-            } else if (jqXHR.status === 404) {
-                $.notify("Requested page not found", {className: "error", position: "bottom center"});
-            } else if (jqXHR.status === 500) {
-                $.notify("Error: Internal Server Error", {className: "error", position: "bottom center"});
-            } else if (exception === 'parsererror') {
-                $.notify("Error: JSON parse failed", {className: "error", position: "bottom center"});
-            } else if (exception === 'timeout') {
-                $.notify("Error: Timeout", {className: "error", position: "bottom center"});
-            } else if (exception === 'abort') {
-                $.notify("Error: Ajax request aborted", {className: "error", position: "bottom center"});
-            } else {
-                $.notify("Error: Unknown Error" + jqXHR.responseText, {className: "error", position: "bottom center"});
-            }
+            errorHandling(jqXHR, exception);
         },
         async: false
     });
@@ -626,16 +695,189 @@ function searchController(term) {
                 searchRecs(term,next_page);
             }
         }
-        //searchRecs(term);    
+        getMarkerInfo(search_rec_results,'new');
     }
 }
 function addSearchResultsToList(search_results) {
     html_body = "";
-    for (var i = 0; i < search_results.length; i++) {
-        html_body += getCardHtml(search_results[i],i);
+    term_matches = search_results["term_matches"];
+    for (var i = 0; i < term_matches.length; i++) {
+        html_body += getCardHtml(term_matches[i],i);
+    }
+    user_matches = search_results["users"];
+    for (var i = 0; i < user_matches.length; i++) {
+        html_body += getFollowHtml(user_matches[i],i);
     }
     //$('.stream-items').append(html_body);
     html_start = "<div class=\"list-container\"><ol class=\"stream-items\">";
     html_end = "</ol></div>";
     $('#scroll').append(html_start+html_body+html_end);
+}
+function showFollowing(uid) {
+    temp_following = get_following(uid,1);
+    following_info = temp_following["responseJSON"];
+    var following = following_info["following"];
+    html_start = "<div class=\"list-container\"><ol class=\"follow-items\">";
+    html_body = "";
+    console.log(following);
+    for (var i = 0; i < following.length; i++) {
+        following[i]["following"] = true;
+        html_body += getFollowHtml(following[i],i);
+    }
+    html_end = "</ol></div>";
+    $('.rec-section-header').empty();
+    $('.rec-section-header').append("<span>Following...</span>");
+    $('.filter-bar').empty();
+    $('#scroll').empty();
+    $('#scroll').append(html_start+html_body+html_end);
+}
+function showFollowers(uid) {
+    temp_followers = get_followers(uid,1);
+    followers_info = temp_followers["responseJSON"];
+    var followers = followers_info["followers"];
+    html_start = "<div class=\"list-container\"><ol class=\"follow-items\">";
+    html_body = "";
+    for (var i = 0; i < followers.length; i++) {
+        html_body += getFollowHtml(followers[i],i);
+    }
+    html_end = "</ol></div>";
+    $('.rec-section-header').empty();
+    $('.rec-section-header').append("<span>Followers...</span>");
+    $('.filter-bar').empty();
+    $('#scroll').empty();
+    $('#scroll').append(html_start+html_body+html_end);    
+}
+function getFollowHtml(follow,i) {
+    card_html = "";
+    card_html += "<li class=\"js-stream-item\"><div class=\"follow-container\">";
+    card_html += "<div class=\"follow-header\">";
+    card_html += "<span class=\"UserName\"><strong class=\"userName\">"+follow["first_name"]+" "+follow["last_name"]+"</strong></span>";
+    card_html += "<a href=\"#\" onclick=\"changeUser("+follow["user_id"].toString()+")\">"+follow["username"]+"</a></div>";
+    if(follow["following"]) {
+        card_html += "<div class=\"follow-icon\"><button type=\"button\" class=\"button button-follow\" id=\"follow-item-"+i.toString()+"\" data-hover=\"Unfollow\" onClick=\"unfollow("+current_user.toString()+","+follow["user_id"].toString()+","+i.toString()+")\"><span>Following</span></button></div>";    
+    } else {
+        card_html += "<div class=\"follow-icon\"><button type=\"button\" class=\"button new-follow\" id=\"follow-item-"+i.toString()+"\" data-hover=\"Follow\" onClick=\"follow("+current_user.toString()+","+follow["user_id"].toString()+","+i.toString()+")\"><span>Follow</span></button></div>";    
+    }
+    card_html += "</div></li>";
+    return card_html;
+}
+function changeUser(uid) {
+    current_user = uid;
+    fetched_my_recommendations = [];
+    $('.content-header').empty();
+    profile_html = getProfileHTML(current_user);
+    $('.content-header').append(profile_html);
+    setRecommendations('local','new','new');
+}
+function unfollow(from_user,to_user,i) {
+    console.log("Unfollow from user "+from_user.toString()+" to user "+to_user.toString());
+    $('#follow-item-'+i+' span').text("Follow");
+    $('#follow-item-'+i).attr('onClick', "follow("+from_user.toString()+","+to_user.toString()+","+i.toString()+")");
+    $('#follow-item-'+i).toggleClass('button-follow new-follow');
+    manageFollowers(from_user,to_user,'unfollow');
+}
+function follow(from_user,to_user,i) {
+    console.log("Follow from user "+from_user.toString()+" to user "+to_user.toString());
+    $('#follow-item-'+i+' span').text("Following");
+    $('#follow-item-'+i).attr('data-hover', 'Unfollow');
+    $('#follow-item-'+i).attr('onClick', "unfollow("+from_user.toString()+","+to_user.toString()+","+i.toString()+")");
+    $('#follow-item-'+i).toggleClass('new-follow button-follow');
+    manageFollowers(from_user,to_user,'follow');
+}
+function manageFollowers(from_user,to_user,follow_type) {
+    post_data = {
+        from_user: from_user,
+        to_user: to_user,
+        follow_type: follow_type
+    };
+    $.ajax({
+        url: 'http://localhost:8080/updateFollowers',
+        type: 'POST',
+        data: JSON.stringify(post_data),
+        dataType: 'text',
+        success: function(result) {
+            console.log(result);
+        },
+        error: function(jqXHR, exception) {
+            errorHandling(jqXHR, exception);
+        },
+        async: false
+    });
+}
+
+function errorHandling(jqXHR, exception) {
+    if (jqXHR.status === 0) {
+        $.notify("Error: No Connection to Database", {className: "error", position: "bottom center"});
+    } else if (jqXHR.status === 404) {
+        $.notify("Requested page not found", {className: "error", position: "bottom center"});
+    } else if (jqXHR.status === 500) {
+        $.notify("Error: Internal Server Error", {className: "error", position: "bottom center"});
+    } else if (exception === 'parsererror') {
+        $.notify("Error: JSON parse failed", {className: "error", position: "bottom center"});
+    } else if (exception === 'timeout') {
+        $.notify("Error: Timeout", {className: "error", position: "bottom center"});
+    } else if (exception === 'abort') {
+        $.notify("Error: Ajax request aborted", {className: "error", position: "bottom center"});
+    } else {
+        $.notify("Error: Unknown Error" + jqXHR.responseText, {className: "error", position: "bottom center"});
+    }
+}
+function composeMessage(from_user,to_user,to_username,r_id) {
+    console.log("From "+from_user+" to "+to_user);
+    $('.temp-modal-title').empty();
+    $("<h3 class=\"modal-title fa fa-envelope\" id=\"modal-title\"></h3>").appendTo(".temp-modal-title");
+    $('.modal-title').append("   ");
+    $('.modal-title').append("Send Message");
+    $('#modal-body').empty();
+    $('#modal-body').append("Replying to "+to_username);
+    $('#modal-body').append("<textarea rows=\"4\" id=\"message-comment\" placeholder=\"Compose your message\">");
+    $('.modal-footer').empty();
+    $('.modal-footer').append("<button type=\"button\" class=\"btn btn-cancel\" data-dismiss=\"modal\">Cancel</button>")
+    $('.modal-footer').append("<button type=\"button\" class=\"btn btn-send\" data-dismiss=\"modal\" onClick=\"sendMessage("+from_user+","+to_user+","+r_id+")\">Send</button>")
+}
+function sendMessage(from_user,to_user,r_id) {
+    var comment = document.getElementById("message-comment").value;
+    storeMessage(from_user,to_user,comment,r_id);
+}
+function storeMessage(from_user,to_user,comment,r_id) {
+    post_data = {
+        from_user: from_user,
+        to_user: to_user,
+        comment: comment,
+        r_id: r_id
+    };
+    $.ajax({
+        url: 'http://localhost:8080/storeMessage',
+        type: 'POST',
+        data: JSON.stringify(post_data),
+        dataType: 'text',
+        success: function() {
+            $.notify("Sent Message", {className: "success", position: "bottom center"});
+        },
+        error: function(jqXHR, exception) {
+            errorHandling(jqXHR, exception);
+        },
+        async: false
+    });
+}
+function getMessages() {
+    post_data = {
+        to_user: user_id,
+        page: 1
+    };
+    $.ajax({
+        url: 'http://localhost:8080/getMessagesByUser',
+        type: 'POST',
+        data: JSON.stringify(post_data),
+        dataType: 'json',
+        success: function(messages) {
+            console.log(messages);
+            
+            $.notify("Found Messages", {className: "success", position: "bottom center"});
+        },
+        error: function(jqXHR, exception) {
+            errorHandling(jqXHR, exception);
+        },
+        async: false
+    });
 }

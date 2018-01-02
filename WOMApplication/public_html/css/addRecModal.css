@@ -96,6 +96,13 @@ and open the template in the editor.
     margin-left: 20px;
     width: 85px;
 }
+.btn-send {
+    color: #fff;
+    background-color: #337ab7;
+    border-color: #2e6da4;
+    margin-left: 20px;
+    width: 85px;
+}
 #rec-comment {
     width: 100%;
     resize: vertical;

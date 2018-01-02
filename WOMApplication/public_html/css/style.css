@@ -1,17 +1,27 @@
 /* Always set the map height explicitly to define the size of the div
  * element that contains the map. */
+
 #wrapper {
     height: 100%;
     width: 100%;
     overflow: hidden;
     position: absolute;
 }
-#map {
-    float: left;
-    width: 70%;
-    height: 100%
+/* Optional: Makes the sample page fill the window. */
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
 }
-#rec-list {
+#title {
+    color: #fff;
+    background-color: #4d90fe;
+    font-size: 25px;
+    font-weight: 500;
+    padding: 6px 12px;
+}
+
+#rec-panel {
     float: right;
     height: 100%;
     width: 30%;
@@ -20,6 +30,7 @@
     width: 100%;
     top: 0;
     display: inline-block;
+    height: 92px;
 }
 .login-info-bar {
     height: 16px;
@@ -56,103 +67,47 @@
     background-color: #000; /* Add a hover color */
 }
 
-#scroll {
-    position: relative;
-    display: inline-block;
-    height: calc( 100% - 92px - 32px );
-    overflow: auto;
+.scroll-wrapper {
+    
+}
+.content-header {
+    height: 32px;
+}
+.profile-header {
+    height: 52px;
     width: 100%;
 }
-.list-container {
-
-}
-/* Optional: Makes the sample page fill the window. */
-html, body {
-    height: 100%;
-    margin: 0;
-    padding: 0;
-}
-#description {
-    font-family: Roboto;
-    font-size: 15px;
-    font-weight: 300;
-}
-
-#infowindow-content .title {
+.full-name {
     font-weight: bold;
+    font-size: 16pt;
+    padding-left: 15px;
+    display: block;
 }
-
-#infowindow-content {
-    display: none;
+.profile-follow-content {
+    padding-left: 15px;
+    font-size: 11pt;
 }
-
-#map #infowindow-content {
-    display: inline;
-}
-
-.pac-card {
-    margin: 10px 10px 0 0;
-    border-radius: 2px 0 0 2px;
-    box-sizing: border-box;
-    -moz-box-sizing: border-box;
-    outline: none;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
-    background-color: #fff;
-    font-family: Roboto;
-}
-
-#pac-container {
-    padding-bottom: 12px;
-    margin-right: 12px;
-}
-
-.pac-controls {
-    display: inline-block;
-    padding: 5px 11px;
-}
-
-.pac-controls label {
-    font-family: Roboto;
-    font-size: 13px;
-    font-weight: 300;
-}
-
-#pac-input {
-    background-color: #fff;
-    font-family: Roboto;
-    font-size: 15px;
-    font-weight: 300;
-    margin-left: 12px;
-    padding: 0 11px 0 13px;
-    text-overflow: ellipsis;
-    width: 400px;
-}
-
-#pac-input:focus {
-    border-color: #4d90fe;
-}
-
-#title {
-    color: #fff;
-    background-color: #4d90fe;
-    font-size: 25px;
-    font-weight: 500;
-    padding: 6px 12px;
-}
-#target {
-    width: 345px;
-}
-.controls {
-
-}
-.scroll-wrapper {
-    border-bottom-style: solid;
-    border-bottom-width: 1px;
+.rec-section-header {
+    font-style: italic;
+    font-size: 14pt;
+    padding-left: 15px;
+    float: left;
+    width: 85%;
+    height: 32px;
 }
 .filter-bar {
     font-size: 18pt;
-    padding-right: 15px;
+    padding-right: 10px;
     float: right;
+    width: 15%;
+    height: 32px;
+}
+.search-input {
+    width: 100%;
+    border: none;
+    padding-left: 10px;
+    border-radius: 6px;
+    background: #f1f1f1;
 }
 .fa-filter:hover {
     color: #58D68D;
@@ -179,23 +134,20 @@ html, body {
 .price-filter {
     height: 100%;
     width: 25%;
-    padding-left: 10px;
+    padding-left: 6px;
 }
 .rating-filter {
     height: 100%;
     padding-left: 0px;
-    width: 33%;
+    width: 35%;
 }
 .type-filter {
     height: 100%;
-    width: 42%;
+    width: 40%;
+    padding-right: 6px;
 }
 .type-list {
     width: 70%;
-}
-.filter-headers {
-    list-style: none;
-    padding-left: 0px;
 }
 
 .rating-filter-label {
@@ -219,22 +171,18 @@ html, body {
     display: inline-block;
     content: "\f005";
 }
-
 .rating .half:before { 
     content: "\f089";
     position: absolute;
 }
-
 /***** CSS Magic to Highlight Stars on Hover *****/
 .rating > input:checked ~ label, /* show gold star when clicked */
 .rating:not(:checked) > label:hover, /* hover current star */
 .rating:not(:checked) > label:hover ~ label { color: #FFD700;  } /* hover previous stars in list */
-
 .rating > input:checked + label:hover, /* hover current star when changing rating */
 .rating > input:checked ~ label:hover,
 .rating > label:hover ~ input:checked ~ label, /* lighten current selection */
 .rating > input:checked ~ label:hover ~ label { color: #FFED85;  }
-
 .price-filter-label {
     float: left;
 }
@@ -256,25 +204,66 @@ html, body {
     display: inline-block;
     content: "\f155";
 }
-
 /***** CSS Magic to Highlight Dollar Signs on Hover *****/
 .price > input:checked ~ label, /* show dollar sign when clicked */
 .price:not(:checked) > label:hover, /* hover current dollar sign */
 .price:not(:checked) > label:hover ~ label { color: greenyellow;  } /* hover previous dollar sign in list */
-
 .price > input:checked + label:hover, /* hover current dollar sign when changing rating */
 .price > input:checked ~ label:hover,
 .price > label:hover ~ input:checked ~ label, /* lighten current selection */
 .price > input:checked ~ label:hover ~ label { color: green;  }
 
-.loc-info {
+.follow-icon {
+    float: right;
+    margin-top: 6px;
+}
+.follow-header {
+    float: left;
     display: block;
 }
-.marker-comment {
-    display: block;
+.follow-container {
+    height: 38px;
 }
-.search-input {
+.button-follow {
+    border-radius: 8px;
+    background-color: #4CAF50;
+    border-style: solid;
+    border-color: black;
+    border-width: 1px;
+    width: 75px;
+}
+.button-follow:hover:before {
+    content: attr(data-hover);
+}
+.button-follow:hover span {
+    display: none;
+}
+.button-follow:hover {
+    background-color: #f44336;
+    color: white;
+}
+.new-follow {
+    border-radius: 8px;
+    background-color: white;
+    border-style: solid;
+    border-color: #4d90fe;
+    border-width: 1px;
+    width: 75px;
+}
+.new-follow:hover {
+    background-color: #4d90fe;
+    color: white;
+}
+.message-button {
+    float:right;
+}
+.send-message {
+    background-color: #ffffff;
+    border-style: none;
+    color: #4d90fe;
+}
+#message-comment {
     width: 100%;
-    border: none;
-    padding-left: 10px;
+    resize: vertical;
+    padding: 2px;
 }
