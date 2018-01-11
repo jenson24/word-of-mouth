@@ -84,7 +84,7 @@ html, body {
     display: block;
 }
 .profile-follow-content {
-    padding-left: 15px;
+    padding-left: 12px;
     font-size: 11pt;
 }
 .rec-section-header {
@@ -257,13 +257,32 @@ html, body {
 .message-button {
     float:right;
 }
-.send-message {
+/*.send-message {
     background-color: #ffffff;
     border-style: none;
     color: #4d90fe;
-}
+}*/
 #message-comment {
     width: 100%;
     resize: vertical;
     padding: 2px;
+}
+/*.list-button {
+    float:right;
+    padding-right: 5px;
+}*/
+.rec-tools-container {
+    width: 8%;
+    float: right;
+}
+.tool-container {
+    align-content: center;
+    height: 100%;
+    border: none;
+    background-color: white;
+}
+.rec-tool-icons {
+    background-color: #ffffff;
+    border-style: none;
+    color: #4d90fe;
 }

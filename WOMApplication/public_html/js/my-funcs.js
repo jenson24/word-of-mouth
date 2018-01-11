@@ -94,12 +94,14 @@ function getProfileHTML(uid) {
     var first_name = profile_info["first_name"];
     var last_name = profile_info["last_name"];
     var rec_count = profile_info["recommendations"].toString();
+    var list_count = profile_info["lists"].toString();
     profile_html = '';
     profile_html += "<div class=\"profile-header\">";
     profile_html += "<span class=\"full-name\">"+first_name+" "+last_name+"</span>";
     profile_html += "<span class=\"profile-follow-content\">Following: </span><a href=\"#\" onclick=\"showFollowing("+uid.toString()+")\">"+following_count+"</a>";
     profile_html += "<span class=\"profile-follow-content\">Followers: </span><a href=\"#\" onclick=\"showFollowers("+uid.toString()+")\">"+followers_count+"</a>";
-    profile_html += "<span class=\"profile-follow-content\">Recommendations: </span><a href=\"#\" onclick=\"setRecommendations('local','new','new')\">"+rec_count.toString()+"</a></div>";
+    profile_html += "<span class=\"profile-follow-content\">Recommendations: </span><a href=\"#\" onclick=\"setRecommendations('local','new','new')\">"+rec_count.toString()+"</a>";
+    profile_html += "<span class=\"profile-follow-content\">Lists: </span><a href=\"#\" onclick=\"showLists("+uid.toString()+")\">"+list_count.toString()+"</a></div>";
     return profile_html;
 }
 
@@ -156,11 +158,19 @@ function getCardHtml(recObj,i) {
     card_html += "<div class=\"rec-item\">";
     card_html += "<div class=\"stream-item-context\">";
     card_html += "<div class=\"stream-item-header\">";
-    card_html += "<span class=\"UserName\"><strong class=\"userName\">"+recObj["username"]+"</strong></span>";
+    card_html += "<a href=\"#\" onclick=\"changeUser("+recObj["user_id"].toString()+")\">"+recObj["username"]+"</a>";
     card_html += "<div class=\"stream-item-container\">";
-    card_html += "<div class=\"message-button\"><button class=\"fa fa-envelope send-message\" data-toggle=\"modal\" data-target=\"#myModal\" onClick=\"composeMessage("+user_id.toString()+","+recObj["user_id"]+",'"+recObj["username"]+"',"+recObj["r_id"]+")\"></button></div>";
     card_html += "<span class=\"rec-name\"><strong class=\"recName\">"+recObj["r_name"]+"</strong></span>";
     card_html += "<span class=\"rec-comment\">"+recObj["r_comment"]+"</span>";
+    if ( recObj["r_lists"] ) {
+        lists = recObj["r_lists"].split(',');
+        for (i = 0; i < lists.length; i++) {
+            card_html += "<a href=\"#\" onclick=\"loadRecList("+lists[i].toString()+")\">"+lists[i].toString()+"</a>";
+            if (i < lists.length - 1) {
+                card_html += "<span>, </span>";
+            }
+        }
+    }
     card_html += "<span class=\"rec-date\" style=\"float:right\">"+recObj["r_date"].slice(0,recObj["r_date"].indexOf(" "))+"</span>";
     card_html += "</div>";
     card_html += "</div>";
@@ -187,6 +197,19 @@ function getCardHtml(recObj,i) {
     card_html += "</div>";
     card_html += "</div>";
     card_html += "</div>";
+    if (recObj["user_id"] === user_id) {
+        card_html += "<div class=\"rec-tools-container\">";
+        card_html += "<button class=\"fa fa-wrench tool-container\" data-toggle=\"collapse\" data-target=\"#rec-tools-collapse-"+i.toString()+"\"></button>";
+        card_html += "<div id=\"rec-tools-collapse-"+i.toString()+"\" class=\"collapse\">";
+        card_html += "<div class=\"edit-rec-button\"><button title=\"Edit Recommendation\" class=\"fa fa-pencil-square-o rec-tool-icons\" data-toggle=\"modal\" data-target=\"#myModal\" onClick=\"editRecommendation("+recObj["r_id"]+")\"></button></div>";
+        card_html += "<div class=\"delete-rec-button\"><button title=\"Delete Recommendation\" class=\"fa fa-trash-o rec-tool-icons\" data-toggle=\"modal\" data-target=\"#myModal\" onClick=\"deleteRecommendation("+recObj["r_id"]+")\"></button></div>";
+        //if ( !recObj["r_lists"] ) {
+        card_html += "<div class=\"list-button\"><button title=\"Add to List\" class=\"fa fa-list rec-tool-icons\" data-toggle=\"modal\" data-target=\"#myModal\" onClick=\"addRecToUserList("+recObj["user_id"]+","+recObj["r_id"]+")\"></button></div>";
+        //}
+        card_html += "</div></div>";
+    } else {
+        card_html += "<div class=\"message-button\"><button title=\"Send Message\" class=\"fa fa-envelope rec-tool-icons\" data-toggle=\"modal\" data-target=\"#myModal\" onClick=\"composeMessage("+user_id.toString()+","+recObj["user_id"]+",'"+recObj["username"]+"',"+recObj["r_id"]+")\"></button></div>";    
+    }
     card_html += "</div>";
     card_html += "</li>";
     return card_html;
@@ -747,6 +770,80 @@ function showFollowers(uid) {
     $('#scroll').empty();
     $('#scroll').append(html_start+html_body+html_end);    
 }
+function showLists(uid) {
+    temp_lists = get_lists(uid);
+    list_info = temp_lists["responseJSON"];
+    var lists = list_info["lists"];
+    html_start = "<div class=\"list-container\"><ol class=\"list-items\">";
+    html_body = "";
+    for (var i = 0; i < lists.length; i++) {
+        html_body += getListHtml(lists[i],i);
+    }
+    html_end = "</ol></div>";
+    $('.rec-section-header').empty();
+    $('.rec-section-header').append("<span>Recommendation Lists...</span>");
+    $('.filter-bar').empty();
+    $('#scroll').empty();
+    $('#scroll').append(html_start+html_body+html_end);    
+}
+function get_lists(user_id) {
+    post_data = {
+        uid: user_id
+    };
+    return $.ajax({
+        url: 'http://localhost:8080/getLists',
+        type: 'POST',
+        data: JSON.stringify(post_data),
+        dataType: 'json',
+        success: function(list_data) {
+            console.log(list_data);
+            //return following_data;
+            $.notify("Found lists", {className: "success", position: "bottom center"});
+        },
+        error: function(jqXHR, exception) {
+            errorHandling(jqXHR, exception);
+        },
+        async: false
+    });
+};
+function getListHtml(list,i) {
+    card_html = "";
+    card_html += "<li class=\"js-stream-item\" id=\"list-item-"+i.toString()+"\"><div class=\"list-container\">";
+    card_html += "<div class=\"list-header\">";
+    card_html += "<a href=\"#\" onclick=\"loadList("+list["list_id"].toString()+","+i.toString()+")\">"+list["list_name"]+"</a></div>";
+    card_html += "<span class=\"ListDesc\">"+list["list_description"]+"</span>";
+    card_html += "</div></li>";
+    return card_html;
+}
+function loadList(list_id,i) {
+    recs = get_recs_for_list(list_id);
+    getMarkerInfo(recs,"new");
+    html_body = "";
+    for (var i = 0; i < recs.length; i++) {
+        html_body += getCardHtml(recs[i],i);
+    }
+    
+    $('#list-item-'+i.toString()).after(html_body);
+}
+function get_recs_for_list(list_id) {
+    post_data = {
+        list_id: list_id
+    };
+    return $.ajax({
+        url: 'http://localhost:8080/getListRecs',
+        type: 'POST',
+        data: JSON.stringify(post_data),
+        dataType: 'json',
+        success: function(list_recs) {
+            console.log(list_recs);
+            $.notify("Found list recommendations", {className: "success", position: "bottom center"});
+        },
+        error: function(jqXHR, exception) {
+            errorHandling(jqXHR, exception);
+        },
+        async: false
+    });
+}
 function getFollowHtml(follow,i) {
     card_html = "";
     card_html += "<li class=\"js-stream-item\"><div class=\"follow-container\">";
@@ -880,4 +977,23 @@ function getMessages() {
         },
         async: false
     });
+}
+function addRecToUserList(uid,r_id) {
+    $('.temp-modal-title').empty();
+    $("<h3 class=\"modal-title fa fa-list\" id=\"modal-title\"></h3>").appendTo(".temp-modal-title");
+    $('.modal-title').append("   ");
+    $('.modal-title').append("Add Recommendation to List");
+    $('#modal-body').empty();
+    modal_body = "<form <select name=\"list-select\" class=\"list-select\">";
+    temp_lists = get_lists(uid);
+    list_info = temp_lists["responseJSON"];
+    var lists = list_info["lists"];
+    for (var i = 0; i < lists.length; i++) {
+        modal_body += "<option value=\""+lists[i]['list_name']+"\">"+lists[i]['list_name']+"</option>";
+    }
+    modal_body += "</select><br><br><input type=\"submit\"></form>";
+    $('.modal-footer').empty();
+    $('.modal-footer').append("<button type=\"button\" class=\"btn btn-cancel\" data-dismiss=\"modal\">Cancel</button>")
+    $('.modal-footer').append("<button type=\"button\" class=\"btn btn-send\" data-dismiss=\"modal\" onClick=\"addToList("+r_id+")\">Send</button>")
+    
 }

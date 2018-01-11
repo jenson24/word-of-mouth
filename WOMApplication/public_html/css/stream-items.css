@@ -30,7 +30,7 @@ and open the template in the editor.
     list-style-position: inside;
 }
 .rec-item {
-    
+    overflow: hidden;
 }
 .rec-name {
     
@@ -39,13 +39,17 @@ and open the template in the editor.
     font-size: 11pt;
 }
 .stream-item-context {
-    
+    width: 92%;
+    float: left;
 }
 .stream-item-container {
     margin-top: 6px;
 }
 .stream-item-header {
-    
+
+}
+.stream-item-footer {
+
 }
 .UserName {
     font-size:  11pt;
