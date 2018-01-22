@@ -286,3 +286,7 @@ html, body {
     border-style: none;
     color: #4d90fe;
 }
+.list-inputs {
+    width: 100%;
+    margin-bottom: 10px;
+}

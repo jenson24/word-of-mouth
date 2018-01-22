@@ -18,6 +18,7 @@ var page_size = 10;
 var marker_list = {};
 var search_rec_results = [];
 var profile_info = {};
+var list_info = {};
     
 window.onload = function(){
     user_id = getCookie('user_id');
@@ -162,36 +163,38 @@ function getCardHtml(recObj,i) {
     card_html += "<div class=\"stream-item-container\">";
     card_html += "<span class=\"rec-name\"><strong class=\"recName\">"+recObj["r_name"]+"</strong></span>";
     card_html += "<span class=\"rec-comment\">"+recObj["r_comment"]+"</span>";
-    if ( recObj["r_lists"] ) {
-        lists = recObj["r_lists"].split(',');
-        for (i = 0; i < lists.length; i++) {
-            card_html += "<a href=\"#\" onclick=\"loadRecList("+lists[i].toString()+")\">"+lists[i].toString()+"</a>";
-            if (i < lists.length - 1) {
+    card_html += "<div class=\"rec-lists\">";
+    if (recObj["r_lists"].length > 0) {
+        list_ids = recObj["r_lists"];
+        list_names = recObj["r_list_names"];
+        for (i = 0; i < list_ids.length; i++) {
+            card_html += "<a href=\"#\" onclick=\"loadRecList("+list_ids[i].toString()+")\">#"+list_names[i]+"</a>";
+            if (i < list_ids.length - 1) {
                 card_html += "<span>, </span>";
             }
         }
     }
+    card_html += "</div>";
     card_html += "<span class=\"rec-date\" style=\"float:right\">"+recObj["r_date"].slice(0,recObj["r_date"].indexOf(" "))+"</span>";
     card_html += "</div>";
     card_html += "</div>";
     card_html += "<div class=\"stream-item-footer\">";
     card_html += "<button class=\"fa fa-angle-down\" data-toggle=\"collapse\" data-target=\"#stream-item-collapse-"+i.toString()+"\"></button>";
     card_html += "<div id=\"stream-item-collapse-"+i.toString()+"\" class=\"collapse\">";
-    if ( recObj["r_price"] ) {
+    if (recObj["r_price"]) {
         price_string = "";
         for (i = 0; i < recObj["r_price"]; i++) {
             price_string += "$";
         }
         card_html += "<span class=\"rec-footer-content\">Price: "+price_string+"</span>";
     } 
-    if ( recObj["r_google_rating"] ) {
+    if (recObj["r_google_rating"]) {
         card_html += "<span class=\"rec-footer-content\">Google Rating: "+recObj["r_google_rating"]+"</span>";
     }
     if (recObj["r_google_type"] ) {
         card_html += "<span class=\"rec-footer-content\">Type: "+recObj["r_google_type"].replace(/_/g," ")+"</span>";
     }
     if ( recObj["r_website"] ) {
-        //card_html += "<span class=\"rec-footer-content\">Website: "+recObj["r_website"]+"</span>";
         card_html += "<span>Website: </span><a href=\""+recObj["r_website"]+"\" class=\"website-footer-content\">"+recObj["r_website"]+"</a>";
     }
     card_html += "</div>";
@@ -201,8 +204,8 @@ function getCardHtml(recObj,i) {
         card_html += "<div class=\"rec-tools-container\">";
         card_html += "<button class=\"fa fa-wrench tool-container\" data-toggle=\"collapse\" data-target=\"#rec-tools-collapse-"+i.toString()+"\"></button>";
         card_html += "<div id=\"rec-tools-collapse-"+i.toString()+"\" class=\"collapse\">";
-        card_html += "<div class=\"edit-rec-button\"><button title=\"Edit Recommendation\" class=\"fa fa-pencil-square-o rec-tool-icons\" data-toggle=\"modal\" data-target=\"#myModal\" onClick=\"editRecommendation("+recObj["r_id"]+")\"></button></div>";
-        card_html += "<div class=\"delete-rec-button\"><button title=\"Delete Recommendation\" class=\"fa fa-trash-o rec-tool-icons\" data-toggle=\"modal\" data-target=\"#myModal\" onClick=\"deleteRecommendation("+recObj["r_id"]+")\"></button></div>";
+        card_html += "<div class=\"edit-rec-button\"><button title=\"Edit Recommendation\" class=\"fa fa-pencil-square-o rec-tool-icons\" data-toggle=\"modal\" data-target=\"#myModal\" onClick=\"editRecommendationController('"+recObj["r_id"]+"', '"+recObj["r_comment"].replace(/'/g, "\\'")+"', '"+recObj["r_name"]+"', '"+recObj["r_type"]+"')\"></button></div>";
+        card_html += "<div class=\"delete-rec-button\"><button title=\"Delete Recommendation\" class=\"fa fa-trash-o rec-tool-icons\" data-toggle=\"modal\" data-target=\"#myModal\" onClick=\"deleteRecommendationController('"+recObj["r_id"]+"', '"+recObj["r_comment"].replace(/'/g, "\\'")+"', '"+recObj["r_name"]+"', '"+recObj["r_type"]+"')\"></button></div>";
         //if ( !recObj["r_lists"] ) {
         card_html += "<div class=\"list-button\"><button title=\"Add to List\" class=\"fa fa-list rec-tool-icons\" data-toggle=\"modal\" data-target=\"#myModal\" onClick=\"addRecToUserList("+recObj["user_id"]+","+recObj["r_id"]+")\"></button></div>";
         //}
@@ -356,7 +359,7 @@ function getProfile(uid) {
         data: JSON.stringify(post_data),
         dataType: 'json',
         success: function(profile_data) {
-            console.log(profile_data);
+            //console.log(profile_data);
             $.notify("Found profile", {className: "success", position: "bottom center"});
         },
         error: function(jqXHR, exception) {
@@ -377,8 +380,7 @@ function get_following(user_id,page) {
         data: JSON.stringify(post_data),
         dataType: 'json',
         success: function(following_data) {
-            console.log(following_data);
-            //return following_data;
+            //console.log(following_data);
             $.notify("Found following", {className: "success", position: "bottom center"});
         },
         error: function(jqXHR, exception) {
@@ -399,8 +401,7 @@ function get_followers(user_id,page) {
         data: JSON.stringify(post_data),
         dataType: 'json',
         success: function(follower_data) {
-            console.log(follower_data);
-            //return follower_data;
+            //console.log(follower_data);
             $.notify("Found following", {className: "success", position: "bottom center"});
         },
         error: function(jqXHR, exception) {
@@ -706,7 +707,7 @@ function searchRecs(term,page) {
     });
 }
 function searchController(term) {
-   console.log(term);
+    //console.log(term);
     if (term.length > 3) {
         search_rec_results = [];
         $('#scroll').empty();
@@ -742,7 +743,7 @@ function showFollowing(uid) {
     var following = following_info["following"];
     html_start = "<div class=\"list-container\"><ol class=\"follow-items\">";
     html_body = "";
-    console.log(following);
+    //console.log(following);
     for (var i = 0; i < following.length; i++) {
         following[i]["following"] = true;
         html_body += getFollowHtml(following[i],i);
@@ -772,8 +773,8 @@ function showFollowers(uid) {
 }
 function showLists(uid) {
     temp_lists = get_lists(uid);
-    list_info = temp_lists["responseJSON"];
-    var lists = list_info["lists"];
+    list_data = temp_lists["responseJSON"];
+    var lists = list_data["lists"];
     html_start = "<div class=\"list-container\"><ol class=\"list-items\">";
     html_body = "";
     for (var i = 0; i < lists.length; i++) {
@@ -796,8 +797,7 @@ function get_lists(user_id) {
         data: JSON.stringify(post_data),
         dataType: 'json',
         success: function(list_data) {
-            console.log(list_data);
-            //return following_data;
+            //console.log(list_data);
             $.notify("Found lists", {className: "success", position: "bottom center"});
         },
         error: function(jqXHR, exception) {
@@ -835,7 +835,7 @@ function get_recs_for_list(list_id) {
         data: JSON.stringify(post_data),
         dataType: 'json',
         success: function(list_recs) {
-            console.log(list_recs);
+            //console.log(list_recs);
             $.notify("Found list recommendations", {className: "success", position: "bottom center"});
         },
         error: function(jqXHR, exception) {
@@ -867,14 +867,14 @@ function changeUser(uid) {
     setRecommendations('local','new','new');
 }
 function unfollow(from_user,to_user,i) {
-    console.log("Unfollow from user "+from_user.toString()+" to user "+to_user.toString());
+    //console.log("Unfollow from user "+from_user.toString()+" to user "+to_user.toString());
     $('#follow-item-'+i+' span').text("Follow");
     $('#follow-item-'+i).attr('onClick', "follow("+from_user.toString()+","+to_user.toString()+","+i.toString()+")");
     $('#follow-item-'+i).toggleClass('button-follow new-follow');
     manageFollowers(from_user,to_user,'unfollow');
 }
 function follow(from_user,to_user,i) {
-    console.log("Follow from user "+from_user.toString()+" to user "+to_user.toString());
+    //console.log("Follow from user "+from_user.toString()+" to user "+to_user.toString());
     $('#follow-item-'+i+' span').text("Following");
     $('#follow-item-'+i).attr('data-hover', 'Unfollow');
     $('#follow-item-'+i).attr('onClick', "unfollow("+from_user.toString()+","+to_user.toString()+","+i.toString()+")");
@@ -893,7 +893,7 @@ function manageFollowers(from_user,to_user,follow_type) {
         data: JSON.stringify(post_data),
         dataType: 'text',
         success: function(result) {
-            console.log(result);
+            //console.log(result);
         },
         error: function(jqXHR, exception) {
             errorHandling(jqXHR, exception);
@@ -920,7 +920,7 @@ function errorHandling(jqXHR, exception) {
     }
 }
 function composeMessage(from_user,to_user,to_username,r_id) {
-    console.log("From "+from_user+" to "+to_user);
+    //console.log("From "+from_user+" to "+to_user);
     $('.temp-modal-title').empty();
     $("<h3 class=\"modal-title fa fa-envelope\" id=\"modal-title\"></h3>").appendTo(".temp-modal-title");
     $('.modal-title').append("   ");
@@ -968,7 +968,7 @@ function getMessages() {
         data: JSON.stringify(post_data),
         dataType: 'json',
         success: function(messages) {
-            console.log(messages);
+            //console.log(messages);
             
             $.notify("Found Messages", {className: "success", position: "bottom center"});
         },
@@ -979,21 +979,163 @@ function getMessages() {
     });
 }
 function addRecToUserList(uid,r_id) {
+    temp_lists = get_lists(uid);
+    list_data = temp_lists["responseJSON"];
+    var lists = list_data["lists"];
+
     $('.temp-modal-title').empty();
     $("<h3 class=\"modal-title fa fa-list\" id=\"modal-title\"></h3>").appendTo(".temp-modal-title");
     $('.modal-title').append("   ");
     $('.modal-title').append("Add Recommendation to List");
     $('#modal-body').empty();
-    modal_body = "<form <select name=\"list-select\" class=\"list-select\">";
-    temp_lists = get_lists(uid);
-    list_info = temp_lists["responseJSON"];
-    var lists = list_info["lists"];
-    for (var i = 0; i < lists.length; i++) {
-        modal_body += "<option value=\""+lists[i]['list_name']+"\">"+lists[i]['list_name']+"</option>";
-    }
-    modal_body += "</select><br><br><input type=\"submit\"></form>";
-    $('.modal-footer').empty();
-    $('.modal-footer').append("<button type=\"button\" class=\"btn btn-cancel\" data-dismiss=\"modal\">Cancel</button>")
-    $('.modal-footer').append("<button type=\"button\" class=\"btn btn-send\" data-dismiss=\"modal\" onClick=\"addToList("+r_id+")\">Send</button>")
     
+    if (lists.length > 0) {
+        $('#modal-body').append("<div>Select a list for the recommendation to be added to...</div>");
+        $('#modal-body').append("<input id=\"user-list-select\" class=\"list-select list-inputs\" type=\"text\" list=\"userLists\" placeholder=\"Select from your created lists...\">");
+        $('#modal-body').append("<datalist id=\"userLists\"></datalist>");
+        for (var i = 0; i < lists.length; i++) {
+            var listElement = document.getElementById('userLists');
+            var option = document.createElement('option');
+            option.value = lists[i]['list_name'];
+            listElement.appendChild(option);
+        }
+        $('#user-list-select').on('change', function () {
+            document.getElementById('addRecToListBtn').disabled=false;
+        });
+
+        $('.modal-footer').empty();
+        $('.modal-footer').append("<button type=\"button\" class=\"btn btn-cancel\" data-dismiss=\"modal\">Cancel</button>");
+        $('.modal-footer').append("<button type=\"button\" class=\"btn btn-save\" id=\"addRecToListBtn\" data-dismiss=\"modal\" disabled=\"true\" onclick=\"addRecToListController("+r_id+")\">Save</button>");
+    } else {
+        $('#modal-body').append("You haven't created any lists yet. Would you like to create one?");
+        $('.modal-footer').empty();
+        $('.modal-footer').append("<button type=\"button\" class=\"btn btn-cancel\" data-dismiss=\"modal\">Cancel</button>");
+        $('.modal-footer').append("<button type=\"button\" class=\"btn btn-create\" data-dismiss=\"modal\" data-target=\"#myModal\" onClick=\"openNewListModal("+r_id+")\">Create New List</button>");
+    }
+}
+function addRecToListController(r_id) {
+    temp_lists = get_lists(user_id);
+    list_data = temp_lists["responseJSON"];
+    var lists = list_data["lists"];
+
+    var list_name = document.getElementById('user-list-select').value;
+    for (var i = 0; i < lists.length; i++) {
+        if (lists[i]['list_name'] === list_name) {
+            list_id = lists[i]['list_id'];
+        }
+    }
+    editRecommendation(r_id,[list_id,list_name],'list');    
+}
+
+function openNewListModal(r_id) {
+    $('.temp-modal-title').empty();
+    $("<h3 class=\"modal-title fa fa-list\" id=\"modal-title\"></h3>").appendTo(".temp-modal-title");
+    $('.modal-title').append("   ");
+    $('.modal-title').append("Create New List");
+    $('#modal-body').empty();
+    $('#modal-body').append("<div>Provide a Name for the New List</div>");
+    $('#modal-body').append("<div><input type=\"text\" placeholder=\"New List...\" id=\"list-name\" class=\"list-inputs\"></div>");
+    $('#modal-body').append("<div>Provide a Description for the New List</div>");
+    $('#modal-body').append("<textarea rows=\"3\" placeholder=\"Description...\" id=\"list-description\" class=\"list-inputs\">");
+    $('#modal-body').append("<div>Input a Location Associated with this List</div>");
+    $('#modal-body').append("<input id=\"list-geo\" class=\"list-geo list-inputs\" type=\"text\" list=\"predictionList\" placeholder=\"Enter a Location (City, State or ZIP)\">");
+    $('#modal-body').append("<datalist id=\"predictionList\"></datalist>");
+
+    $('#list-geo').on('keyup', function() {
+        if (this.value.length > 1) {
+            $('#predictionList').find('option').remove();
+            var displaySuggestions = function(predictions, status) {
+                if (status != google.maps.places.PlacesServiceStatus.OK) {
+                    alert(status);
+                    return;
+                }
+
+                predictions.forEach(function(prediction) {
+                    var listInput = document.getElementById('predictionList');
+                    var option = document.createElement('option');
+                    option.value = prediction.description;
+                    listInput.appendChild(option);
+                });
+            };
+
+            var service = new google.maps.places.AutocompleteService();
+            service.getPlacePredictions({input:this.value}, displaySuggestions);
+            this.focus();
+        }
+    });
+    var vals;
+    $('#list-geo').on('change', function () {
+        verifyListConditions('geo');
+    });
+    $('#list-name').on('keyup', function() {
+        verifyListConditions('name');
+    });
+    $('#list-description').on('keyup', function() {
+        verifyListConditions('desc');
+    });
+    $('.modal-footer').empty();
+    $('.modal-footer').append("<button type=\"button\" class=\"btn btn-cancel\" data-dismiss=\"modal\">Cancel</button>");
+    $('.modal-footer').append("<button type=\"button\" class=\"btn btn-save\" id=\"save-list\" data-dismiss=\"modal\" disabled=\"true\">Save</button>");    
+
+    document.getElementById("save-list").addEventListener("click", function() {
+        verifyListConditions('all');
+        if (list_info['status'] === 'OK') {
+            //console.log(list_info);
+            createNewList(list_info['list_name'],list_info['list_description'],list_info['list_location'],list_info['lat'],list_info['lon'],list_info['place_id'],r_id);
+        }
+    });
+
+}
+function verifyListConditions(input) {
+    var list_name = document.getElementById('list-name').value;
+    var list_description = document.getElementById('list-description').value;
+    var list_location = document.getElementById('list-geo').value;
+    list_info['list_name'] = list_name;
+    list_info['list_description'] = list_description;
+    list_info['list_location'] = list_location;
+    if ((list_name.length > 0 && list_description.length > 0 && list_location.length > 0) || (list_name.length > 0 && list_description.length > 0 && input === 'geo')) {
+        geocoder = new google.maps.Geocoder();
+        geocoder.geocode( { 'address': list_location}, function(results, status) {
+            if (status === 'OK') {
+                list_info['lat'] = results[0].geometry.location.lat();
+                list_info['lon'] = results[0].geometry.location.lng();
+                list_info['place_id'] = results[0].place_id;
+                list_info['status'] = status;
+                document.getElementById('save-list').disabled=false;
+            } else {
+                list_info['status'] = 'check';
+            }
+        });
+    } else {
+        document.getElementById('save-list').disabled=true;
+        list_info['status'] = 'check';
+    }
+}
+function createNewList(list_name,list_description,list_location,lat,lon,place_id,r_id) {
+    post_data = {
+        list_name: list_name,
+        list_description: list_description,
+        list_location: list_location,
+        lat: lat,
+        lon: lon,
+        google_place_id: place_id,
+        user_id: user_id
+    };
+    $.ajax({
+        url: 'http://localhost:8080/createList',
+        type: 'POST',
+        data: JSON.stringify(post_data),
+        dataType: 'json',
+        success: function(list_id) {
+            //console.log("New list ID is "+list_id);
+            $.notify("Created List", {className: "success", position: "bottom center"});
+            if (r_id) {
+                editRecommendation(r_id, [list_id,list_name], 'list')
+            }
+        },
+        error: function(jqXHR, exception) {
+            errorHandling(jqXHR, exception);
+        },
+        async: false
+    });
 }
