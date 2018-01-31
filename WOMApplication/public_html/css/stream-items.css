@@ -14,9 +14,6 @@ and open the template in the editor.
     overflow: auto;
     width: 100%;
 }
-.list-container {
-
-}
 .stream-items {
     overflow: auto;
 }
@@ -26,14 +23,13 @@ and open the template in the editor.
     border-width: 1px;
     width: 100%;
     padding: 12px;
+    padding-right: 4px;
     margin-left: 0px;
     list-style-position: inside;
+    overflow: hidden;
 }
 .rec-item {
     overflow: hidden;
-}
-.rec-name {
-    
 }
 .rec-date {
     font-size: 11pt;

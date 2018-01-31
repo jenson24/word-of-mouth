@@ -16,6 +16,8 @@
     <script src="js/my-funcs.js"></script>
     <script src="js/google-funcs.js"></script>
     <script src="js/modify-recs-controller.js"></script>
+    <script src="js/list-controller.js"></script>
+    <script src="js/message-controller.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.4/angular.min.js"></script>
     <script src="https://npmcdn.com/tether@1.2.4/dist/js/tether.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
@@ -32,7 +34,7 @@
                 <div class="icon-bar">
                     <a href="#" class="icon-select global"><i class="fa fa-globe" onClick="setRecommendations('global','new','new')"></i></a>
                     <a href="#" class="icon-select"><i class="fa fa-search" onClick="enableSearch()"></i></a> 
-                    <a href="#" class="icon-select"><i class="fa fa-envelope" onClick="getMessages()"></i></a> 
+                    <a href="#" class="icon-select"><i class="fa fa-envelope" onClick="messageController()"></i></a> 
                     <a href="#" class="icon-select local"><i class="fa fa-user" onClick="loadDefaultProfile()"></i></a>
                 </div>
             </div>

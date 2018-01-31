@@ -10,8 +10,10 @@ var username = '';
 var recommendations = {};
 var fetched_all_recommendations = [];
 var fetched_my_recommendations = [];
+var fetched_messages = [];
 var active_menu = 'global';
 var markers = [];
+var list_markers = [];
 var infos = [];
 var typeSelection = '';
 var page_size = 10;
@@ -19,6 +21,11 @@ var marker_list = {};
 var search_rec_results = [];
 var profile_info = {};
 var list_info = {};
+var active_user_lists = {};
+var term_matches = [];
+var user_matches = [];
+var list_matches = [];
+var active_tab = 'terms';
     
 window.onload = function(){
     user_id = getCookie('user_id');
@@ -64,7 +71,7 @@ function setRecommendations(rec_type, temp_obj, marker_flag) {
         $('.content-header').css("height","84px");        
         $('#scroll').css("height","calc( 100% - 92px - 32px - 52px)");            
     };
-    html_start = "<div class=\"list-container\"><ol class=\"stream-items\">";
+    html_start = "<div class=\"stream-container\"><ol class=\"stream-items\">";
     getMarkerInfo(recs,marker_flag);
     html_body = "";
     for (var i = 0; i < recs.length; i++) {
@@ -142,7 +149,7 @@ function getMarkerInfo(temp_obj,type) {
     }
 }
 
-function addRecToList(recObj) {
+function addRecToPage(recObj) {
     if (active_menu === 'local') {
         rec_num = fetched_my_recommendations.length;            
     } else {
@@ -152,7 +159,7 @@ function addRecToList(recObj) {
     $('.stream-items').prepend(card_html);
 }
 
-function getCardHtml(recObj,i) {
+function getCardHtml(recObj,ind) {
     r_date = "Just now...";
     card_html = "";
     card_html += "<li class=\"js-stream-item\">";
@@ -164,11 +171,11 @@ function getCardHtml(recObj,i) {
     card_html += "<span class=\"rec-name\"><strong class=\"recName\">"+recObj["r_name"]+"</strong></span>";
     card_html += "<span class=\"rec-comment\">"+recObj["r_comment"]+"</span>";
     card_html += "<div class=\"rec-lists\">";
-    if (recObj["r_lists"].length > 0) {
+    if (recObj["r_lists"] !== null && recObj["r_lists"].length > 0) {
         list_ids = recObj["r_lists"];
         list_names = recObj["r_list_names"];
         for (i = 0; i < list_ids.length; i++) {
-            card_html += "<a href=\"#\" onclick=\"loadRecList("+list_ids[i].toString()+")\">#"+list_names[i]+"</a>";
+            card_html += "<a href=\"#\" onclick=\"loadList("+list_ids[i].toString()+", '"+list_names[i]+"', "+recObj["user_id"]+")\">#"+list_names[i]+"</a>";
             if (i < list_ids.length - 1) {
                 card_html += "<span>, </span>";
             }
@@ -179,8 +186,8 @@ function getCardHtml(recObj,i) {
     card_html += "</div>";
     card_html += "</div>";
     card_html += "<div class=\"stream-item-footer\">";
-    card_html += "<button class=\"fa fa-angle-down\" data-toggle=\"collapse\" data-target=\"#stream-item-collapse-"+i.toString()+"\"></button>";
-    card_html += "<div id=\"stream-item-collapse-"+i.toString()+"\" class=\"collapse\">";
+    card_html += "<button class=\"fa fa-angle-down\" data-toggle=\"collapse\" data-target=\"#stream-item-collapse-"+ind.toString()+"\"></button>";
+    card_html += "<div id=\"stream-item-collapse-"+ind.toString()+"\" class=\"collapse\">";
     if (recObj["r_price"]) {
         price_string = "";
         for (i = 0; i < recObj["r_price"]; i++) {
@@ -202,8 +209,8 @@ function getCardHtml(recObj,i) {
     card_html += "</div>";
     if (recObj["user_id"] === user_id) {
         card_html += "<div class=\"rec-tools-container\">";
-        card_html += "<button class=\"fa fa-wrench tool-container\" data-toggle=\"collapse\" data-target=\"#rec-tools-collapse-"+i.toString()+"\"></button>";
-        card_html += "<div id=\"rec-tools-collapse-"+i.toString()+"\" class=\"collapse\">";
+        card_html += "<button class=\"fa fa-wrench tool-container\" data-toggle=\"collapse\" data-target=\"#rec-tools-collapse-"+ind.toString()+"\"></button>";
+        card_html += "<div id=\"rec-tools-collapse-"+ind.toString()+"\" class=\"collapse\">";
         card_html += "<div class=\"edit-rec-button\"><button title=\"Edit Recommendation\" class=\"fa fa-pencil-square-o rec-tool-icons\" data-toggle=\"modal\" data-target=\"#myModal\" onClick=\"editRecommendationController('"+recObj["r_id"]+"', '"+recObj["r_comment"].replace(/'/g, "\\'")+"', '"+recObj["r_name"]+"', '"+recObj["r_type"]+"')\"></button></div>";
         card_html += "<div class=\"delete-rec-button\"><button title=\"Delete Recommendation\" class=\"fa fa-trash-o rec-tool-icons\" data-toggle=\"modal\" data-target=\"#myModal\" onClick=\"deleteRecommendationController('"+recObj["r_id"]+"', '"+recObj["r_comment"].replace(/'/g, "\\'")+"', '"+recObj["r_name"]+"', '"+recObj["r_type"]+"')\"></button></div>";
         //if ( !recObj["r_lists"] ) {
@@ -266,6 +273,9 @@ function setMapOnAll(map) {
     for (var i = 0; i < markers.length; i++) {
         markers[i].setMap(map);
     }
+    for (var i = 0; i < list_markers.length; i++) {
+        list_markers[i].setMap(map);
+    }
 }
 // Removes the markers from the map, but keeps them in the array.
 function clearMarkers() {
@@ -275,6 +285,7 @@ function clearMarkers() {
 function deleteMarkers() {
     clearMarkers();
     markers = [];
+    list_markers = [];
 }      
 
 function getCookie(cname) {
@@ -308,7 +319,7 @@ function sendData() {
             $.notify("Successfully Added Recommendation", {className: "success", position: "bottom center"});
             if (active_menu === 'local') {
                 temp_obj = {username: username, r_comment: comment, r_name: rec_object["g_name"], r_date: "Just Added..."};
-                addRecToList(temp_obj);
+                addRecToPage(temp_obj);
             }
         },
         error: function(jqXHR, exception) {
@@ -555,8 +566,6 @@ function filter_controller(price, rating, type) {
 $(document).ready(function() {
     $('#scroll').scroll(function() {
         var div = $(this);
-        //console.log(Math.ceil(div[0].scrollHeight - div.scrollTop()));
-        //console.log(Math.ceil(div.height()));
         if (Math.ceil(div[0].scrollHeight - div.scrollTop()) <= Math.ceil(div.height())) { // If scroll to bottom, load next page
             //console.log("Reached the bottom!");
             if (active_menu === 'searchRecs') {
@@ -567,7 +576,11 @@ $(document).ready(function() {
                         searchRecs(term,next_page);
                     }
                 }
-            } else {
+            } else if (active_menu === 'messages') {
+                next_page = getPage();
+                console.log(next_page);
+                //getMessages(next_page);
+            } else if (active_menu !== 'user_list') {
                 filt = checkFilters();
                 if (filt === false) {
                     next_page = getPage();
@@ -616,7 +629,15 @@ function getPage() {
     } else if (active_menu === 'local') {
         rec_length = fetched_my_recommendations.length;
     } else if (active_menu === 'searchRecs') {
-        rec_length = search_rec_results.length;
+        if (active_tab === 'terms') {
+            rec_length = term_matches.length;
+        } else if (active_tab === 'lists') {
+            rec_length = list_matches.length;
+        } else if (active_tab === 'users') {
+            rec_length = user_matchces.length;
+        }
+    } else if (active_menu === 'messages') {
+        rec_length = fetched_messages.length;
     }
     if (rec_length % page_size !== 0) {
         page = 'None';
@@ -655,7 +676,6 @@ function removeFilters() {
 }
 function getMarkerContent(obj) {
     marker_html = "";
-    //marker_html += "<div class=\"rec-item\">";
     marker_html += "<div class=\"marker-item-context\">";
     marker_html += "<div class=\"marker-item-header\">";
     marker_html += "<span class=\"loc-info\"><strong>"+obj["name"]+"</strong></span>";
@@ -674,18 +694,34 @@ function getMarkerContent(obj) {
     return marker_html;
 }
 function enableSearch() {
+    getMarkerInfo({},'new');
+    getListMarkerInfo({});
     active_menu = 'searchRecs';
     $('.filter-content').css('display','none');
     $('#scroll').empty();
     $('.content-header').empty();
+    $('.content-header').css("height","26px");
+    $('#scroll').css("height","calc( 100% - 92px - 26px)");
     html_search = "<form autocomplete=\"on\"><input type=\"text\" placeholder=\"Search Word of Mouth...\" id=\"search-input\" class=\"search-input\" onchange=searchController($(this).val())></form>";
     $('.content-header').append(html_search);
+    tab_html = "<div class=\"tab\" id=\"search-tabs\">";
+    tab_html += "<button class=\"tablinks\" id=\"button-tab-terms\" onclick=\"searchTabController(event,'search-results-terms')\">Term Matches</button>";
+    tab_html += "<button class=\"tablinks\" id=\"button-tab-lists\" onclick=\"searchTabController(event,'search-results-lists')\">List Matches</button>";
+    tab_html += "<button class=\"tablinks\" id=\"button-tab-users\" onclick=\"searchTabController(event,'search-results-users')\">User Matches</button>";
+    tab_html += "</div>";
+    tab_html += "<div class=\"tabcontent-wrapper\">";
+    tab_html += "<div id=\"search-results-terms\" class=\"tabcontent\"></div>";
+    tab_html += "<div id=\"search-results-lists\" class=\"tabcontent\"></div>";
+    tab_html += "<div id=\"search-results-users\" class=\"tabcontent\"></div>";
+    tab_html += "</div>";
+    $('#scroll').append(tab_html);
 }
 function searchRecs(term,page) {
     post_data = {
         uid: user_id,
         term: term,
-        page: page
+        page: page,
+        type: active_tab
     };
     $.ajax({
         url: 'http://localhost:8080/search',
@@ -693,11 +729,27 @@ function searchRecs(term,page) {
         data: JSON.stringify(post_data),
         dataType: 'json',
         success: function(search_results) {
-            //console.log(search_results);
-            addSearchResultsToList(search_results);
-            for (i=0;i<search_results.length;i++) {
-                search_rec_results.push(search_results[i]);
+            term_matches = search_results['term_matches'];
+            user_matches = search_results['users'];
+            list_matches = search_results['lists'];
+            addSearchResultsToList();
+            /*var set_active = false;
+            if (term_matches.length > 0) {
+                $("#search-tabs").tabs( "select" , 0);
+                //$('#button-tab-terms').trigger("click");
+                //$('#button-tab-terms').click();
+                set_active = true;
             }
+            if (!set_active && list_matches.length > 0) {
+                $("#search-tabs").tabs( "select" , 1);
+                //$('#button-tab-lists').trigger("click");
+                set_active = true;
+            }
+            if (!set_active && user_matches.length > 0) {
+                $("#search-tabs").tabs( "select" , 2);
+                //$('#button-tab-users').trigger("click");
+                set_active = true;
+            }*/
             $.notify("Found search results", {className: "success", position: "bottom center"});
         },
         error: function(jqXHR, exception) {
@@ -707,11 +759,22 @@ function searchRecs(term,page) {
     });
 }
 function searchController(term) {
-    //console.log(term);
     if (term.length > 3) {
-        search_rec_results = [];
-        $('#scroll').empty();
-        if (search_rec_results.length === 0) {
+        $('.stream-items').empty();
+        $("#button-tab-terms").text("Term Matches");
+        $("#button-tab-lists").text("List Matches");
+        $("#button-tab-users").text("User Matches");
+        term_matches = [];
+        list_matches = [];
+        user_matches = [];
+        if (active_tab === 'terms') {
+            search_results = term_matches;
+        } else if (active_tab === 'lists') {
+            search_results = list_matches;
+        } else if (active_tab === 'users') {
+            search_results = user_matches;
+        }
+        if (search_results.length === 0) {
             searchRecs(term,1);
         } else {
             next_page = getPage();
@@ -719,29 +782,44 @@ function searchController(term) {
                 searchRecs(term,next_page);
             }
         }
-        getMarkerInfo(search_rec_results,'new');
     }
 }
-function addSearchResultsToList(search_results) {
-    html_body = "";
-    term_matches = search_results["term_matches"];
-    for (var i = 0; i < term_matches.length; i++) {
-        html_body += getCardHtml(term_matches[i],i);
+function addSearchResultsToList() {
+    html_start = "<div class=\"stream-container\"><ol class=\"stream-items\">";
+    html_term_body = "";
+    html_list_body = "";
+    html_user_body = "";
+    if (term_matches.length > 0) {
+        $('#search-results-terms').empty();
+        for (var i = 0; i < term_matches.length; i++) {
+            html_term_body += getCardHtml(term_matches[i],i);
+        }
+        $("#button-tab-terms").text("Term Matches ("+term_matches.length.toString()+")");
+        $('#search-results-terms').append(html_start+html_term_body+html_end);
     }
-    user_matches = search_results["users"];
-    for (var i = 0; i < user_matches.length; i++) {
-        html_body += getFollowHtml(user_matches[i],i);
+    if (list_matches.length > 0) {
+        $('#search-results-lists').empty();
+        for (var i = 0; i < list_matches.length; i++) {
+            html_list_body += getListHtml(list_matches[i],i,user_id);
+        }
+        $("#button-tab-lists").text("List Matches ("+list_matches.length.toString()+")");
+        $('#search-results-lists').append(html_start+html_list_body+html_end);
     }
-    //$('.stream-items').append(html_body);
-    html_start = "<div class=\"list-container\"><ol class=\"stream-items\">";
+    if (user_matches.length > 0) {
+        $('#search-results-users').empty();
+        for (var i = 0; i < user_matches.length; i++) {
+            html_user_body += getFollowHtml(user_matches[i],i);
+        }
+        $("#button-tab-users").text("User Matches ("+user_matches.length.toString()+")");
+        $('#search-results-users').append(html_start+html_user_body+html_end);
+    }
     html_end = "</ol></div>";
-    $('#scroll').append(html_start+html_body+html_end);
 }
 function showFollowing(uid) {
     temp_following = get_following(uid,1);
     following_info = temp_following["responseJSON"];
     var following = following_info["following"];
-    html_start = "<div class=\"list-container\"><ol class=\"follow-items\">";
+    html_start = "<div class=\"stream-container\"><ol class=\"follow-items\">";
     html_body = "";
     //console.log(following);
     for (var i = 0; i < following.length; i++) {
@@ -752,6 +830,7 @@ function showFollowing(uid) {
     $('.rec-section-header').empty();
     $('.rec-section-header').append("<span>Following...</span>");
     $('.filter-bar').empty();
+    $('.filter-content').css('display','none');
     $('#scroll').empty();
     $('#scroll').append(html_start+html_body+html_end);
 }
@@ -759,7 +838,7 @@ function showFollowers(uid) {
     temp_followers = get_followers(uid,1);
     followers_info = temp_followers["responseJSON"];
     var followers = followers_info["followers"];
-    html_start = "<div class=\"list-container\"><ol class=\"follow-items\">";
+    html_start = "<div class=\"stream-container\"><ol class=\"follow-items\">";
     html_body = "";
     for (var i = 0; i < followers.length; i++) {
         html_body += getFollowHtml(followers[i],i);
@@ -768,81 +847,9 @@ function showFollowers(uid) {
     $('.rec-section-header').empty();
     $('.rec-section-header').append("<span>Followers...</span>");
     $('.filter-bar').empty();
+    $('.filter-content').css('display','none');
     $('#scroll').empty();
     $('#scroll').append(html_start+html_body+html_end);    
-}
-function showLists(uid) {
-    temp_lists = get_lists(uid);
-    list_data = temp_lists["responseJSON"];
-    var lists = list_data["lists"];
-    html_start = "<div class=\"list-container\"><ol class=\"list-items\">";
-    html_body = "";
-    for (var i = 0; i < lists.length; i++) {
-        html_body += getListHtml(lists[i],i);
-    }
-    html_end = "</ol></div>";
-    $('.rec-section-header').empty();
-    $('.rec-section-header').append("<span>Recommendation Lists...</span>");
-    $('.filter-bar').empty();
-    $('#scroll').empty();
-    $('#scroll').append(html_start+html_body+html_end);    
-}
-function get_lists(user_id) {
-    post_data = {
-        uid: user_id
-    };
-    return $.ajax({
-        url: 'http://localhost:8080/getLists',
-        type: 'POST',
-        data: JSON.stringify(post_data),
-        dataType: 'json',
-        success: function(list_data) {
-            //console.log(list_data);
-            $.notify("Found lists", {className: "success", position: "bottom center"});
-        },
-        error: function(jqXHR, exception) {
-            errorHandling(jqXHR, exception);
-        },
-        async: false
-    });
-};
-function getListHtml(list,i) {
-    card_html = "";
-    card_html += "<li class=\"js-stream-item\" id=\"list-item-"+i.toString()+"\"><div class=\"list-container\">";
-    card_html += "<div class=\"list-header\">";
-    card_html += "<a href=\"#\" onclick=\"loadList("+list["list_id"].toString()+","+i.toString()+")\">"+list["list_name"]+"</a></div>";
-    card_html += "<span class=\"ListDesc\">"+list["list_description"]+"</span>";
-    card_html += "</div></li>";
-    return card_html;
-}
-function loadList(list_id,i) {
-    recs = get_recs_for_list(list_id);
-    getMarkerInfo(recs,"new");
-    html_body = "";
-    for (var i = 0; i < recs.length; i++) {
-        html_body += getCardHtml(recs[i],i);
-    }
-    
-    $('#list-item-'+i.toString()).after(html_body);
-}
-function get_recs_for_list(list_id) {
-    post_data = {
-        list_id: list_id
-    };
-    return $.ajax({
-        url: 'http://localhost:8080/getListRecs',
-        type: 'POST',
-        data: JSON.stringify(post_data),
-        dataType: 'json',
-        success: function(list_recs) {
-            //console.log(list_recs);
-            $.notify("Found list recommendations", {className: "success", position: "bottom center"});
-        },
-        error: function(jqXHR, exception) {
-            errorHandling(jqXHR, exception);
-        },
-        async: false
-    });
 }
 function getFollowHtml(follow,i) {
     card_html = "";
@@ -919,223 +926,36 @@ function errorHandling(jqXHR, exception) {
         $.notify("Error: Unknown Error" + jqXHR.responseText, {className: "error", position: "bottom center"});
     }
 }
-function composeMessage(from_user,to_user,to_username,r_id) {
-    //console.log("From "+from_user+" to "+to_user);
-    $('.temp-modal-title').empty();
-    $("<h3 class=\"modal-title fa fa-envelope\" id=\"modal-title\"></h3>").appendTo(".temp-modal-title");
-    $('.modal-title').append("   ");
-    $('.modal-title').append("Send Message");
-    $('#modal-body').empty();
-    $('#modal-body').append("Replying to "+to_username);
-    $('#modal-body').append("<textarea rows=\"4\" id=\"message-comment\" placeholder=\"Compose your message\">");
-    $('.modal-footer').empty();
-    $('.modal-footer').append("<button type=\"button\" class=\"btn btn-cancel\" data-dismiss=\"modal\">Cancel</button>")
-    $('.modal-footer').append("<button type=\"button\" class=\"btn btn-send\" data-dismiss=\"modal\" onClick=\"sendMessage("+from_user+","+to_user+","+r_id+")\">Send</button>")
-}
-function sendMessage(from_user,to_user,r_id) {
-    var comment = document.getElementById("message-comment").value;
-    storeMessage(from_user,to_user,comment,r_id);
-}
-function storeMessage(from_user,to_user,comment,r_id) {
-    post_data = {
-        from_user: from_user,
-        to_user: to_user,
-        comment: comment,
-        r_id: r_id
-    };
-    $.ajax({
-        url: 'http://localhost:8080/storeMessage',
-        type: 'POST',
-        data: JSON.stringify(post_data),
-        dataType: 'text',
-        success: function() {
-            $.notify("Sent Message", {className: "success", position: "bottom center"});
-        },
-        error: function(jqXHR, exception) {
-            errorHandling(jqXHR, exception);
-        },
-        async: false
-    });
-}
-function getMessages() {
-    post_data = {
-        to_user: user_id,
-        page: 1
-    };
-    $.ajax({
-        url: 'http://localhost:8080/getMessagesByUser',
-        type: 'POST',
-        data: JSON.stringify(post_data),
-        dataType: 'json',
-        success: function(messages) {
-            //console.log(messages);
-            
-            $.notify("Found Messages", {className: "success", position: "bottom center"});
-        },
-        error: function(jqXHR, exception) {
-            errorHandling(jqXHR, exception);
-        },
-        async: false
-    });
-}
-function addRecToUserList(uid,r_id) {
-    temp_lists = get_lists(uid);
-    list_data = temp_lists["responseJSON"];
-    var lists = list_data["lists"];
 
-    $('.temp-modal-title').empty();
-    $("<h3 class=\"modal-title fa fa-list\" id=\"modal-title\"></h3>").appendTo(".temp-modal-title");
-    $('.modal-title').append("   ");
-    $('.modal-title').append("Add Recommendation to List");
-    $('#modal-body').empty();
+function searchTabController(evt,tabName) {
+    var i, tabcontent, tablinks;
+
+    // Get all elements with class="tabcontent" and hide them
+    tabcontent = document.getElementsByClassName("tabcontent");
+    for (i = 0; i < tabcontent.length; i++) {
+        tabcontent[i].style.display = "none";
+    }
+
+    // Get all elements with class="tablinks" and remove the class "active"
+    tablinks = document.getElementsByClassName("tablinks");
+    for (i = 0; i < tablinks.length; i++) {
+        tablinks[i].className = tablinks[i].className.replace(" active", "");
+    }
+
+    // Show the current tab, and add an "active" class to the button that opened the tab
+    document.getElementById(tabName).style.display = "block";
+    evt.currentTarget.className += " active";
     
-    if (lists.length > 0) {
-        $('#modal-body').append("<div>Select a list for the recommendation to be added to...</div>");
-        $('#modal-body').append("<input id=\"user-list-select\" class=\"list-select list-inputs\" type=\"text\" list=\"userLists\" placeholder=\"Select from your created lists...\">");
-        $('#modal-body').append("<datalist id=\"userLists\"></datalist>");
-        for (var i = 0; i < lists.length; i++) {
-            var listElement = document.getElementById('userLists');
-            var option = document.createElement('option');
-            option.value = lists[i]['list_name'];
-            listElement.appendChild(option);
-        }
-        $('#user-list-select').on('change', function () {
-            document.getElementById('addRecToListBtn').disabled=false;
-        });
-
-        $('.modal-footer').empty();
-        $('.modal-footer').append("<button type=\"button\" class=\"btn btn-cancel\" data-dismiss=\"modal\">Cancel</button>");
-        $('.modal-footer').append("<button type=\"button\" class=\"btn btn-save\" id=\"addRecToListBtn\" data-dismiss=\"modal\" disabled=\"true\" onclick=\"addRecToListController("+r_id+")\">Save</button>");
-    } else {
-        $('#modal-body').append("You haven't created any lists yet. Would you like to create one?");
-        $('.modal-footer').empty();
-        $('.modal-footer').append("<button type=\"button\" class=\"btn btn-cancel\" data-dismiss=\"modal\">Cancel</button>");
-        $('.modal-footer').append("<button type=\"button\" class=\"btn btn-create\" data-dismiss=\"modal\" data-target=\"#myModal\" onClick=\"openNewListModal("+r_id+")\">Create New List</button>");
+    if (tabName === 'search-results-terms') {
+        getMarkerInfo(term_matches,'new');
+        getListMarkerInfo({});
     }
-}
-function addRecToListController(r_id) {
-    temp_lists = get_lists(user_id);
-    list_data = temp_lists["responseJSON"];
-    var lists = list_data["lists"];
-
-    var list_name = document.getElementById('user-list-select').value;
-    for (var i = 0; i < lists.length; i++) {
-        if (lists[i]['list_name'] === list_name) {
-            list_id = lists[i]['list_id'];
-        }
+    if (tabName === 'search-results-lists') {
+        getMarkerInfo({},"new");
+        getListMarkerInfo(list_matches);
     }
-    editRecommendation(r_id,[list_id,list_name],'list');    
-}
-
-function openNewListModal(r_id) {
-    $('.temp-modal-title').empty();
-    $("<h3 class=\"modal-title fa fa-list\" id=\"modal-title\"></h3>").appendTo(".temp-modal-title");
-    $('.modal-title').append("   ");
-    $('.modal-title').append("Create New List");
-    $('#modal-body').empty();
-    $('#modal-body').append("<div>Provide a Name for the New List</div>");
-    $('#modal-body').append("<div><input type=\"text\" placeholder=\"New List...\" id=\"list-name\" class=\"list-inputs\"></div>");
-    $('#modal-body').append("<div>Provide a Description for the New List</div>");
-    $('#modal-body').append("<textarea rows=\"3\" placeholder=\"Description...\" id=\"list-description\" class=\"list-inputs\">");
-    $('#modal-body').append("<div>Input a Location Associated with this List</div>");
-    $('#modal-body').append("<input id=\"list-geo\" class=\"list-geo list-inputs\" type=\"text\" list=\"predictionList\" placeholder=\"Enter a Location (City, State or ZIP)\">");
-    $('#modal-body').append("<datalist id=\"predictionList\"></datalist>");
-
-    $('#list-geo').on('keyup', function() {
-        if (this.value.length > 1) {
-            $('#predictionList').find('option').remove();
-            var displaySuggestions = function(predictions, status) {
-                if (status != google.maps.places.PlacesServiceStatus.OK) {
-                    alert(status);
-                    return;
-                }
-
-                predictions.forEach(function(prediction) {
-                    var listInput = document.getElementById('predictionList');
-                    var option = document.createElement('option');
-                    option.value = prediction.description;
-                    listInput.appendChild(option);
-                });
-            };
-
-            var service = new google.maps.places.AutocompleteService();
-            service.getPlacePredictions({input:this.value}, displaySuggestions);
-            this.focus();
-        }
-    });
-    var vals;
-    $('#list-geo').on('change', function () {
-        verifyListConditions('geo');
-    });
-    $('#list-name').on('keyup', function() {
-        verifyListConditions('name');
-    });
-    $('#list-description').on('keyup', function() {
-        verifyListConditions('desc');
-    });
-    $('.modal-footer').empty();
-    $('.modal-footer').append("<button type=\"button\" class=\"btn btn-cancel\" data-dismiss=\"modal\">Cancel</button>");
-    $('.modal-footer').append("<button type=\"button\" class=\"btn btn-save\" id=\"save-list\" data-dismiss=\"modal\" disabled=\"true\">Save</button>");    
-
-    document.getElementById("save-list").addEventListener("click", function() {
-        verifyListConditions('all');
-        if (list_info['status'] === 'OK') {
-            //console.log(list_info);
-            createNewList(list_info['list_name'],list_info['list_description'],list_info['list_location'],list_info['lat'],list_info['lon'],list_info['place_id'],r_id);
-        }
-    });
-
-}
-function verifyListConditions(input) {
-    var list_name = document.getElementById('list-name').value;
-    var list_description = document.getElementById('list-description').value;
-    var list_location = document.getElementById('list-geo').value;
-    list_info['list_name'] = list_name;
-    list_info['list_description'] = list_description;
-    list_info['list_location'] = list_location;
-    if ((list_name.length > 0 && list_description.length > 0 && list_location.length > 0) || (list_name.length > 0 && list_description.length > 0 && input === 'geo')) {
-        geocoder = new google.maps.Geocoder();
-        geocoder.geocode( { 'address': list_location}, function(results, status) {
-            if (status === 'OK') {
-                list_info['lat'] = results[0].geometry.location.lat();
-                list_info['lon'] = results[0].geometry.location.lng();
-                list_info['place_id'] = results[0].place_id;
-                list_info['status'] = status;
-                document.getElementById('save-list').disabled=false;
-            } else {
-                list_info['status'] = 'check';
-            }
-        });
-    } else {
-        document.getElementById('save-list').disabled=true;
-        list_info['status'] = 'check';
+    if (tabName === 'search-results-users') {
+        getMarkerInfo({},'new');
+        getListMarkerInfo({});
     }
-}
-function createNewList(list_name,list_description,list_location,lat,lon,place_id,r_id) {
-    post_data = {
-        list_name: list_name,
-        list_description: list_description,
-        list_location: list_location,
-        lat: lat,
-        lon: lon,
-        google_place_id: place_id,
-        user_id: user_id
-    };
-    $.ajax({
-        url: 'http://localhost:8080/createList',
-        type: 'POST',
-        data: JSON.stringify(post_data),
-        dataType: 'json',
-        success: function(list_id) {
-            //console.log("New list ID is "+list_id);
-            $.notify("Created List", {className: "success", position: "bottom center"});
-            if (r_id) {
-                editRecommendation(r_id, [list_id,list_name], 'list')
-            }
-        },
-        error: function(jqXHR, exception) {
-            errorHandling(jqXHR, exception);
-        },
-        async: false
-    });
 }

@@ -71,11 +71,12 @@ function updateRecHtml(r_id, val, type) {
             } else if (type === 'list') {
                 list_id = val[0];
                 list_name = val[1];
-                $(".rec-lists:eq("+i.toString()+")").empty();
+                //$(".rec-lists:eq("+i.toString()+")").empty();
                 if (rec['r_lists'] !== null && rec['r_lists'].length > 0) {
                     $(".rec-lists:eq("+i.toString()+")").append("<span>, </span>");
                 }
-                $(".rec-lists:eq("+i.toString()+")").append("<a href=\"#\" onclick=\"loadRecList("+list_id.toString()+")\">#"+list_name+"</a>");
+                $(".rec-lists:eq("+i.toString()+")").append("<a href=\"#\" onclick=\"loadList("+list_id.toString()+", '"+list_name+"', "+user_id.toString()+")\">#"+list_name+"</a>");
+                $(".rec-date:eq("+i.toString()+")").text("Just now...");                    
             }
         }
     }
@@ -126,6 +127,11 @@ function deleteRecFromList(r_id) {
             delete recommendations['recommendations']['r_id'];
             $(".js-stream-item:eq("+i.toString()+")").remove();
         }
+        for (var j = 0; j < markers.length; j++) {
+            if (rec['r_id'].toString() === r_id && markers[j]['title'] === rec['r_name'].toString()) {
+                markers[j].setMap(null);
+                delete markers[j];
+            }
+        }
     }
-    // TODO:  REMOVE MARKER FROM MAP
 }
