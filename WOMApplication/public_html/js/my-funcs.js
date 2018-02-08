@@ -16,7 +16,7 @@ var markers = [];
 var list_markers = [];
 var infos = [];
 var typeSelection = '';
-var page_size = 10;
+var page_size = 25;
 var marker_list = {};
 var search_rec_results = [];
 var profile_info = {};
@@ -26,6 +26,8 @@ var term_matches = [];
 var user_matches = [];
 var list_matches = [];
 var active_tab = 'terms';
+var pos = {};
+var around_me_data = {'list_matches': [], 'rec_matches': []};
     
 window.onload = function(){
     user_id = getCookie('user_id');
@@ -33,13 +35,14 @@ window.onload = function(){
     username = getCookie('username');
     if (user_id !== "") {
         page = 1;
+        login_html = "<span>Logged in as </span><a href=\"#\" class=\"login-link\">"+username+"</a><span>. </span><a href=\"#\" class=\"login-link\" onClick=\"logout()\">Logout</a>"
         setRecommendations('global','new','new');
-        login_html = "<span>Logged in as </span><a href=\"http://localhost:8383/WOMApplication/login.html\" class=\"login-link\">"+username+"</a>"
-        $('.login-info-bar').append(login_html);
         $('a.icon-select.global').addClass('active')
-    } else {
-        login_html = "<a href=\"http://localhost:8383/WOMApplication/login.html\" class=\"login-link\">Login</a>"
         $('.login-info-bar').append(login_html);
+        $('#splashModal').modal('show');
+    } else {
+        $('#loginModal').modal('show');
+        login_html = "<span>Logged in as </span><a href=\"#\" class=\"login-link\">"+username+"</a><span>. </span><a href=\"#\" class=\"login-link\" onClick=\"logout()\">Logout</a>"
     };
 };
 function loadDefaultProfile() {
@@ -303,9 +306,16 @@ function getCookie(cname) {
     }
     return "";
 }
-
+function deleteCookie( name ) {
+    document.cookie = name + '=; expires=Thu, 01 Jan 1970 00:00:01 GMT; path=/';
+    var decodedCookie = decodeURIComponent(document.cookie);
+}
+function logout() {
+    deleteCookie('user_id');
+    deleteCookie('username');
+    location.reload();
+}
 function sendData() {
-    //console.log(rec_object)
     var comment = document.getElementById("rec-comment").value;
     rec_object["comment"] = comment;
     rec_object["user_id"] = user_id;
@@ -578,9 +588,14 @@ $(document).ready(function() {
                 }
             } else if (active_menu === 'messages') {
                 next_page = getPage();
-                console.log(next_page);
+                // TODO: Figure out paging for messages
+                //console.log(next_page);
                 //getMessages(next_page);
-            } else if (active_menu !== 'user_list') {
+            } else if (active_menu === 'aroundMe') {
+                //next_page = getPage();
+                // Handle in aroundMe page
+                
+            } else if (active_menu === 'global' || active_menu === 'local') {
                 filt = checkFilters();
                 if (filt === false) {
                     next_page = getPage();
@@ -597,6 +612,23 @@ $(document).ready(function() {
         $('.icon-select').removeClass("active");
         $(this).addClass("active");
     });
+    
+    $('.join-input').on('keyup', function () {
+        var empty = false;
+        empty_count = 0;
+        $('.join-input').each(function() {
+            if ($(this).val() === '') {
+                empty = true;
+                empty_count += 1;
+            }
+        });
+        if (empty) {
+            $('#join-btn').attr('disabled', 'disabled');
+        } else {
+            $('#join-btn').removeAttr('disabled');
+        }
+    });
+
  });
 
 function checkFilters() {
@@ -638,6 +670,9 @@ function getPage() {
         }
     } else if (active_menu === 'messages') {
         rec_length = fetched_messages.length;
+        // TODO:  Figure out paging for messages.  Right now just pulling 500 messages.
+    } else if (active_menu === 'aroundMe') {
+        
     }
     if (rec_length % page_size !== 0) {
         page = 'None';
@@ -702,7 +737,7 @@ function enableSearch() {
     $('.content-header').empty();
     $('.content-header').css("height","26px");
     $('#scroll').css("height","calc( 100% - 92px - 26px)");
-    html_search = "<form autocomplete=\"on\"><input type=\"text\" placeholder=\"Search Word of Mouth...\" id=\"search-input\" class=\"search-input\" onchange=searchController($(this).val())></form>";
+    html_search = "<input type=\"text\" placeholder=\"Search Word of Mouth...\" id=\"search-input\" class=\"search-input\" onchange=searchController($(this).val())>";
     $('.content-header').append(html_search);
     tab_html = "<div class=\"tab\" id=\"search-tabs\">";
     tab_html += "<button class=\"tablinks\" id=\"button-tab-terms\" onclick=\"searchTabController(event,'search-results-terms')\">Term Matches</button>";
@@ -733,23 +768,6 @@ function searchRecs(term,page) {
             user_matches = search_results['users'];
             list_matches = search_results['lists'];
             addSearchResultsToList();
-            /*var set_active = false;
-            if (term_matches.length > 0) {
-                $("#search-tabs").tabs( "select" , 0);
-                //$('#button-tab-terms').trigger("click");
-                //$('#button-tab-terms').click();
-                set_active = true;
-            }
-            if (!set_active && list_matches.length > 0) {
-                $("#search-tabs").tabs( "select" , 1);
-                //$('#button-tab-lists').trigger("click");
-                set_active = true;
-            }
-            if (!set_active && user_matches.length > 0) {
-                $("#search-tabs").tabs( "select" , 2);
-                //$('#button-tab-users').trigger("click");
-                set_active = true;
-            }*/
             $.notify("Found search results", {className: "success", position: "bottom center"});
         },
         error: function(jqXHR, exception) {
@@ -785,16 +803,27 @@ function searchController(term) {
     }
 }
 function addSearchResultsToList() {
-    html_start = "<div class=\"stream-container\"><ol class=\"stream-items\">";
+    html_start = "<div class=\"stream-container\" id=\"stream-container\"><ol class=\"stream-items\">";
     html_term_body = "";
     html_list_body = "";
     html_user_body = "";
+    if (active_menu === 'aroundMe') {
+        term_matches = around_me_data['rec_matches'];
+        list_matches = around_me_data['list_matches'];
+        user_matches = [];
+    }
     if (term_matches.length > 0) {
         $('#search-results-terms').empty();
         for (var i = 0; i < term_matches.length; i++) {
             html_term_body += getCardHtml(term_matches[i],i);
         }
         $("#button-tab-terms").text("Term Matches ("+term_matches.length.toString()+")");
+        if (term_matches.length < around_me_data['rec_count']) {
+            load_more_html = "<div class=\"load-more-around-me\"><button id=\"load-more-button\" onClick=\"searchAroundMe('geo-rec')\">Load More (Showing "+around_me_data['rec_matches'].length.toString()+" of "+around_me_data['rec_count']+")</button></div>"
+        } else {
+            load_more_html = "";
+        }
+        html_end = "</ol>"+load_more_html+"</div>";
         $('#search-results-terms').append(html_start+html_term_body+html_end);
     }
     if (list_matches.length > 0) {
@@ -803,6 +832,12 @@ function addSearchResultsToList() {
             html_list_body += getListHtml(list_matches[i],i,user_id);
         }
         $("#button-tab-lists").text("List Matches ("+list_matches.length.toString()+")");
+        if (list_matches.length < around_me_data['list_count']) {
+            load_more_html = "<div class=\"load-more-around-me\"><button id=\"load-more-button\" onClick=\"searchAroundMe('geo-list')\">Load More (Showing "+around_me_data['list_matches'].length.toString()+" of "+around_me_data['list_count']+")</button></div>"
+        } else {
+            load_more_html = "";
+        }
+        html_end = "</ol>"+load_more_html+"</div>";
         $('#search-results-lists').append(html_start+html_list_body+html_end);
     }
     if (user_matches.length > 0) {
@@ -811,9 +846,10 @@ function addSearchResultsToList() {
             html_user_body += getFollowHtml(user_matches[i],i);
         }
         $("#button-tab-users").text("User Matches ("+user_matches.length.toString()+")");
+        load_more_html = '';
+        html_end = "</ol>"+load_more_html+"</div>";
         $('#search-results-users').append(html_start+html_user_body+html_end);
     }
-    html_end = "</ol></div>";
 }
 function showFollowing(uid) {
     temp_following = get_following(uid,1);
@@ -947,15 +983,185 @@ function searchTabController(evt,tabName) {
     evt.currentTarget.className += " active";
     
     if (tabName === 'search-results-terms') {
+        active_tab = 'terms';
         getMarkerInfo(term_matches,'new');
         getListMarkerInfo({});
     }
     if (tabName === 'search-results-lists') {
+        active_tab = 'lists';
         getMarkerInfo({},"new");
         getListMarkerInfo(list_matches);
     }
     if (tabName === 'search-results-users') {
+        active_tab = 'users';
         getMarkerInfo({},'new');
         getListMarkerInfo({});
     }
+}
+
+function searchAroundMe(type) {
+    if (type === 'geo') {
+        page = 1;
+    } else if (type === 'geo-rec') {
+        page = (around_me_data['rec_matches'].length / page_size) + 1;
+    } else if (type === 'geo-list') {
+        page = (around_me_data['list_matches'].length / page_size) + 1;
+    }
+    dist = 25;
+    post_data = {
+        uid: user_id,
+        term: 'null',
+        page: page,
+        type: type,
+        dist: dist,
+        lat: pos.lat,
+        lon: pos.lng
+    };
+    $.ajax({
+        url: 'http://localhost:8080/search',
+        type: 'POST',
+        data: JSON.stringify(post_data),
+        dataType: 'json',
+        success: function(search_results) {
+            for (i=0; i<search_results['list_matches'].length; i++) {
+                in_list = false;
+                for (j=0; j<around_me_data['list_matches'].length; j++) {
+                    if (around_me_data['list_matches'][j]['list_id'] === search_results['list_matches'][i]['list_id']) {
+                        in_list = true;
+                    }
+                }
+                if (!in_list) {
+                    around_me_data['list_matches'].push(search_results['list_matches'][i]);
+                }
+            }
+            for (i=0; i<search_results['rec_matches'].length; i++) {
+                in_list = false;
+                for (j=0; j<around_me_data['rec_matches'].length; j++) {
+                    if (around_me_data['rec_matches'][j]['r_id'] === search_results['rec_matches'][i]['r_id']) {
+                        in_list = true;
+                    }
+                }
+                if (!in_list) {
+                    around_me_data['rec_matches'].push(search_results['rec_matches'][i]);
+                }
+            }
+            around_me_data['list_count'] = search_results['list_count'];
+            around_me_data['rec_count'] = search_results['rec_count'];
+            if (type !== 'geo') {
+                $(".load-more-around-me").remove();
+                addSearchResultsToList();
+            }
+            $.notify("Found search results", {className: "success", position: "bottom center"});
+        },
+        error: function(jqXHR, exception) {
+            errorHandling(jqXHR, exception);
+        },
+        async: false
+    });
+}
+function selectAroundMe() {
+    searchAroundMe('geo');
+    getListMarkerInfo(around_me_data['list_matches']);
+    getMarkerInfo(around_me_data['rec_matches'],'new');
+    active_menu = 'aroundMe';
+    $('.filter-content').css('display','none');
+    $('#scroll').empty();
+    $('.content-header').empty();
+    $('.content-header').css("height","26px");
+    $('#scroll').css("height","calc( 100% - 92px - 34px)");
+    html_head = "<div class=\"rec-section-header\"><span>What my network recommends around me...</span></div>";
+    $('.content-header').append(html_head);
+    tab_html = "<div class=\"tab\" id=\"search-tabs\">";
+    tab_html += "<button class=\"tablinks\" id=\"button-tab-terms\" onclick=\"searchTabController(event,'search-results-terms')\">Recommendations</button>";
+    tab_html += "<button class=\"tablinks\" id=\"button-tab-lists\" onclick=\"searchTabController(event,'search-results-lists')\">Lists</button>";
+    tab_html += "</div>";
+    tab_html += "<div class=\"tabcontent-wrapper\">";
+    tab_html += "<div id=\"search-results-terms\" class=\"tabcontent\"></div>";
+    tab_html += "<div id=\"search-results-lists\" class=\"tabcontent\"></div>";
+    tab_html += "<div id=\"search-results-users\" class=\"tabcontent\"></div>";
+    tab_html += "</div>";
+    $('#scroll').append(tab_html);
+    addSearchResultsToList();
+}
+
+function enableJoin() {
+    $('#joinModal').modal('show');
+}
+
+function joinWom() {
+    var first_name = $("#join-fname").val();
+    var last_name = $("#join-lname").val();
+    var email = $("#join-email").val();
+    var uname = $("#join-uname").val();
+    var pwd1 = $("#join-pwd1").val();
+    var pwd2 = $("#join-pwd2").val();
+    bad_chars = ['<','>','%','='];
+    valid_fields = true;
+    for (i=0; i < bad_chars.length; i++) {
+        if (first_name.indexOf(bad_chars[i]) > -1) {
+            $.notify("Bad first name", {className: "failure", position: "bottom center"});
+            valid_fields = false;
+        }
+        if (last_name.indexOf(bad_chars[i]) > -1) {
+            $.notify("Bad last name", {className: "failure", position: "bottom center"});
+            valid_fields = false;
+        }
+        if (email.indexOf(bad_chars[i]) > -1) {
+            $.notify("Bad email", {className: "failure", position: "bottom center"});
+            valid_fields = false;
+        }
+        if (uname.indexOf(bad_chars[i]) > -1) {
+            $.notify("Bad username", {className: "failure", position: "bottom center"});
+            valid_fields = false;
+        }
+        if (pwd1.indexOf(bad_chars[i]) > -1) {
+            $.notify("Bad pwd1", {className: "failure", position: "bottom center"});
+            valid_fields = false;
+        }
+        if (pwd2.indexOf(bad_chars[i]) > -1) {
+            $.notify("Bad pwd2", {className: "failure", position: "bottom center"});
+            valid_fields = false;
+        }
+    }
+    if (pwd1 !== pwd2) {
+        valid_fields = false;
+        alert("Passwords do not match");
+        $('#joinModal').modal('show');
+    }
+    if (valid_fields) {
+        result = createUser(first_name, last_name, email, uname, pwd1);
+    }
+}
+function createUser(first_name, last_name, email, uname, pwd) {
+    post_data = {
+        fname: first_name,
+        lname: last_name,
+        email: email,
+        uname: uname,
+        password: pwd
+    };
+    console.log(post_data);
+    $.ajax({
+        url: 'http://localhost:8080/createUser',
+        type: 'POST',
+        data: JSON.stringify(post_data),
+        dataType: 'text',
+        success: function(create_result) {
+            console.log(create_result);
+            if (create_result !== 'invalid') {
+                $.notify("Created User", {className: "success", position: "bottom center"});
+                user_id = parseInt(create_result);
+                current_user = user_id;
+                console.log(user_id);
+                loadDefaultProfile();
+            } else {
+                alert("Invalid username and password provided");
+                $('#joinModal').modal('show');
+            }
+        },
+        error: function(jqXHR, exception) {
+            errorHandling(jqXHR, exception);
+        },
+        async: false
+    });
 }

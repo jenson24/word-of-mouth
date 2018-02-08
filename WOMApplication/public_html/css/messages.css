@@ -1,0 +1,159 @@
+/*
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+*/
+/* 
+    Created on : Feb 3, 2018, 2:04:57 PM
+    Author     : Jenson
+*/
+
+.speech-container {
+    width: 100%;
+    overflow: auto;
+    padding-top: 2px;
+    padding-bottom: 2px;
+}
+.speech-bubble {
+    position: relative;
+    border-radius: .4em;
+    padding: 8px;
+    max-width: 65%;
+}
+.speech-bubble-left {
+    float: left;
+    margin-left: 28px;
+    background: #c0c0c0;
+}
+.speech-bubble-right {
+    float: right;
+    margin-right: 28px;
+    background: #4d90fe;
+    color: white;
+}
+.speech-bubble-left:after {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 20%;
+    width: 0;
+    height: 0;
+    border: 20px solid transparent;
+    border-right-color: #c0c0c0;
+    border-left: 0;
+    border-top: 0;
+    margin-top: -5px;
+    margin-left: -12px;
+}
+.speech-bubble-right:after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 20%;
+    width: 0;
+    height: 0;
+    border: 20px solid transparent;
+    border-left-color: #4d90fe;
+    border-right: 0;
+    border-top: 0;
+    margin-top: -5px;
+    margin-right: -12px;
+}
+.message-list {
+    margin-top: 10px;
+    margin-bottom: 10px;
+    overflow: auto;
+}
+.message-rec-item {
+    border-style: solid;
+    border-width: 1px;
+    width: 80%;
+    padding: 12px;
+    padding-right: 4px;
+    margin: auto;
+    margin-top: 8px;
+    list-style-position: inside;
+    overflow: hidden;   
+}
+.message-container-li {
+    border-style: solid;
+    border-width: 2px;
+    border-color: #2e6da4;
+    overflow:auto;
+}
+.modified-rec-container {
+    overflow: auto;
+}
+.reply-message-input-li {
+    overflow: auto;
+    margin-bottom: 10px;
+}
+.reply-message-input {
+    width: 50%;
+    max-width: 50%;
+    min-width: 50%;
+    min-height: 40px;
+    float: right;
+    border: none;
+    border-radius: 6px;
+    background: #f1f1f1;
+    display: block;
+    overflow: hidden;
+    padding: 3px;
+}
+.message-expand-container {
+    display: block;
+    width: 100%;
+    height: 36px;
+}
+.message-expand-icon {
+    float: left;
+    vertical-align: middle;
+    margin-left: 5px;
+    font-size: 12pt;
+}
+.message-expand-summary {
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+    padding-left: 5px;
+}
+.message-expand-span {
+    text-overflow: ellipsis;
+    overflow: hidden;
+    width: 400px;
+    white-space: nowrap;
+}
+.btn-reply {
+    float: right;
+    margin-left: 6px;
+    margin-right: 6px;
+    margin-top: 12px;
+    width: 54px;
+    display: inline-block;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.42857143;
+    text-align: center;
+    white-space: nowrap;
+    cursor: pointer;
+    background-image: none;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    font-family: inherit;
+    color: #fff;
+    background-color: #337ab7;
+    border-color: #2e6da4;
+}
+.message-reply-wrapper {
+    width: 80%;
+    float: right;
+    overflow: auto;
+    margin-bottom: 10px;
+}
+.message-textarea {
+    overflow: auto;
+}
+.message-reply-button {
+    float:right;
+}

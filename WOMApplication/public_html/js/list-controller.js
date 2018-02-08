@@ -65,6 +65,9 @@ function getListMarkerInfo(lists) {
             bounds.extend(list_markers[i].getPosition());
         }
         map.fitBounds(bounds);        
+        if (map.getZoom() > 11) {
+            map.setZoom(11);
+        }
     }
 }
 
@@ -133,7 +136,11 @@ function getListHtml(list,i,uid) {
     card_html = "";
     card_html += "<li class=\"js-stream-item\" id=\"list-item-"+i.toString()+"\"><div class=\"list-item\">";
     card_html += "<div class=\"list-header\">";
-    card_html += "<a href=\"#\" id=\"list-name-"+i.toString()+"\" onClick=\"loadList("+list["list_id"].toString()+", '"+list["list_name"]+"', "+uid.toString()+")\">"+list["list_name"]+"</a></div>";
+    card_html += "<a href=\"#\" id=\"list-name-"+i.toString()+"\" onClick=\"loadList("+list["list_id"].toString()+", '"+list["list_name"]+"', "+list["user_id"]+")\">"+list["list_name"]+"</a>";
+    if (active_menu === 'searchRecs' && uid.toString() !== list["user_id"]) {
+        card_html += "<span> (</span><a href=\"#\" onClick=\"changeUser("+uid.toString()+")\">"+list["username"]+"</a><span>)</span>";
+    }
+    card_html +="</div>";
     card_html += "<span id=\"list-desc-"+i.toString()+"\" class=\"listDesc\">"+list["list_description"]+"</span>";
     card_html += "<div><strong>Total Recommendations: "+list["rec_count"].toString()+"</strong></div>";
     card_html += "</div>";
@@ -270,7 +277,7 @@ function openNewListModal(r_id) {
             this.focus();
         }
     });
-    var vals;
+
     $('#list-geo').on('change', function () {
         verifyListConditions('geo');
     });

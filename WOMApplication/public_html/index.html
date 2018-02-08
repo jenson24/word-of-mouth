@@ -5,6 +5,10 @@
     <link rel="stylesheet" href="css/addRecModal.css" type="text/css"/>
     <link rel="stylesheet" href="css/stream-items.css" type="text/css"/>
     <link rel="stylesheet" href="css/map-items.css" type="text/css"/>
+    <link rel="stylesheet" href="css/messages.css" type="text/css"/>
+    <link rel="stylesheet" href="css/search.css" type="text/css"/>
+    <link rel="stylesheet" href="css/lists.css" type="text/css"/>
+    <link rel="stylesheet" href="css/login.css" type="text/css"/>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
     <link rel="icon" type="image/png" href="img/favicon-32x32.png" sizes="32x32" />
@@ -32,10 +36,11 @@
             <div id="header">
                 <div class="login-info-bar"></div>
                 <div class="icon-bar">
-                    <a href="#" class="icon-select global"><i class="fa fa-globe" onClick="setRecommendations('global','new','new')"></i></a>
-                    <a href="#" class="icon-select"><i class="fa fa-search" onClick="enableSearch()"></i></a> 
-                    <a href="#" class="icon-select"><i class="fa fa-envelope" onClick="messageController()"></i></a> 
-                    <a href="#" class="icon-select local"><i class="fa fa-user" onClick="loadDefaultProfile()"></i></a>
+                    <a href="#" class="icon-select around-me" title="Around Me"><i class="fa fa-map-marker" onClick="selectAroundMe()"></i></a>
+                    <a href="#" class="icon-select global" title="My Feed"><i class="fa fa-globe" onClick="setRecommendations('global','new','new')"></i></a>
+                    <a href="#" class="icon-select" title="Search"><i class="fa fa-search" onClick="enableSearch()"></i></a> 
+                    <a href="#" class="icon-select" title="Messages"><i class="fa fa-envelope" onClick="messageController()"></i></a> 
+                    <a href="#" class="icon-select local" title="My Profile"><i class="fa fa-user" onClick="loadDefaultProfile()"></i></a>
                 </div>
             </div>
             <div class="scroll-wrapper">
@@ -95,6 +100,107 @@
                     <!--<button type="button" class="btn btn-cancel" data-dismiss="modal">Cancel</button>
                     <button type="button" class="btn btn-save" data-dismiss="modal" onClick="sendData()">Save</button>
                     -->
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="splashModal" class="modal fade" role="dialog">
+        <div class="modal-dialog">
+            <!-- Modal content-->
+            <div class="modal-content">
+                <div class="modal-header" id="splash-modal-header">
+                    <!--<button type="button" class="close-modal" data-dismiss="splash-modal">&times;</button>-->
+                    <div id="splash-modal-title" class="temp-modal-title">What would you like to do?</div>
+                </div>
+                <div class="modal-body" id="splash-modal-body">
+                    <div class="splash-button-wrapper">
+                        <div id="splash-around-me" class="splash-option">
+                            <button class="splash-button" data-dismiss="modal" onClick="selectAroundMe()">Around Me<p></p><i class="fa fa-map-marker"></i></button>
+                        </div>
+                        <div id="splash-global-feed" class="splash-option">
+                            <button class="splash-button" data-dismiss="modal" onClick="setRecommendations('global','new','new')">My feed<p></p><i class="fa fa-globe"></i></button>
+                        </div>
+                        <div id="splash-search" class="splash-option">
+                            <button class="splash-button" data-dismiss="modal" onClick="enableSearch()">Search<p></p><i class="fa fa-search"></i></button>
+                        </div>
+                    </div>
+                    <div class="splash-button-wrapper">
+                        <div id="splash-messages" class="splash-option">
+                            <button class="splash-button" data-dismiss="modal" onClick="messageController()">Messages<p></p><i class="fa fa-envelope"></i></button>
+                        </div>
+                        <div id="splash-global-profile" class="splash-option">
+                            <button class="splash-button" data-dismiss="modal" onClick="setRecommendations('local','new','new')">My Profile<p></p><i class="fa fa-user"></i></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="loginModal" class="modal fade" role="dialog">
+        <div class="modal-dialog">
+            <!-- Modal content-->
+            <div class="modal-content">
+                <div class="modal-header" id="login-modal-header">
+                    <!--<button type="button" class="close-modal" data-dismiss="splash-modal">&times;</button>-->
+                    <div id="login-modal-title" class="temp-modal-title">Word of Mouth</div>
+                </div>
+                <div class="modal-body" id="login-modal-body">
+                    <form action="http://localhost:8080/auth" method="post">
+                        <div class="imgcontainer">
+                            <!--<img src="img_avatar2.png" alt="Avatar" class="avatar">-->
+                        </div>
+
+                        <div class="login-container">
+                            <label><b>Username</b></label>
+                            <input type="text" placeholder="Enter Username" name="uname" required class="login-input">
+
+                            <label><b>Password</b></label>
+                            <input type="password" placeholder="Enter Password" name="psw" required>
+
+                            <button type="submit" class="login-button">Login</button>
+                            <input type="checkbox" checked="checked"> Remember me
+                        </div>
+
+                        <div class="login-container" style="background-color:#f1f1f1">
+                            <!--<button type="button" class="cancel-btn">Cancel</button>-->
+                            <button type="button" class="join-btn" onClick="enableJoin()" data-dismiss="modal">Join</button>
+                            <span class="psw">Forgot <a href="#">password?</a></span>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="joinModal" class="modal fade" role="dialog">
+        <div class="modal-dialog">
+            <!-- Modal content-->
+            <div class="modal-content">
+                <div class="modal-header" id="join-modal-header">
+                    <!--<button type="button" class="close-modal" data-dismiss="splash-modal">&times;</button>-->
+                    <div id="join-modal-title" class="temp-modal-title">Join Word of Mouth</div>
+                </div>
+                <div class="modal-body" id="join-modal-body">
+                    <div class="join-container" id="join-container">
+                        <label><b>First Name</b></label>
+                        <input id="join-fname" type="text" placeholder="Enter Username" name="firstName" required class="join-input">
+                        <label><b>Last Name</b></label>
+                        <input id="join-lname" type="text" placeholder="Enter Username" name="lastName" required class="join-input">
+                        <label><b>Email</b></label>
+                        <input id="join-email" type="text" placeholder="Enter Username" name="email" required class="join-input">
+                        <label><b>Username</b></label>
+                        <input id="join-uname" type="text" placeholder="Enter Username" name="uname" required class="join-input">
+                        <label><b>Password</b></label>
+                        <input id="join-pwd1" type="password" placeholder="Enter Password" name="psw" required class="join-input">
+                        <label><b>Re-Enter Password</b></label>
+                        <input id="join-pwd2" type="password" placeholder="Enter Password" name="psw" required class="join-input">
+
+                        <!--<button type="submit" class="login-button">Join</button>-->
+                    </div>
+
+                    <div class="login-container" style="background-color:#f1f1f1">
+                        <!--<button type="button" class="cancel-btn">Cancel</button>-->
+                        <button type="button" class="join-btn" id="join-btn" onClick="joinWom()" data-dismiss="modal" disabled="disabled">Join</button>
+                    </div>
                 </div>
             </div>
         </div>

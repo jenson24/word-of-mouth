@@ -12,7 +12,7 @@ function messageController() {
     $('#scroll').empty();
     $('.content-header').empty();
     $('.content-header').css("height","26px");
-    $('#scroll').css("height","calc( 100% - 92px - 26px)");
+    $('#scroll').css("height","calc( 100% - 92px - 40px)");
     getMessages(1);
 }
 
@@ -28,6 +28,7 @@ function getMessages(page) {
         dataType: 'json',
         success: function(messages) {
             addMessagesToPage(messages);
+            fetched_messages = messages;
             $.notify("Found Messages", {className: "success", position: "bottom center"});
         },
         error: function(jqXHR, exception) {
@@ -39,43 +40,49 @@ function getMessages(page) {
 
 function addMessagesToPage(messages) {
     $('.content-header').append("<div class=\"rec-section-header\"><span>Message Board...</span></div>"); 
-    html_start = "<div class=\"stream-container\"><ol class=\"stream-items\">";
+    html_start = "<div class=\"stream-container\"><div class=\"stream-items\">";
     html_body_final = '';
     html_body = '';
     ind = 0;
     for (rec in messages) {
-        html_body += "<li class=\"message-container-li\"><ol class=\"modified-rec-container\">";
-        //html_body += "<li class=\"message-icon\"><i class=\"fa fa-at\" aria-hidden=\"true\"></i></li>";
+        temp_rec_obj = [messages[rec]["rec_data"]];
+        getMarkerInfo(temp_rec_obj,'continue');
+        html_body += "<div class=\"message-container-li\"><div class=\"modified-rec-container\">";
+        html_body += "<div class=\"message-expand-container\">";
+        html_body += "<div class=\"message-expand-icon\"><button id=\message-expand-button-"+ind.toString()+"\" class=\"message-expand-button fa fa-angle-double-down\" title=\"Show/Hide Thread\" onClick=\"messageExpandController("+ind.toString()+")\"></button></div>";
+        html_body += "<div class=\"message-expand-summary\" id=\"message-expand-summary-"+ind.toString()+"\">";
+        html_body += "<a href=\"#\" onclick=\"changeUser("+messages[rec]["rec_data"]["user_id"].toString()+")\">@"+messages[rec]["rec_data"]["username"]+"</a>";
+        html_body += "<span class=\"message-expand-span\">: "+messages[rec]["rec_data"]["r_name"]+"  >>  "+messages[rec]["messages"][0]["comment"]+"</span>";
+        html_body += "</div></div>";
         html_body += getModifiedCardHtml(messages[rec]['rec_data'],ind);
-        html_body += "<li class=\"message-list\"><ol class=\"message-list-container\">";
+        html_body += "<div id=\"message-list-"+ind.toString()+"\" class=\"message-list\" hidden=true><div class=\"message-list-container\">";
         for (i = 0; i < messages[rec]['messages'].length; i++) {
             html_body += getMessageHtml(messages[rec]['messages'][i]);
         }
-        html_body += "</ol></li>";
-        html_body += "<li class=\"reply-message-input-li\"><div class=\"reply-message-wrapper\">";
+        html_body += "</div></div>";
+        html_body += "<div id=\"reply-message-input-li-"+ind.toString()+"\" class=\"reply-message-input-li\" hidden=true><div class=\"reply-message-wrapper\">";
         html_body += "<div class=\"message-reply-button\"><button type=\"button\" class=\"btn-reply\" id=\"btn-send-"+ind.toString()+"\" onClick=\"sendMessage("+user_id.toString()+","+messages[rec]['rec_data']["user_id"]+","+messages[rec]['rec_data']["r_id"].toString()+", "+ind.toString()+")\">Send</button></div>"
         html_body += "<div class=\"message-textarea\"><textarea rows='2' data-min-rows='2' placeholder=\" Reply to thread...\" id=\"reply-message-input-"+ind.toString()+"\" class=\"reply-message-input autoExpand\"></textarea></div>";
-        html_body += "</div></li>";
-        html_body += "</ol></li>";
+        html_body += "</div></div>";
+        html_body += "</div></div>";
         ind += 1;
     }
-    html_end = "</ol></div>";
+    html_end = "</div></div>";
     $('#scroll').append(html_start+html_body+html_end);    
 }
 
 function getMessageHtml(message) {
     if (message['from_id'].toString() === user_id.toString()) {
-        messageHtml = "<li class=\"speech-container\"><div class=\"speech-bubble speech-bubble-right\">"+message['comment']+"</div></li>"
+        messageHtml = "<div class=\"speech-container\"><div class=\"speech-bubble speech-bubble-right\">"+message['comment']+"</div></div>"
     } else {
-        messageHtml = "<li class=\"speech-container\"><div class=\"speech-bubble speech-bubble-left\">"+message['comment']+"</div></li>"
+        messageHtml = "<div class=\"speech-container\"><div class=\"speech-bubble speech-bubble-left\">"+message['comment']+"</div></div>"
     }
     return messageHtml;
 }
 
 function getModifiedCardHtml(recObj,ind) {
-    r_date = "Just now...";
     card_html = "";
-    card_html += "<li class=\"message-rec-item\">";
+    card_html += "<div id=\"message-rec-item-"+ind.toString()+"\" class=\"message-rec-item\" hidden=true>";
     card_html += "<div class=\"rec-item\">";
     card_html += "<div class=\"stream-item-header\">";
     card_html += "<a href=\"#\" onclick=\"changeUser("+recObj["user_id"].toString()+")\">"+recObj["username"]+"</a>";
@@ -98,7 +105,7 @@ function getModifiedCardHtml(recObj,ind) {
     card_html += "<span class=\"rec-date\" style=\"float:right\">"+recObj["r_date"].slice(0,recObj["r_date"].indexOf(" "))+"</span>";
     card_html += "</div>";
     card_html += "</div>";
-    card_html += "</li>";
+    card_html += "</div>";
     return card_html;
 }
 
@@ -115,7 +122,6 @@ $(document).one('focus.autoExpand', 'textarea.autoExpand', function(){
 });
 
 function composeMessage(from_user,to_user,to_username,r_id) {
-    //console.log("From "+from_user+" to "+to_user);
     $('.temp-modal-title').empty();
     $("<h3 class=\"modal-title fa fa-envelope\" id=\"modal-title\"></h3>").appendTo(".temp-modal-title");
     $('.modal-title').append("   ");
@@ -132,7 +138,6 @@ function sendMessage(from_user,to_user,r_id,type) {
         var comment = document.getElementById("message-comment").value;    
     } else {
         var comment = document.getElementById("reply-message-input-"+type.toString()).value;
-        console.log(comment);
     }
     if (comment.length > 0) {
         storeMessage(from_user,to_user,comment,r_id,type);
@@ -153,8 +158,9 @@ function storeMessage(from_user,to_user,comment,r_id,ind) {
         success: function() {
             $.notify("Sent Message", {className: "success", position: "bottom center"});
             if (active_menu === 'messages') {
-                insert_str = "<li class=\"speech-container\"><div class=\"speech-bubble speech-bubble-right\">"+comment+"</div></li>";
+                insert_str = "<div class=\"speech-container\"><div class=\"speech-bubble speech-bubble-right\">"+comment+"</div></div>";
                 $(".message-list-container:eq("+ind.toString()+")").append(insert_str);
+                document.getElementById("reply-message-input-"+ind.toString()).value = '';
             }
         },
         error: function(jqXHR, exception) {
@@ -164,6 +170,23 @@ function storeMessage(from_user,to_user,comment,r_id,ind) {
     });
 }
 
-function messageThreadController(from_id, to_id, r_id, ind) {
+function messageExpandController(ind) {
+    if ($("#message-expand-summary-"+ind).css('display') === 'none') {
+        var ic = document.getElementsByClassName("message-expand-button")[ind];
+        ic.classList.add("fa-angle-double-down");
+        ic.classList.remove("fa-angle-double-up");
+        $("#message-expand-summary-"+ind).css('display','block');
+        $("#message-rec-item-"+ind).css('display','none');
+        $("#message-list-"+ind).css('display','none');
+        $("#reply-message-input-li-"+ind).css('display','none');        
 
+    } else {
+        var ic = document.getElementsByClassName("message-expand-button")[ind];
+        ic.classList.add("fa-angle-double-up");
+        ic.classList.remove("fa-angle-double-down");
+        $("#message-expand-summary-"+ind).css('display','none');
+        $("#message-rec-item-"+ind).css('display','block');
+        $("#message-list-"+ind).css('display','block');
+        $("#reply-message-input-li-"+ind).css('display','block');        
+    }
 }
