@@ -22,7 +22,7 @@ function getMessages(page) {
         page: page
     };
     $.ajax({
-        url: 'http://localhost:8080/getMessagesByUser',
+        url: "http://"+server_host+":8080/getMessagesByUser",
         type: 'POST',
         data: JSON.stringify(post_data),
         dataType: 'json',
@@ -44,28 +44,43 @@ function addMessagesToPage(messages) {
     html_body_final = '';
     html_body = '';
     ind = 0;
-    for (rec in messages) {
-        temp_rec_obj = [messages[rec]["rec_data"]];
-        getMarkerInfo(temp_rec_obj,'continue');
-        html_body += "<div class=\"message-container-li\"><div class=\"modified-rec-container\">";
-        html_body += "<div class=\"message-expand-container\">";
-        html_body += "<div class=\"message-expand-icon\"><button id=\message-expand-button-"+ind.toString()+"\" class=\"message-expand-button fa fa-angle-double-down\" title=\"Show/Hide Thread\" onClick=\"messageExpandController("+ind.toString()+")\"></button></div>";
-        html_body += "<div class=\"message-expand-summary\" id=\"message-expand-summary-"+ind.toString()+"\">";
-        html_body += "<a href=\"#\" onclick=\"changeUser("+messages[rec]["rec_data"]["user_id"].toString()+")\">@"+messages[rec]["rec_data"]["username"]+"</a>";
-        html_body += "<span class=\"message-expand-span\">: "+messages[rec]["rec_data"]["r_name"]+"  >>  "+messages[rec]["messages"][0]["comment"]+"</span>";
-        html_body += "</div></div>";
-        html_body += getModifiedCardHtml(messages[rec]['rec_data'],ind);
-        html_body += "<div id=\"message-list-"+ind.toString()+"\" class=\"message-list\" hidden=true><div class=\"message-list-container\">";
-        for (i = 0; i < messages[rec]['messages'].length; i++) {
-            html_body += getMessageHtml(messages[rec]['messages'][i]);
+    if (Object.keys(messages).length > 0) {
+        for (rec in messages) {
+            temp_rec_obj = [messages[rec]["rec_data"]];
+            getMarkerInfo(temp_rec_obj,'continue');
+            html_body += "<div class=\"message-container-li\"><div class=\"modified-rec-container\">";
+            html_body += "<div class=\"message-expand-container\">";
+            html_body += "<div class=\"message-expand-icon\"><button id=\message-expand-button-"+ind.toString()+"\" class=\"message-expand-button fa fa-angle-double-down\" title=\"Show/Hide Thread\" onClick=\"messageExpandController("+ind.toString()+")\"></button></div>";
+            html_body += "<div class=\"message-expand-summary\" id=\"message-expand-summary-"+ind.toString()+"\">";
+            console.log(messages[rec]["messages"][0]["from_id"]);
+            console.log(messages[rec]["messages"][0]["to_id"]);
+            if (messages[rec]["messages"][0]["from_id"].toString() === user_id.toString()) {
+                html_body += "<a href=\"#\" onclick=\"changeUser("+messages[rec]["messages"][0]["to_id"].toString()+")\">@"+messages[rec]["messages"][0]["to_name"]+"</a>";
+            } else {
+                html_body += "<a href=\"#\" onclick=\"changeUser("+messages[rec]["messages"][0]["from_id"].toString()+")\">@"+messages[rec]["messages"][0]["from_name"]+"</a>";
+            }
+            html_body += "<span class=\"message-expand-span\">: "+messages[rec]["rec_data"]["r_name"]+"  >>  "+messages[rec]["messages"][0]["comment"]+"</span>";
+            html_body += "</div></div>";
+            if (messages[rec]["messages"][0]["from_id"].toString() === user_id.toString()) {
+                html_body += "<div class=\"contact-name\" id=\"contact-name-"+ind.toString()+"\" hidden=true><a href=\"#\" onclick=\"changeUser("+messages[rec]["messages"][0]["to_id"].toString()+")\">@"+messages[rec]["messages"][0]["to_name"]+"</a></div>";
+            } else {
+                html_body += "<div class=\"contact-name\" id=\"contact-name-"+ind.toString()+"\" hidden=true><a href=\"#\" onclick=\"changeUser("+messages[rec]["messages"][0]["from_id"].toString()+")\">@"+messages[rec]["messages"][0]["from_name"]+"</a></div>";
+            }
+            html_body += getModifiedCardHtml(messages[rec]['rec_data'],ind);
+            html_body += "<div id=\"message-list-"+ind.toString()+"\" class=\"message-list\" hidden=true><div class=\"message-list-container\">";
+            for (i = 0; i < messages[rec]['messages'].length; i++) {
+                html_body += getMessageHtml(messages[rec]['messages'][i]);
+            }
+            html_body += "</div></div>";
+            html_body += "<div id=\"reply-message-input-li-"+ind.toString()+"\" class=\"reply-message-input-li\" hidden=true><div class=\"reply-message-wrapper\">";
+            html_body += "<div class=\"message-reply-button\"><button type=\"button\" class=\"btn-reply\" id=\"btn-send-"+ind.toString()+"\" onClick=\"sendMessage("+user_id.toString()+","+messages[rec]['rec_data']["user_id"]+","+messages[rec]['rec_data']["r_id"].toString()+", "+ind.toString()+")\">Send</button></div>"
+            html_body += "<div class=\"message-textarea\"><textarea rows='2' data-min-rows='2' placeholder=\" Reply to thread...\" id=\"reply-message-input-"+ind.toString()+"\" class=\"reply-message-input autoExpand\"></textarea></div>";
+            html_body += "</div></div>";
+            html_body += "</div></div>";
+            ind += 1;
         }
-        html_body += "</div></div>";
-        html_body += "<div id=\"reply-message-input-li-"+ind.toString()+"\" class=\"reply-message-input-li\" hidden=true><div class=\"reply-message-wrapper\">";
-        html_body += "<div class=\"message-reply-button\"><button type=\"button\" class=\"btn-reply\" id=\"btn-send-"+ind.toString()+"\" onClick=\"sendMessage("+user_id.toString()+","+messages[rec]['rec_data']["user_id"]+","+messages[rec]['rec_data']["r_id"].toString()+", "+ind.toString()+")\">Send</button></div>"
-        html_body += "<div class=\"message-textarea\"><textarea rows='2' data-min-rows='2' placeholder=\" Reply to thread...\" id=\"reply-message-input-"+ind.toString()+"\" class=\"reply-message-input autoExpand\"></textarea></div>";
-        html_body += "</div></div>";
-        html_body += "</div></div>";
-        ind += 1;
+    } else {
+        html_body = "<div class=\"empty-action\">You don't have any messages! Reply to a recommendation to begin a message thread.</div>";
     }
     html_end = "</div></div>";
     $('#scroll').append(html_start+html_body+html_end);    
@@ -151,7 +166,7 @@ function storeMessage(from_user,to_user,comment,r_id,ind) {
         r_id: r_id
     };
     $.ajax({
-        url: 'http://localhost:8080/storeMessage',
+        url: "http://"+server_host+":8080/storeMessage",
         type: 'POST',
         data: JSON.stringify(post_data),
         dataType: 'text',
@@ -176,6 +191,7 @@ function messageExpandController(ind) {
         ic.classList.add("fa-angle-double-down");
         ic.classList.remove("fa-angle-double-up");
         $("#message-expand-summary-"+ind).css('display','block');
+        $("#contact-name-"+ind).css('display','none');
         $("#message-rec-item-"+ind).css('display','none');
         $("#message-list-"+ind).css('display','none');
         $("#reply-message-input-li-"+ind).css('display','none');        
@@ -185,6 +201,7 @@ function messageExpandController(ind) {
         ic.classList.add("fa-angle-double-up");
         ic.classList.remove("fa-angle-double-down");
         $("#message-expand-summary-"+ind).css('display','none');
+        $("#contact-name-"+ind).css('display','block');
         $("#message-rec-item-"+ind).css('display','block');
         $("#message-list-"+ind).css('display','block');
         $("#reply-message-input-li-"+ind).css('display','block');        

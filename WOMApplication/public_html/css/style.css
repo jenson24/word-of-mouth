@@ -291,18 +291,22 @@ html, body {
     display: inline-block;
     text-align: center;
     padding: 4px;
+    white-space: normal;
+    vertical-align: middle;
 }
 .splash-button {
     width: 100%;
     height: 100%;
     font-size: 18pt;
-    white-space: nowrap;
+    white-space: normal;
+    text-align: center;
 }
 .splash-button-wrapper {
     width: 100%;
     align-content: center;
     text-align: center;
     vertical-align: middle;
+    display: inline-block;
 }
 .load-more-around-me {
     width: 100%;
@@ -316,4 +320,14 @@ html, body {
 #load-more-button {
     width: 100%;
     height: 100%;
+}
+.empty-action {
+    margin: 12px;
+    text-align: center;
+    border-style: solid;
+    border-color: #4d90fe;
+    border-width: 1px;
+    background-color: infobackground;
+    color: #f44336;
+    font-size: 16pt;
 }

@@ -37,7 +37,7 @@ function editRecommendation(r_id, val, type) {
         };
     }
     $.ajax({
-        url: 'http://localhost:8080/editRec',
+        url: "http://"+server_host+":8080/editRec",
         type: 'POST',
         data: JSON.stringify(post_data),
         dataType: 'text',
@@ -104,7 +104,7 @@ function deleteRecommendation(r_id) {
         r_id: r_id,
     };
     $.ajax({
-        url: 'http://localhost:8080/deleteRec',
+        url: "http://"+server_host+":8080/deleteRec",
         type: 'POST',
         data: JSON.stringify(post_data),
         dataType: 'text',

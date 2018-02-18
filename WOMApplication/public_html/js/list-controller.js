@@ -117,7 +117,7 @@ function get_lists(user_id) {
         uid: user_id
     };
     return $.ajax({
-        url: 'http://localhost:8080/getLists',
+        url: "http://"+server_host+":8080/getLists",
         type: 'POST',
         data: JSON.stringify(post_data),
         dataType: 'json',
@@ -164,7 +164,7 @@ function get_recs_for_list(list_id,list_name,user_id) {
         user_id: user_id
     };
     return $.ajax({
-        url: 'http://localhost:8080/getListRecs',
+        url: "http://"+server_host+":8080/getListRecs",
         type: 'POST',
         data: JSON.stringify(post_data),
         dataType: 'json',
@@ -338,7 +338,7 @@ function createNewList(list_name,list_description,list_location,lat,lon,place_id
         user_id: user_id
     };
     $.ajax({
-        url: 'http://localhost:8080/createList',
+        url: "http://"+server_host+":8080/createList",
         type: 'POST',
         data: JSON.stringify(post_data),
         dataType: 'json',
@@ -458,7 +458,7 @@ function deleteList(list_id) {
         user_id: user_id
     };
     $.ajax({
-        url: 'http://localhost:8080/deleteList',
+        url: "http://"+server_host+":8080/deleteList",
         type: 'POST',
         data: JSON.stringify(post_data),
         dataType: 'text',
@@ -485,7 +485,7 @@ function editListRequest(list_name,list_description,list_location,lat,lon,place_
         list_id: list_id
     };
     $.ajax({
-        url: 'http://localhost:8080/editList',
+        url: "http://"+server_host+":8080/editList",
         type: 'POST',
         data: JSON.stringify(post_data),
         dataType: 'json',

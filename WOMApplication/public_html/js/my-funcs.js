@@ -25,9 +25,11 @@ var active_user_lists = {};
 var term_matches = [];
 var user_matches = [];
 var list_matches = [];
+var search_data = {};
 var active_tab = 'terms';
 var pos = {};
 var around_me_data = {'list_matches': [], 'rec_matches': []};
+var server_host = '18.144.25.233';
     
 window.onload = function(){
     user_id = getCookie('user_id');
@@ -77,8 +79,16 @@ function setRecommendations(rec_type, temp_obj, marker_flag) {
     html_start = "<div class=\"stream-container\"><ol class=\"stream-items\">";
     getMarkerInfo(recs,marker_flag);
     html_body = "";
-    for (var i = 0; i < recs.length; i++) {
-        html_body += getCardHtml(recs[i],i);
+    if (recs.length > 0) {
+        for (var i = 0; i < recs.length; i++) {
+            html_body += getCardHtml(recs[i],i);
+        }
+    } else {
+        if (rec_type === 'local') {
+            html_body = "<div class=\"empty-action\">You haven't added any recommendations yet! Use the map (and the search bar above the map) to find places to recommend.</div>";
+        } else {
+            html_body = "<div class=\"empty-action\">Your network hasn't made any recommendations yet! Click on the Search icon above to find people to follow or use the map to the left (and the search bar above the map) to find places to recommend.</div>";
+        }
     }
     
     html_end = "</ol></div>";
@@ -130,10 +140,10 @@ function getMarkerInfo(temp_obj,type) {
             }
         } else {
             marker_list[temp_obj[i]["r_google_place_id"]] = {};
-            lat = temp_obj[i]["r_geom"].slice(temp_obj[i]["r_geom"].indexOf("(")+1,temp_obj[i]["r_geom"].indexOf(" "));
-            long = temp_obj[i]["r_geom"].slice(temp_obj[i]["r_geom"].indexOf(" ")+1,temp_obj[i]["r_geom"].indexOf(")"));
-            marker_list[temp_obj[i]["r_google_place_id"]]["lat"] = lat;
-            marker_list[temp_obj[i]["r_google_place_id"]]["long"] = long;
+            //lat = temp_obj[i]["r_geom"].slice(temp_obj[i]["r_geom"].indexOf("(")+1,temp_obj[i]["r_geom"].indexOf(" "));
+            //long = temp_obj[i]["r_geom"].slice(temp_obj[i]["r_geom"].indexOf(" ")+1,temp_obj[i]["r_geom"].indexOf(")"));
+            marker_list[temp_obj[i]["r_google_place_id"]]["lat"] = temp_obj[i]["r_lat"];
+            marker_list[temp_obj[i]["r_google_place_id"]]["long"] = temp_obj[i]["r_lon"];
             marker_list[temp_obj[i]["r_google_place_id"]]["name"] = temp_obj[i]["r_name"];
             marker_list[temp_obj[i]["r_google_place_id"]]["comment"] = [temp_obj[i]["r_comment"]];
             marker_list[temp_obj[i]["r_google_place_id"]]["username"] = [temp_obj[i]["username"]];
@@ -163,7 +173,6 @@ function addRecToPage(recObj) {
 }
 
 function getCardHtml(recObj,ind) {
-    r_date = "Just now...";
     card_html = "";
     card_html += "<li class=\"js-stream-item\">";
     card_html += "<div class=\"rec-item\">";
@@ -185,7 +194,12 @@ function getCardHtml(recObj,ind) {
         }
     }
     card_html += "</div>";
-    card_html += "<span class=\"rec-date\" style=\"float:right\">"+recObj["r_date"].slice(0,recObj["r_date"].indexOf(" "))+"</span>";
+    if(recObj["r_date"].indexOf("Just") > -1) {
+        date_text = recObj["r_date"];
+    } else {
+        date_text = recObj["r_date"].slice(0,recObj["r_date"].indexOf(" "));
+    }
+    card_html += "<span class=\"rec-date\" style=\"float:right\">"+date_text+"</span>";
     card_html += "</div>";
     card_html += "</div>";
     card_html += "<div class=\"stream-item-footer\">";
@@ -321,14 +335,16 @@ function sendData() {
     rec_object["user_id"] = user_id;
     rec_object["username"] = username;
     $.ajax({
-        url: 'http://localhost:8080/createRec',
+        url: "http://"+server_host+":8080/createRec",
         type: 'POST',
         data: JSON.stringify(rec_object),
         dataType: 'text',
         success: function() {
             $.notify("Successfully Added Recommendation", {className: "success", position: "bottom center"});
+            //fetched_all_recommendations.push(rec_object);
+            //fetched_my_recommendations.push(rec_object);
             if (active_menu === 'local') {
-                temp_obj = {username: username, r_comment: comment, r_name: rec_object["g_name"], r_date: "Just Added..."};
+                temp_obj = {user_id: user_id, username: username, r_comment: comment, r_name: rec_object["g_name"], r_date: "Just Added...", r_lists: []};
                 addRecToPage(temp_obj);
             }
         },
@@ -345,7 +361,7 @@ function get_recommendations(lookup_type, page) {
         page: page
     };
     $.ajax({
-        url: 'http://localhost:8080/getRecs',
+        url: "http://"+server_host+":8080/getRecs",
         type: 'POST',
         data: JSON.stringify(post_data),
         dataType: 'json',
@@ -375,7 +391,7 @@ function getProfile(uid) {
         uid: uid
     };
     return $.ajax({
-        url: 'http://localhost:8080/getProfile',
+        url: "http://"+server_host+":8080/getProfile",
         type: 'POST',
         data: JSON.stringify(post_data),
         dataType: 'json',
@@ -390,13 +406,14 @@ function getProfile(uid) {
     });
 };
 
-function get_following(user_id,page) {
+function get_following(uid,page) {
     post_data = {
-        uid: user_id,
+        uid: uid,
+        active_user: user_id,
         page: page
     };
     return $.ajax({
-        url: 'http://localhost:8080/getFollowing',
+        url: "http://"+server_host+":8080/getFollowing",
         type: 'POST',
         data: JSON.stringify(post_data),
         dataType: 'json',
@@ -411,13 +428,14 @@ function get_following(user_id,page) {
     });
 };
 
-function get_followers(user_id,page) {
+function get_followers(uid,page) {
     post_data = {
-        uid: user_id,
+        uid: uid,
+        active_user: user_id,
         page: page
     };
     return $.ajax({
-        url: 'http://localhost:8080/getFollowers',
+        url: "http://"+server_host+":8080/getFollowers",
         type: 'POST',
         data: JSON.stringify(post_data),
         dataType: 'json',
@@ -579,13 +597,14 @@ $(document).ready(function() {
         if (Math.ceil(div[0].scrollHeight - div.scrollTop()) <= Math.ceil(div.height())) { // If scroll to bottom, load next page
             //console.log("Reached the bottom!");
             if (active_menu === 'searchRecs') {
-                next_page = getPage();
+                // Use load more button
+                /*next_page = getPage();
                 term = $('.search-input').val();
                 if (term.length > 3) {
                     if (next_page !== 'None') {
                         searchRecs(term,next_page);
                     }
-                }
+                }*/
             } else if (active_menu === 'messages') {
                 next_page = getPage();
                 // TODO: Figure out paging for messages
@@ -661,13 +680,13 @@ function getPage() {
     } else if (active_menu === 'local') {
         rec_length = fetched_my_recommendations.length;
     } else if (active_menu === 'searchRecs') {
-        if (active_tab === 'terms') {
+        /*if (active_tab === 'terms') {
             rec_length = term_matches.length;
         } else if (active_tab === 'lists') {
             rec_length = list_matches.length;
         } else if (active_tab === 'users') {
             rec_length = user_matchces.length;
-        }
+        }*/
     } else if (active_menu === 'messages') {
         rec_length = fetched_messages.length;
         // TODO:  Figure out paging for messages.  Right now just pulling 500 messages.
@@ -737,12 +756,12 @@ function enableSearch() {
     $('.content-header').empty();
     $('.content-header').css("height","26px");
     $('#scroll').css("height","calc( 100% - 92px - 26px)");
-    html_search = "<input type=\"text\" placeholder=\"Search Word of Mouth...\" id=\"search-input\" class=\"search-input\" onchange=searchController($(this).val())>";
+    html_search = "<input type=\"text\" autocomplete=\"off\" placeholder=\"Search Word of Mouth...\" id=\"search-input\" class=\"search-input\" onchange=searchController($(this).val())>";
     $('.content-header').append(html_search);
     tab_html = "<div class=\"tab\" id=\"search-tabs\">";
-    tab_html += "<button class=\"tablinks\" id=\"button-tab-terms\" onclick=\"searchTabController(event,'search-results-terms')\">Term Matches</button>";
-    tab_html += "<button class=\"tablinks\" id=\"button-tab-lists\" onclick=\"searchTabController(event,'search-results-lists')\">List Matches</button>";
-    tab_html += "<button class=\"tablinks\" id=\"button-tab-users\" onclick=\"searchTabController(event,'search-results-users')\">User Matches</button>";
+    tab_html += "<button class=\"tablinks\" id=\"button-tab-terms\" onclick=\"searchTabController(event,'search-results-terms')\">Recommendations</button>";
+    tab_html += "<button class=\"tablinks\" id=\"button-tab-lists\" onclick=\"searchTabController(event,'search-results-lists')\">Lists</button>";
+    tab_html += "<button class=\"tablinks\" id=\"button-tab-users\" onclick=\"searchTabController(event,'search-results-users')\">Users</button>";
     tab_html += "</div>";
     tab_html += "<div class=\"tabcontent-wrapper\">";
     tab_html += "<div id=\"search-results-terms\" class=\"tabcontent\"></div>";
@@ -759,14 +778,16 @@ function searchRecs(term,page) {
         type: active_tab
     };
     $.ajax({
-        url: 'http://localhost:8080/search',
+        url: "http://"+server_host+":8080/search",
         type: 'POST',
         data: JSON.stringify(post_data),
         dataType: 'json',
         success: function(search_results) {
+            search_data = search_results;
             term_matches = search_results['term_matches'];
             user_matches = search_results['users'];
             list_matches = search_results['lists'];
+
             addSearchResultsToList();
             $.notify("Found search results", {className: "success", position: "bottom center"});
         },
@@ -779,9 +800,9 @@ function searchRecs(term,page) {
 function searchController(term) {
     if (term.length > 3) {
         $('.stream-items').empty();
-        $("#button-tab-terms").text("Term Matches");
-        $("#button-tab-lists").text("List Matches");
-        $("#button-tab-users").text("User Matches");
+        $("#button-tab-terms").text("Recommendations (0)");
+        $("#button-tab-lists").text("Lists (0)");
+        $("#button-tab-users").text("Users (0)");
         term_matches = [];
         list_matches = [];
         user_matches = [];
@@ -803,6 +824,9 @@ function searchController(term) {
     }
 }
 function addSearchResultsToList() {
+    $("#button-tab-terms").removeClass("active");
+    $("#button-tab-lists").removeClass("active");
+    $("#button-tab-users").removeClass("active");
     html_start = "<div class=\"stream-container\" id=\"stream-container\"><ol class=\"stream-items\">";
     html_term_body = "";
     html_list_body = "";
@@ -811,15 +835,28 @@ function addSearchResultsToList() {
         term_matches = around_me_data['rec_matches'];
         list_matches = around_me_data['list_matches'];
         user_matches = [];
+        rec_count = around_me_data['rec_count'];
+        list_count = around_me_data['list_count'];
+        user_count = around_me_data['user_count'];
+    } else {
+        term = $('.search-input').val();
+        rec_count = search_data['rec_count'];
+        list_count = search_data['list_count'];
+        user_count = search_data['user_count'];
     }
     if (term_matches.length > 0) {
         $('#search-results-terms').empty();
         for (var i = 0; i < term_matches.length; i++) {
             html_term_body += getCardHtml(term_matches[i],i);
         }
-        $("#button-tab-terms").text("Term Matches ("+term_matches.length.toString()+")");
-        if (term_matches.length < around_me_data['rec_count']) {
-            load_more_html = "<div class=\"load-more-around-me\"><button id=\"load-more-button\" onClick=\"searchAroundMe('geo-rec')\">Load More (Showing "+around_me_data['rec_matches'].length.toString()+" of "+around_me_data['rec_count']+")</button></div>"
+        $("#button-tab-terms").text("Recommendations ("+term_matches.length.toString()+")");
+        if (term_matches.length < rec_count) {
+            if (active_menu === 'aroundMe') {
+                load_more_html = "<div class=\"load-more-around-me\"><button id=\"load-more-button\" onClick=\"searchAroundMe('geo-rec')\">Load More (Showing "+rec_matches.length.toString()+" of "+rec_count.toString()+")</button></div>";
+            } else {
+                next_page = (term_matches.length / page_size) + 1; 
+                load_more_html = "<div class=\"load-more-around-me\"><button id=\"load-more-button\" onClick=\"searchRecs("+term+","+next_page.toString()+")\">Load More (Showing "+rec_matches.length.toString()+" of "+rec_count.toString()+")</button></div>";
+            }
         } else {
             load_more_html = "";
         }
@@ -829,11 +866,16 @@ function addSearchResultsToList() {
     if (list_matches.length > 0) {
         $('#search-results-lists').empty();
         for (var i = 0; i < list_matches.length; i++) {
-            html_list_body += getListHtml(list_matches[i],i,user_id);
+            html_list_body += getListHtml(list_matches[i],i,list_matches[i]['user_id']);
         }
-        $("#button-tab-lists").text("List Matches ("+list_matches.length.toString()+")");
-        if (list_matches.length < around_me_data['list_count']) {
-            load_more_html = "<div class=\"load-more-around-me\"><button id=\"load-more-button\" onClick=\"searchAroundMe('geo-list')\">Load More (Showing "+around_me_data['list_matches'].length.toString()+" of "+around_me_data['list_count']+")</button></div>"
+        $("#button-tab-lists").text("Lists ("+list_matches.length.toString()+")");
+        if (list_matches.length < list_count) {
+            if (active_menu === 'aroundMe') {
+                load_more_html = "<div class=\"load-more-around-me\"><button id=\"load-more-button\" onClick=\"searchAroundMe('geo-list')\">Load More (Showing "+list_matches.length.toString()+" of "+list_count.toString()+")</button></div>";
+            } else {
+                next_page = (list_matches.length / page_size) + 1; 
+                load_more_html = "<div class=\"load-more-around-me\"><button id=\"load-more-button\" onClick=\"searchRecs("+term+","+next_page.toString()+")\">Load More (Showing "+list_matches.length.toString()+" of "+list_count.toString()+")</button></div>";
+            }
         } else {
             load_more_html = "";
         }
@@ -845,10 +887,30 @@ function addSearchResultsToList() {
         for (var i = 0; i < user_matches.length; i++) {
             html_user_body += getFollowHtml(user_matches[i],i);
         }
-        $("#button-tab-users").text("User Matches ("+user_matches.length.toString()+")");
         load_more_html = '';
+        $("#button-tab-users").text("Users ("+user_matches.length.toString()+")");
+        if (user_matches.length < user_count) {
+            if (active_menu === 'aroundMe') {
+                load_more_html = "<div class=\"load-more-around-me\"><button id=\"load-more-button\" onClick=\"searchAroundMe('geo-list')\">Load More (Showing "+user_matches.length.toString()+" of "+user_count.toString()+")</button></div>";
+            } else {
+                next_page = (user_matches.length / page_size) + 1; 
+                load_more_html = "<div class=\"load-more-around-me\"><button id=\"load-more-button\" onClick=\"searchRecs("+term+","+next_page.toString()+")\">Load More (Showing "+user_matches.length.toString()+" of "+user_count.toString()+")</button></div>";
+            }
+        } else {
+            load_more_html = "";
+        }
         html_end = "</ol>"+load_more_html+"</div>";
         $('#search-results-users').append(html_start+html_user_body+html_end);
+    }
+    if (term_matches.length > 0) {
+        $("#button-tab-terms").addClass("active");
+        document.getElementById('search-results-terms').style.display = "block";
+    } else if (list_matches.length > 0) {
+        $("#button-tab-lists").addClass("active");
+        document.getElementById('search-results-lists').style.display = "block";
+    } else if (user_matches.length > 0) {
+        $("#button-tab-users").addClass("active");
+        document.getElementById('search-results-users').style.display = "block";
     }
 }
 function showFollowing(uid) {
@@ -857,17 +919,21 @@ function showFollowing(uid) {
     var following = following_info["following"];
     html_start = "<div class=\"stream-container\"><ol class=\"follow-items\">";
     html_body = "";
-    //console.log(following);
-    for (var i = 0; i < following.length; i++) {
-        following[i]["following"] = true;
-        html_body += getFollowHtml(following[i],i);
+    if (following.length > 0) {
+        for (var i = 0; i < following.length; i++) {
+            html_body += getFollowHtml(following[i],i);
+        }        
+    } else {
+        html_body = "<div class=\"empty-action\">You aren't following anyone yet! Click the Search icon above to search for people to follow.</div>";
     }
-    html_end = "</ol></div>";
+    html_end = "<get/ol></div>";
     $('.rec-section-header').empty();
     $('.rec-section-header').append("<span>Following...</span>");
     $('.filter-bar').empty();
     $('.filter-content').css('display','none');
     $('#scroll').empty();
+    $('.content-header').css("height","32px");
+    $('#scroll').css("height","calc( 100% - 92px - 32px)");        
     $('#scroll').append(html_start+html_body+html_end);
 }
 function showFollowers(uid) {
@@ -876,8 +942,12 @@ function showFollowers(uid) {
     var followers = followers_info["followers"];
     html_start = "<div class=\"stream-container\"><ol class=\"follow-items\">";
     html_body = "";
-    for (var i = 0; i < followers.length; i++) {
-        html_body += getFollowHtml(followers[i],i);
+    if (followers.length > 0) {
+        for (var i = 0; i < followers.length; i++) {
+            html_body += getFollowHtml(followers[i],i);
+        }
+    } else {
+        html_body = "<div class=\"empty-action\">You don't have any followers yet!</div>";
     }
     html_end = "</ol></div>";
     $('.rec-section-header').empty();
@@ -885,6 +955,8 @@ function showFollowers(uid) {
     $('.filter-bar').empty();
     $('.filter-content').css('display','none');
     $('#scroll').empty();
+    $('.content-header').css("height","32px");
+    $('#scroll').css("height","calc( 100% - 92px - 32px)");        
     $('#scroll').append(html_start+html_body+html_end);    
 }
 function getFollowHtml(follow,i) {
@@ -893,10 +965,12 @@ function getFollowHtml(follow,i) {
     card_html += "<div class=\"follow-header\">";
     card_html += "<span class=\"UserName\"><strong class=\"userName\">"+follow["first_name"]+" "+follow["last_name"]+"</strong></span>";
     card_html += "<a href=\"#\" onclick=\"changeUser("+follow["user_id"].toString()+")\">"+follow["username"]+"</a></div>";
-    if(follow["following"]) {
-        card_html += "<div class=\"follow-icon\"><button type=\"button\" class=\"button button-follow\" id=\"follow-item-"+i.toString()+"\" data-hover=\"Unfollow\" onClick=\"unfollow("+current_user.toString()+","+follow["user_id"].toString()+","+i.toString()+")\"><span>Following</span></button></div>";    
-    } else {
-        card_html += "<div class=\"follow-icon\"><button type=\"button\" class=\"button new-follow\" id=\"follow-item-"+i.toString()+"\" data-hover=\"Follow\" onClick=\"follow("+current_user.toString()+","+follow["user_id"].toString()+","+i.toString()+")\"><span>Follow</span></button></div>";    
+    if(follow["user_id"].toString() !== user_id.toString()) {
+        if(follow["following"]) {
+            card_html += "<div class=\"follow-icon\"><button type=\"button\" class=\"button button-follow\" id=\"follow-item-"+i.toString()+"\" data-hover=\"Unfollow\" onClick=\"unfollow("+current_user.toString()+","+follow["user_id"].toString()+","+i.toString()+")\"><span>Following</span></button></div>";    
+        } else {
+            card_html += "<div class=\"follow-icon\"><button type=\"button\" class=\"button new-follow\" id=\"follow-item-"+i.toString()+"\" data-hover=\"Follow\" onClick=\"follow("+current_user.toString()+","+follow["user_id"].toString()+","+i.toString()+")\"><span>Follow</span></button></div>";    
+        }
     }
     card_html += "</div></li>";
     return card_html;
@@ -931,7 +1005,7 @@ function manageFollowers(from_user,to_user,follow_type) {
         follow_type: follow_type
     };
     $.ajax({
-        url: 'http://localhost:8080/updateFollowers',
+        url: "http://"+server_host+":8080/updateFollowers",
         type: 'POST',
         data: JSON.stringify(post_data),
         dataType: 'text',
@@ -1018,7 +1092,7 @@ function searchAroundMe(type) {
         lon: pos.lng
     };
     $.ajax({
-        url: 'http://localhost:8080/search',
+        url: "http://"+server_host+":8080/search",
         type: 'POST',
         data: JSON.stringify(post_data),
         dataType: 'json',
@@ -1069,11 +1143,11 @@ function selectAroundMe() {
     $('.content-header').empty();
     $('.content-header').css("height","26px");
     $('#scroll').css("height","calc( 100% - 92px - 34px)");
-    html_head = "<div class=\"rec-section-header\"><span>What my network recommends around me...</span></div>";
+    html_head = "<div class=\"rec-section-header\"><span>Recommended around me...</span></div>";
     $('.content-header').append(html_head);
     tab_html = "<div class=\"tab\" id=\"search-tabs\">";
-    tab_html += "<button class=\"tablinks\" id=\"button-tab-terms\" onclick=\"searchTabController(event,'search-results-terms')\">Recommendations</button>";
-    tab_html += "<button class=\"tablinks\" id=\"button-tab-lists\" onclick=\"searchTabController(event,'search-results-lists')\">Lists</button>";
+    tab_html += "<button class=\"tablinks\" id=\"button-tab-terms\" onclick=\"searchTabController(event,'search-results-terms')\">Recommendations (0)</button>";
+    tab_html += "<button class=\"tablinks\" id=\"button-tab-lists\" onclick=\"searchTabController(event,'search-results-lists')\">Lists (0)</button>";
     tab_html += "</div>";
     tab_html += "<div class=\"tabcontent-wrapper\">";
     tab_html += "<div id=\"search-results-terms\" class=\"tabcontent\"></div>";
@@ -1142,7 +1216,7 @@ function createUser(first_name, last_name, email, uname, pwd) {
     };
     console.log(post_data);
     $.ajax({
-        url: 'http://localhost:8080/createUser',
+        url: "http://"+server_host+":8080/createUser",
         type: 'POST',
         data: JSON.stringify(post_data),
         dataType: 'text',
