@@ -29,9 +29,12 @@ var search_data = {};
 var active_tab = 'terms';
 var pos = {};
 var around_me_data = {'list_matches': [], 'rec_matches': []};
-var server_host = '18.144.25.233';
+//var server_host = '18.144.25.233';
+var server_host = 'localhost';
     
 window.onload = function(){
+    //var temp = document.cookie;
+    //console.log(temp);
     user_id = getCookie('user_id');
     current_user = user_id;
     username = getCookie('username');
@@ -44,9 +47,45 @@ window.onload = function(){
         $('#splashModal').modal('show');
     } else {
         $('#loginModal').modal('show');
-        login_html = "<span>Logged in as </span><a href=\"#\" class=\"login-link\">"+username+"</a><span>. </span><a href=\"#\" class=\"login-link\" onClick=\"logout()\">Logout</a>"
+        //login_html = "<span>Logged in as </span><a href=\"#\" class=\"login-link\">"+username+"</a><span>. </span><a href=\"#\" class=\"login-link\" onClick=\"logout()\">Logout</a>"
     };
 };
+function login() {
+    var uname = $("#login-uname").val();
+    var pword = $("#login-pwd").val();
+    var auth_object = {
+        'uname': uname,
+        'password': pword
+    };
+    $.ajax({
+        url: "http://"+server_host+":8080/auth",
+        type: 'POST',
+        data: JSON.stringify(auth_object),
+        dataType: 'json',
+        success: function(result) {
+            $.notify("Logged In", {className: "success", position: "bottom center"});
+            if(result['status'] === 'ok') {
+                user_id = result['user_id'].toString();
+                current_user = user_id;
+                username = result['username'];
+                document.cookie = "username="+username+"; path=/;";
+                document.cookie = "user_id="+user_id+"; path=/;";
+                console.log("Set cookie to: "+document.cookie);
+                page = 1;
+                login_html = "<span>Logged in as </span><a href=\"#\" class=\"login-link\">"+username+"</a><span>. </span><a href=\"#\" class=\"login-link\" onClick=\"logout()\">Logout</a>"
+                setRecommendations('global','new','new');
+                $('a.icon-select.global').addClass('active')
+                $('.login-info-bar').append(login_html);
+                $('#splashModal').modal('show');
+            } else {
+                $('#loginModal').modal('show');
+            };
+        },
+        error: function(jqXHR, exception) {
+            errorHandling(jqXHR, exception);
+        }
+    });
+}
 function loadDefaultProfile() {
     current_user = user_id;
     fetched_my_recommendations = [];
@@ -321,12 +360,15 @@ function getCookie(cname) {
     return "";
 }
 function deleteCookie( name ) {
-    document.cookie = name + '=; expires=Thu, 01 Jan 1970 00:00:01 GMT; path=/';
-    var decodedCookie = decodeURIComponent(document.cookie);
+    cookie_str = name + '=; expires=Thu, 01 Jan 1970 00:00:01 GMT; path=/;';
+    document.cookie = cookie_str;
 }
 function logout() {
+    user_id = '';
+    username = '';
     deleteCookie('user_id');
     deleteCookie('username');
+    console.log(document.cookie);
     location.reload();
 }
 function sendData() {
