@@ -44,9 +44,9 @@ function getListMarkerInfo(lists) {
     marker_list = {};
     for (var i = 0; i < lists.length; i++) {
         marker_list[lists[i]["list_id"]] = {};
-        if (lists[i]["lat"]) {
-            lat = lists[i]["lat"];
-            lon = lists[i]["lon"];
+        if (lists[i]["list_lat"]) {
+            lat = lists[i]["list_lat"];
+            lon = lists[i]["list_lon"];
         } else {
             lat = lists[i]["list_geom"].slice(lists[i]["list_geom"].indexOf("(")+1,lists[i]["list_geom"].indexOf(" "));
             lon = lists[i]["list_geom"].slice(lists[i]["list_geom"].indexOf(" ")+1,lists[i]["list_geom"].indexOf(")"));

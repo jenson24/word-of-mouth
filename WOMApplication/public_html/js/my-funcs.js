@@ -44,11 +44,13 @@ window.onload = function(){
         login_html = "<span>Logged in as </span><a href=\"#\" class=\"login-link\">"+username+"</a><span>. </span><a href=\"#\" class=\"login-link\" onClick=\"logout()\">Logout</a>"
         setRecommendations('global','new','new');
         $('a.icon-select.global').addClass('active')
+        $('.login-info-bar').empty();
         $('.login-info-bar').append(login_html);
         $('#splashModal').modal('show');
     } else {
         $('#loginModal').modal('show');
         login_html = "<a href=\"#\" class=\"login-link\" onClick=\"showLoginModal()\">Login</a>"
+        $('.login-info-bar').empty();
         $('.login-info-bar').append(login_html);
     };
 };
@@ -79,7 +81,8 @@ function login() {
                 page = 1;
                 login_html = "<span>Logged in as </span><a href=\"#\" class=\"login-link\">"+username+"</a><span>. </span><a href=\"#\" class=\"login-link\" onClick=\"logout()\">Logout</a>"
                 setRecommendations('global','new','new');
-                $('a.icon-select.global').addClass('active')
+                $('a.icon-select.global').addClass('active');
+                $('.login-info-bar').empty();
                 $('.login-info-bar').append(login_html);
                 $('#splashModal').modal('show');
             } else {

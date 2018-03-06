@@ -58,8 +58,10 @@ function editRecommendation(r_id, val, type) {
 function updateRecHtml(r_id, val, type) {
     if (active_menu === 'local') {
         recs = fetched_my_recommendations;
-    } else {
+    } else if (active_menu === 'global') {
         recs = fetched_all_recommendations;
+    } else if (active_menu === 'aroundMe') {
+        recs = around_me_data['rec_matches'];
     }
     for (var i = 0; i < recs.length; i++) {
         rec = recs[i];
