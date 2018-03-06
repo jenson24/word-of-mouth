@@ -141,15 +141,10 @@
             <!-- Modal content-->
             <div class="modal-content">
                 <div class="modal-header" id="login-modal-header">
-                    <!--<button type="button" class="close-modal" data-dismiss="splash-modal">&times;</button>-->
                     <div id="login-modal-title" class="temp-modal-title">Word of Mouth</div>
                 </div>
                 <div class="modal-body" id="login-modal-body">
-                    <!--<form action="http://localhost:8080/auth" method="post">-->
-                    <div class="imgcontainer">
-                        <!--<img src="img_avatar2.png" alt="Avatar" class="avatar">-->
-                    </div>
-
+                    <p style="text-align:center">Enter login information for <strong>existing users</strong> or click <strong>Join</strong> below for new users</p>
                     <div class="login-container">
                         <label><b>Username</b></label>
                         <input type="text" placeholder="Enter Username" name="uname" required class="login-input" id="login-uname">
@@ -162,11 +157,9 @@
                     </div>
 
                     <div class="login-container" style="background-color:#f1f1f1">
-                        <!--<button type="button" class="cancel-btn">Cancel</button>-->
                         <button type="button" class="join-btn" onClick="enableJoin()" data-dismiss="modal">Join</button>
                         <span class="psw">Forgot <a href="#">password?</a></span>
                     </div>
-                    <!--</form>-->
                 </div>
             </div>
         </div>
@@ -176,7 +169,6 @@
             <!-- Modal content-->
             <div class="modal-content">
                 <div class="modal-header" id="join-modal-header">
-                    <!--<button type="button" class="close-modal" data-dismiss="splash-modal">&times;</button>-->
                     <div id="join-modal-title" class="temp-modal-title">Join Word of Mouth</div>
                 </div>
                 <div class="modal-body" id="join-modal-body">
@@ -193,13 +185,11 @@
                         <input id="join-pwd1" type="password" placeholder="Enter Password" name="psw" required class="join-input">
                         <label><b>Re-Enter Password</b></label>
                         <input id="join-pwd2" type="password" placeholder="Enter Password" name="psw" required class="join-input">
-
-                        <!--<button type="submit" class="login-button">Join</button>-->
                     </div>
 
                     <div class="login-container" style="background-color:#f1f1f1">
-                        <!--<button type="button" class="cancel-btn">Cancel</button>-->
                         <button type="button" class="join-btn" id="join-btn" onClick="joinWom()" data-dismiss="modal" disabled="disabled">Join</button>
+                        <button type="button" class="cancel-btn" onClick="cancelJoin()" data-dismiss="modal">Cancel</button>
                     </div>
                 </div>
             </div>

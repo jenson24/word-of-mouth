@@ -74,7 +74,7 @@ function getListMarkerInfo(lists) {
 function addListMarkers(marker_list) {
     for (var id in marker_list) {
         var myLatLng = {lat: parseFloat(marker_list[id]["lat"]), lng: parseFloat(marker_list[id]["long"])};
-        marker_icon = "http://maps.google.com/mapfiles/ms/icons/blue-dot.png";
+        marker_icon = "https://maps.google.com/mapfiles/ms/icons/blue-dot.png";
         var marker = new google.maps.Marker({
             position: myLatLng,
             map: map,
@@ -117,7 +117,7 @@ function get_lists(user_id) {
         uid: user_id
     };
     return $.ajax({
-        url: "http://"+server_host+":8080/getLists",
+        url: host_type+"://"+server_host+"/getLists",
         type: 'POST',
         data: JSON.stringify(post_data),
         dataType: 'json',
@@ -164,7 +164,7 @@ function get_recs_for_list(list_id,list_name,user_id) {
         user_id: user_id
     };
     return $.ajax({
-        url: "http://"+server_host+":8080/getListRecs",
+        url: host_type+"://"+server_host+"/getListRecs",
         type: 'POST',
         data: JSON.stringify(post_data),
         dataType: 'json',
@@ -338,7 +338,7 @@ function createNewList(list_name,list_description,list_location,lat,lon,place_id
         user_id: user_id
     };
     $.ajax({
-        url: "http://"+server_host+":8080/createList",
+        url: host_type+"://"+server_host+"/createList",
         type: 'POST',
         data: JSON.stringify(post_data),
         dataType: 'json',
@@ -458,7 +458,7 @@ function deleteList(list_id) {
         user_id: user_id
     };
     $.ajax({
-        url: "http://"+server_host+":8080/deleteList",
+        url: host_type+"://"+server_host+"/deleteList",
         type: 'POST',
         data: JSON.stringify(post_data),
         dataType: 'text',
@@ -485,7 +485,7 @@ function editListRequest(list_name,list_description,list_location,lat,lon,place_
         list_id: list_id
     };
     $.ajax({
-        url: "http://"+server_host+":8080/editList",
+        url: host_type+"://"+server_host+"/editList",
         type: 'POST',
         data: JSON.stringify(post_data),
         dataType: 'json',

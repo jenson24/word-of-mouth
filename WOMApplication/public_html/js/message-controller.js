@@ -22,7 +22,7 @@ function getMessages(page) {
         page: page
     };
     $.ajax({
-        url: "http://"+server_host+":8080/getMessagesByUser",
+        url: host_type+"://"+server_host+"/getMessagesByUser",
         type: 'POST',
         data: JSON.stringify(post_data),
         dataType: 'json',
@@ -166,7 +166,7 @@ function storeMessage(from_user,to_user,comment,r_id,ind) {
         r_id: r_id
     };
     $.ajax({
-        url: "http://"+server_host+":8080/storeMessage",
+        url: host_type+"://"+server_host+"/storeMessage",
         type: 'POST',
         data: JSON.stringify(post_data),
         dataType: 'text',

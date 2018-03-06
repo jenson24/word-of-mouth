@@ -29,9 +29,10 @@ var search_data = {};
 var active_tab = 'terms';
 var pos = {};
 var around_me_data = {'list_matches': [], 'rec_matches': []};
-//var server_host = '18.144.25.233';
-var server_host = 'localhost';
-    
+var server_host = 'word-of-mouth-test.com/api';
+var server_host = 'localhost:8080/api';
+var host_type = 'http';
+
 window.onload = function(){
     //var temp = document.cookie;
     //console.log(temp);
@@ -47,9 +48,13 @@ window.onload = function(){
         $('#splashModal').modal('show');
     } else {
         $('#loginModal').modal('show');
-        //login_html = "<span>Logged in as </span><a href=\"#\" class=\"login-link\">"+username+"</a><span>. </span><a href=\"#\" class=\"login-link\" onClick=\"logout()\">Logout</a>"
+        login_html = "<a href=\"#\" class=\"login-link\" onClick=\"showLoginModal()\">Login</a>"
+        $('.login-info-bar').append(login_html);
     };
 };
+function showLoginModal() {
+    $('#loginModal').modal('show');
+}
 function login() {
     var uname = $("#login-uname").val();
     var pword = $("#login-pwd").val();
@@ -58,7 +63,7 @@ function login() {
         'password': pword
     };
     $.ajax({
-        url: "http://"+server_host+":8080/auth",
+        url: host_type+"://"+server_host+"/auth",
         type: 'POST',
         data: JSON.stringify(auth_object),
         dataType: 'json',
@@ -78,7 +83,9 @@ function login() {
                 $('.login-info-bar').append(login_html);
                 $('#splashModal').modal('show');
             } else {
+                error_msg = result['status'];
                 $('#loginModal').modal('show');
+                alert(error_msg);
             };
         },
         error: function(jqXHR, exception) {
@@ -94,16 +101,16 @@ function loadDefaultProfile() {
 function setRecommendations(rec_type, temp_obj, marker_flag) {
     recs = temp_obj;
     if (temp_obj === 'new') {
-        if (rec_type === 'global' && fetched_all_recommendations.length > 0) {
-            recs = fetched_all_recommendations;
-        } else if (rec_type === 'local' && fetched_my_recommendations.length > 0) {
-            recs = fetched_my_recommendations;
-        } else {
-            page = 1;
-            get_recommendations(rec_type, page);
-            recs = recommendations["recommendations"];            
-            jQuery('#scroll').animate({scrollTop:0},0);
-        }
+        //if (rec_type === 'global' && fetched_all_recommendations.length > 0) {
+        //    recs = fetched_all_recommendations;
+        //} else if (rec_type === 'local' && fetched_my_recommendations.length > 0) {
+        //    recs = fetched_my_recommendations;
+        //} else {
+        page = 1;
+        get_recommendations(rec_type, page);
+        recs = recommendations["recommendations"];            
+        jQuery('#scroll').animate({scrollTop:0},0);
+        //}
         clearFilters();
     }
     if (rec_type === 'global') {
@@ -263,7 +270,7 @@ function getCardHtml(recObj,ind) {
     card_html += "</div>";
     card_html += "</div>";
     card_html += "</div>";
-    if (recObj["user_id"] === user_id) {
+    if (recObj["user_id"].toString() === user_id.toString()) {
         card_html += "<div class=\"rec-tools-container\">";
         card_html += "<button class=\"fa fa-wrench tool-container\" data-toggle=\"collapse\" data-target=\"#rec-tools-collapse-"+ind.toString()+"\"></button>";
         card_html += "<div id=\"rec-tools-collapse-"+ind.toString()+"\" class=\"collapse\">";
@@ -285,11 +292,11 @@ function addMarkers(marker_list) {
     for (var id in marker_list) {
         var myLatLng = {lat: parseFloat(marker_list[id]["lat"]), lng: parseFloat(marker_list[id]["long"])};
         if (marker_list[id]["type"] === 1) {
-            marker_icon = "http://maps.google.com/mapfiles/ms/icons/green-dot.png";
+            marker_icon = "https://maps.google.com/mapfiles/ms/icons/green-dot.png";
         } else if (marker_list[id]["type"] === -1) {
-            marker_icon = "http://maps.google.com/mapfiles/ms/icons/red-dot.png";
+            marker_icon = "https://maps.google.com/mapfiles/ms/icons/red-dot.png";
         } else {
-            marker_icon = "http://maps.google.com/mapfiles/ms/icons/yellow-dot.png";
+            marker_icon = "https://maps.google.com/mapfiles/ms/icons/yellow-dot.png";
         }
         var marker = new google.maps.Marker({
             position: myLatLng,
@@ -377,7 +384,7 @@ function sendData() {
     rec_object["user_id"] = user_id;
     rec_object["username"] = username;
     $.ajax({
-        url: "http://"+server_host+":8080/createRec",
+        url: host_type+"://"+server_host+"/createRec",
         type: 'POST',
         data: JSON.stringify(rec_object),
         dataType: 'text',
@@ -403,7 +410,7 @@ function get_recommendations(lookup_type, page) {
         page: page
     };
     $.ajax({
-        url: "http://"+server_host+":8080/getRecs",
+        url: host_type+"://"+server_host+"/getRecs",
         type: 'POST',
         data: JSON.stringify(post_data),
         dataType: 'json',
@@ -414,9 +421,25 @@ function get_recommendations(lookup_type, page) {
             };
             for (var i = 0; i < recommendations["recommendations"].length; i++) {
                 if (lookup_type === 'global') {
-                    fetched_all_recommendations.push(recommendations["recommendations"][i]);                                 
+                    var already_pulled = false;
+                    for (var j = 0; j < fetched_all_recommendations.length; j++) {
+                        if (recommendations["recommendations"][i]["r_id"] === fetched_all_recommendations[j]["r_id"]) {
+                            already_pulled = true;
+                        }
+                    }
+                    if (already_pulled === false) {
+                        fetched_all_recommendations.push(recommendations["recommendations"][i]);
+                    }
                 } else if (lookup_type === 'local') {
-                    fetched_my_recommendations.push(recommendations["recommendations"][i]);                                    
+                    var already_pulled = false;
+                    for (var j = 0; j < fetched_my_recommendations.length; j++) {
+                        if (recommendations["recommendations"][i]["r_id"] === fetched_my_recommendations[j]["r_id"]) {
+                            already_pulled = true;
+                        }
+                    }
+                    if (already_pulled === false) {
+                        fetched_my_recommendations.push(recommendations["recommendations"][i]);                                    
+                    }
                 }
             }
             $.notify("Found data", {className: "success", position: "bottom center"});
@@ -433,7 +456,7 @@ function getProfile(uid) {
         uid: uid
     };
     return $.ajax({
-        url: "http://"+server_host+":8080/getProfile",
+        url: host_type+"://"+server_host+"/getProfile",
         type: 'POST',
         data: JSON.stringify(post_data),
         dataType: 'json',
@@ -455,7 +478,7 @@ function get_following(uid,page) {
         page: page
     };
     return $.ajax({
-        url: "http://"+server_host+":8080/getFollowing",
+        url: host_type+"://"+server_host+"/getFollowing",
         type: 'POST',
         data: JSON.stringify(post_data),
         dataType: 'json',
@@ -477,7 +500,7 @@ function get_followers(uid,page) {
         page: page
     };
     return $.ajax({
-        url: "http://"+server_host+":8080/getFollowers",
+        url: host_type+"://"+server_host+"/getFollowers",
         type: 'POST',
         data: JSON.stringify(post_data),
         dataType: 'json',
@@ -820,7 +843,7 @@ function searchRecs(term,page) {
         type: active_tab
     };
     $.ajax({
-        url: "http://"+server_host+":8080/search",
+        url: host_type+"://"+server_host+"/search",
         type: 'POST',
         data: JSON.stringify(post_data),
         dataType: 'json',
@@ -1047,7 +1070,7 @@ function manageFollowers(from_user,to_user,follow_type) {
         follow_type: follow_type
     };
     $.ajax({
-        url: "http://"+server_host+":8080/updateFollowers",
+        url: host_type+"://"+server_host+"/updateFollowers",
         type: 'POST',
         data: JSON.stringify(post_data),
         dataType: 'text',
@@ -1134,7 +1157,7 @@ function searchAroundMe(type) {
         lon: pos.lng
     };
     $.ajax({
-        url: "http://"+server_host+":8080/search",
+        url: host_type+"://"+server_host+"/search",
         type: 'POST',
         data: JSON.stringify(post_data),
         dataType: 'json',
@@ -1248,6 +1271,10 @@ function joinWom() {
         result = createUser(first_name, last_name, email, uname, pwd1);
     }
 }
+function cancelJoin() {
+    $('#loginModal').modal('show');
+}
+
 function createUser(first_name, last_name, email, uname, pwd) {
     post_data = {
         fname: first_name,
@@ -1256,19 +1283,19 @@ function createUser(first_name, last_name, email, uname, pwd) {
         uname: uname,
         password: pwd
     };
-    console.log(post_data);
+    //console.log(post_data);
     $.ajax({
-        url: "http://"+server_host+":8080/createUser",
+        url: host_type+"://"+server_host+"/createUser",
         type: 'POST',
         data: JSON.stringify(post_data),
         dataType: 'text',
         success: function(create_result) {
-            console.log(create_result);
+            //console.log(create_result);
             if (create_result !== 'invalid') {
                 $.notify("Created User", {className: "success", position: "bottom center"});
                 user_id = parseInt(create_result);
                 current_user = user_id;
-                console.log(user_id);
+                username = uname;
                 loadDefaultProfile();
             } else {
                 alert("Invalid username and password provided");
