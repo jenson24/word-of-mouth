@@ -48,8 +48,8 @@ function getListMarkerInfo(lists) {
             lat = lists[i]["list_lat"];
             lon = lists[i]["list_lon"];
         } else {
-            lat = lists[i]["list_geom"].slice(lists[i]["list_geom"].indexOf("(")+1,lists[i]["list_geom"].indexOf(" "));
-            lon = lists[i]["list_geom"].slice(lists[i]["list_geom"].indexOf(" ")+1,lists[i]["list_geom"].indexOf(")"));
+            //lat = lists[i]["list_geom"].slice(lists[i]["list_geom"].indexOf("(")+1,lists[i]["list_geom"].indexOf(" "));
+            //lon = lists[i]["list_geom"].slice(lists[i]["list_geom"].indexOf(" ")+1,lists[i]["list_geom"].indexOf(")"));
         }
         marker_list[lists[i]["list_id"]]["lat"] = lat;
         marker_list[lists[i]["list_id"]]["long"] = lon;

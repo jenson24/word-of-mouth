@@ -5,7 +5,15 @@
  */
 
 
-function editRecommendationController(r_id, comment, r_name, r_type) {
+function editRecommendationController(r_id) {
+    for (var i = 0; i < fetched_my_recommendations.length; i++) {
+        if (fetched_my_recommendations[i]["r_id"].toString() === r_id.toString()) {
+            r_name = fetched_my_recommendations[i]["r_name"];
+            comment = fetched_my_recommendations[i]["r_comment"].replace(/'/g, "\\'");
+            r_type = fetched_my_recommendations[i]["r_type"];
+        }
+    }
+
     $('.temp-modal-title').empty();
     if (r_type === '1') {
         $("<h3 class=\"modal-title fa fa-thumbs-up\" id=\"modal-title\"></h3>").appendTo(".temp-modal-title");    
@@ -19,11 +27,10 @@ function editRecommendationController(r_id, comment, r_name, r_type) {
     $('#modal-body').append("<textarea rows=\"4\" id=\"rec-comment\">"+comment+"</textarea>");
     $('.modal-footer').empty();
     $('.modal-footer').append("<button type=\"button\" class=\"btn btn-cancel\" data-dismiss=\"modal\">Cancel</button>");
-    $('.modal-footer').append("<button type=\"button\" class=\"btn btn-save\" data-dismiss=\"modal\" onClick=\"editRecommendation("+r_id+")\">Send</button>");
+    $('.modal-footer').append("<button type=\"button\" class=\"btn btn-save\" data-dismiss=\"modal\" onClick=\"editRecommendation("+r_id+",'','comment')\">Send</button>");
 }
 
 function editRecommendation(r_id, val, type) {
-    //console.log(recObj)
     if (type === 'comment') {
         var comment = document.getElementById("rec-comment").value;
         post_data = {
@@ -44,6 +51,11 @@ function editRecommendation(r_id, val, type) {
         success: function() {
             $.notify("Successfully Updated Recommendation", {className: "success", position: "bottom center"});
             if (type === 'comment') {
+                for (var i = 0; i < fetched_my_recommendations.length; i++) {
+                    if (fetched_my_recommendations[i]['r_id'].toString() === r_id.toString()) {
+                        fetched_my_recommendations[i]['r_comment'] = comment;
+                    }
+                }
                 updateRecHtml(r_id,comment,'comment');
             } else if (type === 'list') {
                 updateRecHtml(r_id,val,'list');
@@ -84,8 +96,15 @@ function updateRecHtml(r_id, val, type) {
     }
 }
 
-function deleteRecommendationController(r_id, comment, r_name, r_type) {
+function deleteRecommendationController(r_id) {
     $('.temp-modal-title').empty();
+    for (var i = 0; i < fetched_my_recommendations.length; i++) {
+        if (fetched_my_recommendations[i]["r_id"].toString() === r_id.toString()) {
+            r_name = fetched_my_recommendations[i]["r_name"];
+            comment = fetched_my_recommendations[i]["r_comment"].replace(/'/g, "\\'");
+            r_type = fetched_my_recommendations[i]["r_type"];
+        }
+    }
     if (r_type === '1') {
         $("<h3 class=\"modal-title fa fa-thumbs-up\" id=\"modal-title\"></h3>").appendTo(".temp-modal-title");    
     } else {

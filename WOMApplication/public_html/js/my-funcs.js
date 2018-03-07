@@ -277,11 +277,9 @@ function getCardHtml(recObj,ind) {
         card_html += "<div class=\"rec-tools-container\">";
         card_html += "<button class=\"fa fa-wrench tool-container\" data-toggle=\"collapse\" data-target=\"#rec-tools-collapse-"+ind.toString()+"\"></button>";
         card_html += "<div id=\"rec-tools-collapse-"+ind.toString()+"\" class=\"collapse\">";
-        card_html += "<div class=\"edit-rec-button\"><button title=\"Edit Recommendation\" class=\"fa fa-pencil-square-o rec-tool-icons\" data-toggle=\"modal\" data-target=\"#myModal\" onClick=\"editRecommendationController('"+recObj["r_id"]+"', '"+recObj["r_comment"].replace(/'/g, "\\'")+"', '"+recObj["r_name"]+"', '"+recObj["r_type"]+"')\"></button></div>";
-        card_html += "<div class=\"delete-rec-button\"><button title=\"Delete Recommendation\" class=\"fa fa-trash-o rec-tool-icons\" data-toggle=\"modal\" data-target=\"#myModal\" onClick=\"deleteRecommendationController('"+recObj["r_id"]+"', '"+recObj["r_comment"].replace(/'/g, "\\'")+"', '"+recObj["r_name"]+"', '"+recObj["r_type"]+"')\"></button></div>";
-        //if ( !recObj["r_lists"] ) {
+        card_html += "<div class=\"edit-rec-button\"><button title=\"Edit Recommendation\" class=\"fa fa-pencil-square-o rec-tool-icons\" data-toggle=\"modal\" data-target=\"#myModal\" onClick=\"editRecommendationController('"+recObj["r_id"]+"')\"></button></div>";
+        card_html += "<div class=\"delete-rec-button\"><button title=\"Delete Recommendation\" class=\"fa fa-trash-o rec-tool-icons\" data-toggle=\"modal\" data-target=\"#myModal\" onClick=\"deleteRecommendationController('"+recObj["r_id"]+"')\"></button></div>";
         card_html += "<div class=\"list-button\"><button title=\"Add to List\" class=\"fa fa-list rec-tool-icons\" data-toggle=\"modal\" data-target=\"#myModal\" onClick=\"addRecToUserList("+recObj["user_id"]+","+recObj["r_id"]+")\"></button></div>";
-        //}
         card_html += "</div></div>";
     } else {
         card_html += "<div class=\"message-button\"><button title=\"Send Message\" class=\"fa fa-envelope rec-tool-icons\" data-toggle=\"modal\" data-target=\"#myModal\" onClick=\"composeMessage("+user_id.toString()+","+recObj["user_id"]+",'"+recObj["username"]+"',"+recObj["r_id"]+")\"></button></div>";    
@@ -391,14 +389,10 @@ function sendData() {
         type: 'POST',
         data: JSON.stringify(rec_object),
         dataType: 'text',
-        success: function() {
+        success: function(rec_id) {
             $.notify("Successfully Added Recommendation", {className: "success", position: "bottom center"});
-            //fetched_all_recommendations.push(rec_object);
-            //fetched_my_recommendations.push(rec_object);
-            if (active_menu === 'local') {
-                temp_obj = {user_id: user_id, username: username, r_comment: comment, r_name: rec_object["g_name"], r_date: "Just Added...", r_lists: []};
-                addRecToPage(temp_obj);
-            }
+            temp_obj = {r_id: rec_id, user_id: user_id, username: username, r_comment: comment, r_name: rec_object["g_name"], r_date: "Just Added...", r_lists: []};
+            addRecToPage(temp_obj);
         },
         error: function(jqXHR, exception) {
             errorHandling(jqXHR, exception);
