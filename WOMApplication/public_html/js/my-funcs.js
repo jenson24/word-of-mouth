@@ -21,7 +21,7 @@ var marker_list = {};
 var search_rec_results = [];
 var profile_info = {};
 var list_info = {};
-var active_user_lists = {};
+var active_user_lists = [];
 var term_matches = [];
 var user_matches = [];
 var list_matches = [];
@@ -29,7 +29,7 @@ var search_data = {};
 var active_tab = 'terms';
 var pos = {};
 var around_me_data = {'list_matches': [], 'rec_matches': []};
-var server_host = 'word-of-mouth-test.com/api';
+//var server_host = 'word-of-mouth-test.com/api';
 var server_host = 'localhost:8080/api';
 var host_type = 'http';
 

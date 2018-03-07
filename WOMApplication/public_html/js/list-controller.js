@@ -150,8 +150,8 @@ function getListHtml(list,i,uid) {
         card_html += "<div class=\"rec-tools-container\">";
         card_html += "<button class=\"fa fa-wrench tool-container\" data-toggle=\"collapse\" data-target=\"#list-tools-collapse-"+i.toString()+"\"></button>";
         card_html += "<div id=\"list-tools-collapse-"+i.toString()+"\" class=\"collapse\">";
-        card_html += "<div class=\"edit-list-button\"><button title=\"Edit List Details\" class=\"fa fa-pencil-square-o rec-tool-icons\" data-toggle=\"modal\" data-target=\"#myModal\" onClick=\"editListController('"+list["list_id"]+"', '"+list["list_name"].replace(/'/g, "\\'")+"', '"+list["list_description"]+"', '"+list["list_location"]+"')\"></button></div>";
-        card_html += "<div class=\"delete-list-button\"><button title=\"Delete List\" class=\"fa fa-trash-o rec-tool-icons\" data-toggle=\"modal\" data-target=\"#myModal\" onClick=\"deleteListController('"+list["list_id"]+"', '"+list["list_name"].replace(/'/g, "\\'")+"')\"></button></div>";
+        card_html += "<div class=\"edit-list-button\"><button title=\"Edit List Details\" class=\"fa fa-pencil-square-o rec-tool-icons\" data-toggle=\"modal\" data-target=\"#myModal\" onClick=\"editListController('"+list["list_id"]+"')\"></button></div>";
+        card_html += "<div class=\"delete-list-button\"><button title=\"Delete List\" class=\"fa fa-trash-o rec-tool-icons\" data-toggle=\"modal\" data-target=\"#myModal\" onClick=\"deleteListController('"+list["list_id"]+"')\"></button></div>";
         card_html += "</div></div>";
     }
     card_html += "</li>";
@@ -380,7 +380,21 @@ function addListToPage(list) {
     getListMarkerInfo(lists);
 }
 
-function editListController(list_id,list_name,list_description,list_location) {
+function editListController(list_id) {
+    if (active_menu === 'local') {
+        temp_lists = active_user_lists;
+    } else if (active_menu === 'around_me') {
+        temp_lists = around_me_data['list_matches'];
+    } else if (active_menu === 'searchRecs') {
+        temp_lists = list_matches;
+    }
+    for (var i = 0; i < temp_lists.length; i++) {
+        if (temp_lists[i]["r_id"].toString() === r_id.toString()) {
+            list_name = temp_lists[i]["list_name"];
+            list_description = temp_lists[i]["list_description"].replace(/'/g, "\\'");
+        }
+    }
+ 
     $('.temp-modal-title').empty();
     $("<h3 class=\"modal-title fa fa-list\" id=\"modal-title\"></h3>").appendTo(".temp-modal-title");
     $('.modal-title').append("   ");
@@ -440,7 +454,20 @@ function editListController(list_id,list_name,list_description,list_location) {
 
 }
 
-function deleteListController(list_id,list_name) {
+function deleteListController(list_id) {
+    if (active_menu === 'local') {
+        temp_lists = active_user_lists;
+    } else if (active_menu === 'around_me') {
+        temp_lists = around_me_data['list_matches'];
+    } else if (active_menu === 'searchRecs') {
+        temp_lists = list_matches;
+    }
+    for (var i = 0; i < temp_lists.length; i++) {
+        if (temp_lists[i]["r_id"].toString() === r_id.toString()) {
+            list_name = temp_lists[i]["list_name"];
+        }
+    }
+
     $('.temp-modal-title').empty();
     $("<h3 class=\"modal-title fa fa-list\" id=\"modal-title\"></h3>").appendTo(".temp-modal-title");    
     $('.modal-title').append("   ");

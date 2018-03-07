@@ -6,11 +6,21 @@
 
 
 function editRecommendationController(r_id) {
-    for (var i = 0; i < fetched_my_recommendations.length; i++) {
-        if (fetched_my_recommendations[i]["r_id"].toString() === r_id.toString()) {
-            r_name = fetched_my_recommendations[i]["r_name"];
-            comment = fetched_my_recommendations[i]["r_comment"].replace(/'/g, "\\'");
-            r_type = fetched_my_recommendations[i]["r_type"];
+    var temp_recs = [];
+    if (active_menu === 'local') {
+        temp_recs = fetched_my_recommendations;
+    } else if (active_menu === 'global') {
+        temp_recs = fetched_all_recommendations;
+    } else if (active_menu === 'around_me') {
+        temp_recs = around_me_data['rec_matches'];
+    } else if (active_menu === 'searchRecs') {
+        temp_recs = term_matches;
+    }
+    for (var i = 0; i < temp_recs.length; i++) {
+        if (temp_recs[i]["r_id"].toString() === r_id.toString()) {
+            r_name = temp_recs[i]["r_name"];
+            comment = temp_recs[i]["r_comment"].replace(/'/g, "\\'");
+            r_type = temp_recs[i]["r_type"];
         }
     }
 
@@ -98,11 +108,20 @@ function updateRecHtml(r_id, val, type) {
 
 function deleteRecommendationController(r_id) {
     $('.temp-modal-title').empty();
-    for (var i = 0; i < fetched_my_recommendations.length; i++) {
-        if (fetched_my_recommendations[i]["r_id"].toString() === r_id.toString()) {
-            r_name = fetched_my_recommendations[i]["r_name"];
-            comment = fetched_my_recommendations[i]["r_comment"].replace(/'/g, "\\'");
-            r_type = fetched_my_recommendations[i]["r_type"];
+    if (active_menu === 'local') {
+        temp_recs = fetched_my_recommendations;
+    } else if (active_menu === 'global') {
+        temp_recs = fetched_all_recommendations;
+    } else if (active_menu === 'around_me') {
+        temp_recs = around_me_data['rec_matches'];
+    } else if (active_menu === 'searchRecs') {
+        temp_recs = term_matches;
+    }
+    for (var i = 0; i < temp_recs.length; i++) {
+        if (temp_recs[i]["r_id"].toString() === r_id.toString()) {
+            r_name = temp_recs[i]["r_name"];
+            comment = temp_recs[i]["r_comment"].replace(/'/g, "\\'");
+            r_type = temp_recs[i]["r_type"];
         }
     }
     if (r_type === '1') {
