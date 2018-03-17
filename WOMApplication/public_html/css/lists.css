@@ -24,4 +24,8 @@ and open the template in the editor.
     overflow: hidden;
     padding-bottom: 3px;
 }
-
+.remove-rec {
+    background-color: white;
+    color: #f44336;
+    border: none;
+}

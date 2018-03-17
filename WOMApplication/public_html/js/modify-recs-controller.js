@@ -7,15 +7,7 @@
 
 function editRecommendationController(r_id) {
     var temp_recs = [];
-    if (active_menu === 'local') {
-        temp_recs = fetched_my_recommendations;
-    } else if (active_menu === 'global') {
-        temp_recs = fetched_all_recommendations;
-    } else if (active_menu === 'around_me') {
-        temp_recs = around_me_data['rec_matches'];
-    } else if (active_menu === 'searchRecs') {
-        temp_recs = term_matches;
-    }
+    temp_recs = recommendation[active_menu];
     for (var i = 0; i < temp_recs.length; i++) {
         if (temp_recs[i]["r_id"].toString() === r_id.toString()) {
             r_name = temp_recs[i]["r_name"];
@@ -61,14 +53,23 @@ function editRecommendation(r_id, val, type) {
         success: function() {
             $.notify("Successfully Updated Recommendation", {className: "success", position: "bottom center"});
             if (type === 'comment') {
-                for (var i = 0; i < fetched_my_recommendations.length; i++) {
-                    if (fetched_my_recommendations[i]['r_id'].toString() === r_id.toString()) {
-                        fetched_my_recommendations[i]['r_comment'] = comment;
+                for (var i = 0; i < recommendations['local'].length; i++) {
+                    if (recommendations['local'][i]['r_id'].toString() === r_id.toString()) {
+                        recommendations['local'][i]['r_comment'] = comment;
                     }
                 }
                 updateRecHtml(r_id,comment,'comment');
             } else if (type === 'list') {
                 updateRecHtml(r_id,val,'list');
+                tabs = ['local','global','aroundMe','searchRecs'];
+                for (var m in tabs) {
+                    for (var i = 0; i < recommendations[tabs[m]].length; i++) {
+                        if (recommendations[tabs[m]][i]['r_id'].toString() === r_id.toString()) {
+                            recommendations[tabs[m]][i]['r_lists'].push(val[0].toString());
+                            recommendations[tabs[m]][i]['r_list_names'].push(val[1].toString());
+                        }
+                    }
+                }
             }
         },
         error: function(jqXHR, exception) {
@@ -78,24 +79,16 @@ function editRecommendation(r_id, val, type) {
 };
 
 function updateRecHtml(r_id, val, type) {
-    if (active_menu === 'local') {
-        recs = fetched_my_recommendations;
-    } else if (active_menu === 'global') {
-        recs = fetched_all_recommendations;
-    } else if (active_menu === 'aroundMe') {
-        recs = around_me_data['rec_matches'];
-    }
+    recs = recommendations[active_menu];
     for (var i = 0; i < recs.length; i++) {
         rec = recs[i];
         if (rec['r_id'] === r_id) {
             if (type === 'comment') {
-                //console.log("Updated Rec "+r_id.toString()+" to comment "+val);
                 $(".rec-comment:eq("+i.toString()+")").text(val);
                 $(".rec-date:eq("+i.toString()+")").text("Just now...");                    
             } else if (type === 'list') {
                 list_id = val[0];
                 list_name = val[1];
-                //$(".rec-lists:eq("+i.toString()+")").empty();
                 if (rec['r_lists'] !== null && rec['r_lists'].length > 0) {
                     $(".rec-lists:eq("+i.toString()+")").append("<span>, </span>");
                 }
@@ -108,15 +101,7 @@ function updateRecHtml(r_id, val, type) {
 
 function deleteRecommendationController(r_id) {
     $('.temp-modal-title').empty();
-    if (active_menu === 'local') {
-        temp_recs = fetched_my_recommendations;
-    } else if (active_menu === 'global') {
-        temp_recs = fetched_all_recommendations;
-    } else if (active_menu === 'around_me') {
-        temp_recs = around_me_data['rec_matches'];
-    } else if (active_menu === 'searchRecs') {
-        temp_recs = term_matches;
-    }
+    temp_recs = recommendations[active_menu];
     for (var i = 0; i < temp_recs.length; i++) {
         if (temp_recs[i]["r_id"].toString() === r_id.toString()) {
             r_name = temp_recs[i]["r_name"];
@@ -161,10 +146,12 @@ function deleteRecommendation(r_id) {
 };
 
 function deleteRecFromList(r_id) {
-    for (var i = 0; i < recommendations['recommendations'].length; i++) {
-        rec = recommendations['recommendations'][i];
+    temp_recs = recommendations[active_menu];
+
+    for (var i = 0; i < temp_recs.length; i++) {
+        rec = temp_recs[i];
         if (rec['r_id'] === r_id) {
-            delete recommendations['recommendations']['r_id'];
+            delete recommendations[active_menu]['r_id'];
             $(".js-stream-item:eq("+i.toString()+")").remove();
         }
         for (var j = 0; j < markers.length; j++) {

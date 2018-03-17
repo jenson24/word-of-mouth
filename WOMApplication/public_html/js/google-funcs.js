@@ -66,6 +66,49 @@ function initAutocomplete(event) {
                 marker.setMap(null);
             });
             markers = [];
+            
+            /*
+            var content_string = '';
+            var like_link = "<p></p><button type=\"button\" id=\"addRec\" class=\"fa fa-thumbs-up\" data-toggle=\"modal\" data-target=\"#myModal\"> Like</button>";
+            var dislike_link = "<button type=\"button\" id=\"addRec\" class=\"fa fa-thumbs-down\" data-toggle=\"modal\" data-target=\"#myModal\"> Dislike</button><p></p>";
+            var divider = "<div class=\"divider\"/>";
+            like_link.click(function() {
+                //console.log("link clicked",self,self.getContent(),self.content);
+                rec_object["r_type"] = 1;
+                $('.temp-modal-title').empty();
+                $("<h3 class=\"modal-title fa fa-thumbs-up\" id=\"modal-title\"></h3>").appendTo(".temp-modal-title");
+                $('.modal-title').append("   ");
+                $('.modal-title').append(rec_object["g_name"]);
+                $('#modal-body').empty();
+                $('#modal-body').append("Save a comment...");
+                $('#modal-body').append("<textarea rows=\"4\" id=\"rec-comment\" placeholder=\"What do you like about this place?\">");
+                $('.modal-footer').empty();
+                $('.modal-footer').append("<button type=\"button\" class=\"btn btn-cancel\" data-dismiss=\"modal\">Cancel</button>");
+                $('.modal-footer').append("<button type=\"button\" class=\"btn btn-save\" data-dismiss=\"modal\" onClick=\"sendData()\">Send</button>");
+            });
+            dislike_link.click(function() {
+                //console.log("link clicked",self,self.getContent(),self.content);
+                rec_object["r_type"] = -1;
+                $('.temp-modal-title').empty();
+                $("<h3 class=\"modal-title fa fa-thumbs-down\" id=\"modal-title\"></h3>").appendTo(".temp-modal-title");
+                $('.modal-title').append("   ");
+                $('.modal-title').append(rec_object["g_name"]);
+                $('#modal-body').empty();
+                $('#modal-body').append("Save a comment...");
+                $('#modal-body').append("<textarea rows=\"4\" id=\"rec-comment\" placeholder=\"What don't you like about this place?\">");
+                $('.modal-footer').empty();
+                $('.modal-footer').append("<button type=\"button\" class=\"btn btn-cancel\" data-dismiss=\"modal\">Cancel</button>");
+                $('.modal-footer').append("<button type=\"button\" class=\"btn btn-save\" data-dismiss=\"modal\" onClick=\"sendData()\">Send</button>");
+            });
+            //infowindow.content.find("div.address").append($("<div>")).append(divider).append(like_link).append(divider).append(dislike_link).append($("</div>"));
+            content_string += "<div>"+divider+like_link+divider+dislike_link+"</div>";
+            
+            var infowindow = new google.maps.InfoWindow({
+                content: content_string,
+                maxWidth: 250
+            });
+            infowindow.setPosition(new google.maps.LatLng(places[0].geometry.location.lat(), places[0].geometry.location.lng()));
+            infowindow.open(map);*/
         }
 
         // For each place, get the icon, name and location.
@@ -89,8 +132,8 @@ function initAutocomplete(event) {
 
     google.maps.event.addListener(map, "click", function(event) {
         // get lat/lon of click
-        var clickLat = event.latLng.lat();
-        var clickLon = event.latLng.lng();                
+        //var clickLat = event.latLng.lat();
+        //var clickLon = event.latLng.lng();                
         // show in input box
         //document.getElementById("lat").value = clickLat.toFixed(5);
         //document.getElementById("lon").value = clickLon.toFixed(5);
@@ -115,7 +158,7 @@ function set_rec_object(place) {
         g_website: place.website,    
         g_price: place.price_level
     };
-    console.log(rec_object);
+    //console.log(rec_object);
     return rec_object;
 };
 

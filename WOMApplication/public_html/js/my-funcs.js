@@ -7,9 +7,9 @@
 var user_id = 0;
 var current_user = 0;
 var username = '';
-var recommendations = {};
-var fetched_all_recommendations = [];
-var fetched_my_recommendations = [];
+var recommendations = {'local':[],'global':[],'aroundMe':[],'searchRecs':[]};
+//var fetched_all_recommendations = [];
+//var fetched_my_recommendations = [];
 var fetched_messages = [];
 var active_menu = 'global';
 var markers = [];
@@ -97,9 +97,11 @@ function login() {
     });
 }
 function loadDefaultProfile() {
+    active_menu = 'local';
     current_user = user_id;
-    fetched_my_recommendations = [];
-    setRecommendations('local','new','new');
+    //recommendations['local'] = [];
+    //fetched_my_recommendations = [];
+    setRecommendations(active_menu,'new','new');
 }
 function setRecommendations(rec_type, temp_obj, marker_flag) {
     recs = temp_obj;
@@ -111,7 +113,7 @@ function setRecommendations(rec_type, temp_obj, marker_flag) {
         //} else {
         page = 1;
         get_recommendations(rec_type, page);
-        recs = recommendations["recommendations"];            
+        recs = recommendations["latest_pull"];            
         jQuery('#scroll').animate({scrollTop:0},0);
         //}
         clearFilters();
@@ -168,10 +170,10 @@ function getProfileHTML(uid) {
     profile_html = '';
     profile_html += "<div class=\"profile-header\">";
     profile_html += "<span class=\"full-name\">"+first_name+" "+last_name+"</span>";
-    profile_html += "<span class=\"profile-follow-content\">Following: </span><a href=\"#\" onclick=\"showFollowing("+uid.toString()+")\">"+following_count+"</a>";
-    profile_html += "<span class=\"profile-follow-content\">Followers: </span><a href=\"#\" onclick=\"showFollowers("+uid.toString()+")\">"+followers_count+"</a>";
+    profile_html += "<span class=\"profile-follow-content\">Following: </span><a id=\"followingLink\" href=\"#\" onclick=\"showFollowing("+uid.toString()+")\">"+following_count+"</a>";
+    profile_html += "<span class=\"profile-follow-content\">Followers: </span><a id=\"follwerLink\" href=\"#\" onclick=\"showFollowers("+uid.toString()+")\">"+followers_count+"</a>";
     profile_html += "<span class=\"profile-follow-content\">Recommendations: </span><a href=\"#\" onclick=\"setRecommendations('local','new','new')\">"+rec_count.toString()+"</a>";
-    profile_html += "<span class=\"profile-follow-content\">Lists: </span><a href=\"#\" onclick=\"showLists("+uid.toString()+")\">"+list_count.toString()+"</a></div>";
+    profile_html += "<span class=\"profile-follow-content\">Lists: </span><a id=\"listLink\" href=\"#\" onclick=\"showLists("+uid.toString()+")\">"+list_count.toString()+"</a></div>";
     return profile_html;
 }
 
@@ -212,11 +214,12 @@ function getMarkerInfo(temp_obj,type) {
 }
 
 function addRecToPage(recObj) {
-    if (active_menu === 'local') {
+    rec_num = recommendations[active_menu].length;
+    /*if (active_menu === 'local') {
         rec_num = fetched_my_recommendations.length;            
     } else {
         rec_num = fetched_all_recommendations.length;    
-    }
+    }*/
     card_html = getCardHtml(recObj,rec_num);
     $('.stream-items').prepend(card_html);
 }
@@ -231,7 +234,7 @@ function getCardHtml(recObj,ind) {
     card_html += "<div class=\"stream-item-container\">";
     card_html += "<span class=\"rec-name\"><strong class=\"recName\">"+recObj["r_name"]+"</strong></span>";
     card_html += "<span class=\"rec-comment\">"+recObj["r_comment"]+"</span>";
-    card_html += "<div class=\"rec-lists\">";
+    card_html += "<div id=\"rec-lists-"+ind.toString()+"\" class=\"rec-lists\">";
     if (recObj["r_lists"] !== null && recObj["r_lists"].length > 0) {
         list_ids = recObj["r_lists"];
         list_names = recObj["r_list_names"];
@@ -268,7 +271,7 @@ function getCardHtml(recObj,ind) {
         card_html += "<span class=\"rec-footer-content\">Type: "+recObj["r_google_type"].replace(/_/g," ")+"</span>";
     }
     if ( recObj["r_website"] ) {
-        card_html += "<span>Website: </span><a href=\""+recObj["r_website"]+"\" class=\"website-footer-content\">"+recObj["r_website"]+"</a>";
+        card_html += "<span>Website: </span><a target=\"_blank\" href=\""+recObj["r_website"]+"\" class=\"website-footer-content\">"+recObj["r_website"]+"</a>";
     }
     card_html += "</div>";
     card_html += "</div>";
@@ -279,7 +282,7 @@ function getCardHtml(recObj,ind) {
         card_html += "<div id=\"rec-tools-collapse-"+ind.toString()+"\" class=\"collapse\">";
         card_html += "<div class=\"edit-rec-button\"><button title=\"Edit Recommendation\" class=\"fa fa-pencil-square-o rec-tool-icons\" data-toggle=\"modal\" data-target=\"#myModal\" onClick=\"editRecommendationController('"+recObj["r_id"]+"')\"></button></div>";
         card_html += "<div class=\"delete-rec-button\"><button title=\"Delete Recommendation\" class=\"fa fa-trash-o rec-tool-icons\" data-toggle=\"modal\" data-target=\"#myModal\" onClick=\"deleteRecommendationController('"+recObj["r_id"]+"')\"></button></div>";
-        card_html += "<div class=\"list-button\"><button title=\"Add to List\" class=\"fa fa-list rec-tool-icons\" data-toggle=\"modal\" data-target=\"#myModal\" onClick=\"addRecToUserList("+recObj["user_id"]+","+recObj["r_id"]+")\"></button></div>";
+        card_html += "<div class=\"list-button\"><button title=\"Add to List\" class=\"fa fa-list rec-tool-icons\" data-toggle=\"modal\" data-target=\"#myModal\" onClick=\"addRecToUserList("+recObj["r_id"]+")\"></button></div>";
         card_html += "</div></div>";
     } else {
         card_html += "<div class=\"message-button\"><button title=\"Send Message\" class=\"fa fa-envelope rec-tool-icons\" data-toggle=\"modal\" data-target=\"#myModal\" onClick=\"composeMessage("+user_id.toString()+","+recObj["user_id"]+",'"+recObj["username"]+"',"+recObj["r_id"]+")\"></button></div>";    
@@ -334,11 +337,15 @@ function closeInfos(){
 
 // Sets the map on all markers in the array.
 function setMapOnAll(map) {
-    for (var i = 0; i < markers.length; i++) {
-        markers[i].setMap(map);
+    if (markers.length > 0) {
+        for (var i = 0; i < markers.length; i++) {
+            markers[i].setMap(map);
+        }
     }
-    for (var i = 0; i < list_markers.length; i++) {
-        list_markers[i].setMap(map);
+    if (list_markers.length > 0) {
+        for (var i = 0; i < list_markers.length; i++) {
+            list_markers[i].setMap(map);
+        }
     }
 }
 // Removes the markers from the map, but keeps them in the array.
@@ -413,14 +420,24 @@ function get_recommendations(lookup_type, page) {
         dataType: 'json',
         success: function(recommendation_data) {
             temp_obj = recommendation_data["recommendations"];
-            recommendations = {
-                "recommendations": temp_obj
-            };
-            for (var i = 0; i < recommendations["recommendations"].length; i++) {
-                if (lookup_type === 'global') {
+            /*recommendations = {
+                "latest_pull": temp_obj
+            };*/
+            recommendations['latest_pull'] = temp_obj;
+            for (var i = 0; i < recommendations["latest_pull"].length; i++) {
+                var already_pulled = false;
+                for (var j = 0; j < recommendations[active_menu].length; j++) {
+                    if (recommendations["latest_pull"][i]["r_id"] === recommendations[active_menu][j]["r_id"]) {
+                        already_pulled = true;
+                    }
+                }
+                if (already_pulled === false) {
+                    recommendations[active_menu].push(recommendations["latest_pull"][i]);
+                }
+                /*if (lookup_type === 'global') {
                     var already_pulled = false;
                     for (var j = 0; j < fetched_all_recommendations.length; j++) {
-                        if (recommendations["recommendations"][i]["r_id"] === fetched_all_recommendations[j]["r_id"]) {
+                        if (recommendations["latest_pull"][i]["r_id"] === fetched_all_recommendations[j]["r_id"]) {
                             already_pulled = true;
                         }
                     }
@@ -437,7 +454,7 @@ function get_recommendations(lookup_type, page) {
                     if (already_pulled === false) {
                         fetched_my_recommendations.push(recommendations["recommendations"][i]);                                    
                     }
-                }
+                }*/
             }
             $.notify("Found data", {className: "success", position: "bottom center"});
         },
@@ -545,11 +562,12 @@ function showFilters() {
 };
 
 function getTypes() {
-    if (active_menu === 'global') {
+    temp_obj = recommendations[active_menu];
+    /*if (active_menu === 'global') {
         temp_obj = fetched_all_recommendations;        
     } else if (active_menu === 'local') {
         temp_obj = fetched_my_recommendations;
-    }    
+    } */   
     var type_list = [];
     for (var i = 0; i < temp_obj.length; i++) {
         types_string = temp_obj[i]["r_google_type"];
@@ -599,11 +617,12 @@ function filter_by_price(all_recs, price) {
     return new_filtered_objects;
 }
 function filter_controller(price, rating, type) {
-    if (active_menu === 'global') {
+    all_recs = recommendations[active_menu];
+    /*if (active_menu === 'global') {
         all_recs = fetched_all_recommendations;        
     } else if (active_menu === 'local') {
         all_recs = fetched_my_recommendations;
-    }    
+    }*/   
     if (price === "") {
         price_filter = 0;
         dollar_ids = ["dollar1","dollar2","dollar3","dollar4"];
@@ -738,9 +757,11 @@ function checkFilters() {
 }
 function getPage() {
     if (active_menu === 'global') {
-        rec_length = fetched_all_recommendations.length;
+        rec_length = recommendations['global'].length;
+        //rec_length = fetched_all_recommendations.length;
     } else if (active_menu === 'local') {
-        rec_length = fetched_my_recommendations.length;
+        rec_length = recommendations['local'].length;
+        //rec_length = fetched_my_recommendations.length;
     } else if (active_menu === 'searchRecs') {
         /*if (active_tab === 'terms') {
             rec_length = term_matches.length;
@@ -763,13 +784,14 @@ function getPage() {
     return page;
 }
 function addRecsToPage() {
-    new_recs = recommendations["recommendations"];
+    new_recs = recommendations["latest_pull"];
     getMarkerInfo(new_recs,'continue');
-    if (active_menu === 'local') {
+    rec_num = recommendations[active_menu].length - new_recs.length;
+    /*if (active_menu === 'local') {
         rec_num = fetched_my_recommendations.length - new_recs.length;            
     } else {
         rec_num = fetched_all_recommendations.length - new_recs.length;    
-    }
+    }*/
     html_body = "";
     for (var i = 0; i < new_recs.length; i++) {
         html_body += getCardHtml(new_recs[i],i+rec_num);
@@ -784,11 +806,12 @@ function clearFilters() {
 }
 function removeFilters() {
     clearFilters();
-    if (active_menu === 'local') {
+    setRecommendations(active_menu,recommendations[active_menu],'new');
+    /*if (active_menu === 'local') {
         setRecommendations('local',fetched_my_recommendations,'new');
     } else {
         setRecommendations(active_menu,fetched_all_recommendations,'new');
-    }
+    }*/
 }
 function getMarkerContent(obj) {
     marker_html = "";
@@ -796,7 +819,7 @@ function getMarkerContent(obj) {
     marker_html += "<div class=\"marker-item-header\">";
     marker_html += "<span class=\"loc-info\"><strong>"+obj["name"]+"</strong></span>";
     marker_html += "<span class=\"loc-info\">"+obj["address"].replace(',', '<br>')+"</span>";
-    marker_html += "<a href=\""+obj["website"]+"\" class=\"website-footer-content\">"+obj["website"]+"</a>";
+    marker_html += "<a target=\"_blank\" href=\""+obj["website"]+"\" class=\"website-footer-content\">"+obj["website"]+"</a>";
     marker_html += "</div>";
     marker_html += "<div class=\"marker-item-container\">";
     for (var i=0; i<obj["comment"].length; i++) {
@@ -1039,26 +1062,41 @@ function getFollowHtml(follow,i) {
 }
 function changeUser(uid) {
     current_user = uid;
-    fetched_my_recommendations = [];
+    recommendations['local'] = [];
+    //fetched_my_recommendations = [];
     $('.content-header').empty();
     profile_html = getProfileHTML(current_user);
     $('.content-header').append(profile_html);
     setRecommendations('local','new','new');
 }
 function unfollow(from_user,to_user,i) {
-    //console.log("Unfollow from user "+from_user.toString()+" to user "+to_user.toString());
     $('#follow-item-'+i+' span').text("Follow");
     $('#follow-item-'+i).attr('onClick', "follow("+from_user.toString()+","+to_user.toString()+","+i.toString()+")");
     $('#follow-item-'+i).toggleClass('button-follow new-follow');
     manageFollowers(from_user,to_user,'unfollow');
+    if (active_menu === 'local') {
+        updateProfileCounts('following',-1);
+    }
 }
 function follow(from_user,to_user,i) {
-    //console.log("Follow from user "+from_user.toString()+" to user "+to_user.toString());
     $('#follow-item-'+i+' span').text("Following");
     $('#follow-item-'+i).attr('data-hover', 'Unfollow');
     $('#follow-item-'+i).attr('onClick', "unfollow("+from_user.toString()+","+to_user.toString()+","+i.toString()+")");
     $('#follow-item-'+i).toggleClass('new-follow button-follow');
     manageFollowers(from_user,to_user,'follow');
+    if (active_menu === 'local') {
+        updateProfileCounts('following',1);
+    }
+}
+
+function updateProfileCounts(type,val) {
+    if (type === 'following') {
+        var old_val = parseInt($('#followingLink').text());
+        $('#followingLink').text(old_val + val);
+    } else if (type === 'list') {
+        var old_val = parseInt($('#listLink').text());
+        $('#listLink').text(old_val + val);
+    }
 }
 function manageFollowers(from_user,to_user,follow_type) {
     post_data = {
@@ -1225,20 +1263,20 @@ function enableJoin() {
 }
 
 function joinWom() {
-    var first_name = $("#join-fname").val();
-    var last_name = $("#join-lname").val();
-    var email = $("#join-email").val();
-    var uname = $("#join-uname").val();
-    var pwd1 = $("#join-pwd1").val();
-    var pwd2 = $("#join-pwd2").val();
-    bad_chars = ['<','>','%','='];
+    var first_name = $("#join-fname").val().trim();
+    var last_name = $("#join-lname").val().trim();
+    var email = $("#join-email").val().trim();
+    var uname = $("#join-uname").val().trim();
+    var pwd1 = $("#join-pwd1").val().trim();
+    var pwd2 = $("#join-pwd2").val().trim();
+    bad_chars = ['<','>','%','=',' '];
     valid_fields = true;
     for (i=0; i < bad_chars.length; i++) {
-        if (first_name.indexOf(bad_chars[i]) > -1) {
+        if (bad_chars[i] !== ' ' && first_name.indexOf(bad_chars[i]) > -1) {
             $.notify("Bad first name", {className: "failure", position: "bottom center"});
             valid_fields = false;
         }
-        if (last_name.indexOf(bad_chars[i]) > -1) {
+        if (bad_chars[i] !== ' ' && last_name.indexOf(bad_chars[i]) > -1) {
             $.notify("Bad last name", {className: "failure", position: "bottom center"});
             valid_fields = false;
         }

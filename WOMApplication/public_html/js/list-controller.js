@@ -99,7 +99,6 @@ function addListMarkers(marker_list) {
 
 function getListMarkerContent(obj) {
     marker_html = "";
-    //marker_html += "<div class=\"rec-item\">";
     marker_html += "<div class=\"marker-item-context\">";
     marker_html += "<div class=\"marker-item-header\">";
     marker_html += "<span class=\"loc-info\"><strong>"+obj["name"]+"</strong></span>";
@@ -191,8 +190,8 @@ function get_recs_for_list(list_id,list_name,user_id) {
     });
 }
 
-function addRecToUserList(uid,r_id) {
-    temp_lists = get_lists(uid);
+function addRecToUserList(r_id) {
+    temp_lists = get_lists(user_id);
     list_data = temp_lists["responseJSON"];
     var lists = list_data["lists"];
 
@@ -201,24 +200,32 @@ function addRecToUserList(uid,r_id) {
     $('.modal-title').append("   ");
     $('.modal-title').append("Add Recommendation to List");
     $('#modal-body').empty();
+    var temp_obj;
     
     if (lists.length > 0) {
-        $('#modal-body').append("<div>Select a list for the recommendation to be added to...</div>");
-        $('#modal-body').append("<input id=\"user-list-select\" class=\"list-select list-inputs\" type=\"text\" list=\"userLists\" placeholder=\"Select from your created lists...\">");
-        $('#modal-body').append("<datalist id=\"userLists\"></datalist>");
-        for (var i = 0; i < lists.length; i++) {
-            var listElement = document.getElementById('userLists');
-            var option = document.createElement('option');
-            option.value = lists[i]['list_name'];
-            listElement.appendChild(option);
+        for (var i = 0; i < recommendations[active_menu].length; i++) {
+            if (recommendations[active_menu][i]["r_id"].toString() === r_id.toString() && recommendations[active_menu][i]["r_lists"].length > 0) {
+                temp_obj = recommendations[active_menu][i];
+                $('#modal-body').append("<div>This recommendation is already included in the following lists:</div>");
+                for (var j = 0; j < recommendations[active_menu][i]["r_lists"].length; j++) {
+                    $('#modal-body').append("<span>   "+recommendations[active_menu][i]["r_list_names"][j]+"    </span>");
+                    $('#modal-body').append("<button onclick=\"removeRecFromListController("+r_id+",'"+recommendations[active_menu][i]["r_name"].replace(/'/g, "\\'")+"','"+recommendations[active_menu][i]["r_list_names"][j]+"',"+recommendations[active_menu][i]["r_lists"][j]+")\" title=\"Remove from List\" class=\"fa fa-minus-circle remove-rec\" data-dismiss=\"modal\"></button><p></p>");
+                }
+            }
         }
-        $('#user-list-select').on('change', function () {
-            document.getElementById('addRecToListBtn').disabled=false;
-        });
-
+        $('#modal-body').append("<div>Select a list for the recommendation to be added to...</div>");
+        var dropdown = "<select id=\"user-list-select\" class=\"list-select list-inputs\">";
+        for (var i = 0; i < lists.length; i++) {
+            if (temp_obj && temp_obj["r_list_names"].indexOf(lists[i]["list_name"]) === -1) {
+                dropdown += "<option value=\""+lists[i]["list_name"]+"\">"+lists[i]["list_name"]+"</option>";
+            }
+        }
+        dropdown += "</select>";
+        $('#modal-body').append(dropdown);
+ 
         $('.modal-footer').empty();
         $('.modal-footer').append("<button type=\"button\" class=\"btn btn-cancel\" data-dismiss=\"modal\">Cancel</button>");
-        $('.modal-footer').append("<button type=\"button\" class=\"btn btn-save\" id=\"addRecToListBtn\" data-dismiss=\"modal\" disabled=\"true\" onclick=\"addRecToListController("+r_id+")\">Save</button>");
+        $('.modal-footer').append("<button type=\"button\" class=\"btn btn-save\" id=\"addRecToListBtn\" data-dismiss=\"modal\" onclick=\"addRecToListController("+r_id+")\">Save</button>");
     } else {
         $('#modal-body').append("You haven't created any lists yet. Would you like to create one?");
         $('.modal-footer').empty();
@@ -364,6 +371,7 @@ function createNewList(list_name,list_description,list_location,lat,lon,place_id
 function loadList(list_id,list_name,uid) {
     active_menu = 'user_list';
     profile_html = getProfileHTML(uid);
+    current_user = uid;
     $('.content-header').empty();
     $('.content-header').append(profile_html);
     $('.content-header').append("<div class=\"rec-section-header\"><span>List recommendations...</span></div>");
@@ -378,6 +386,7 @@ function addListToPage(list) {
     $('.list-items').prepend(card_html);
     getMarkerInfo({},"new");
     getListMarkerInfo(lists);
+    updateProfileCounts('list',1);
 }
 
 function editListController(list_id) {
@@ -389,7 +398,7 @@ function editListController(list_id) {
         temp_lists = list_matches;
     }
     for (var i = 0; i < temp_lists.length; i++) {
-        if (temp_lists[i]["r_id"].toString() === r_id.toString()) {
+        if (temp_lists[i]["list_id"].toString() === list_id.toString()) {
             list_name = temp_lists[i]["list_name"];
             list_description = temp_lists[i]["list_description"].replace(/'/g, "\\'");
         }
@@ -463,7 +472,7 @@ function deleteListController(list_id) {
         temp_lists = list_matches;
     }
     for (var i = 0; i < temp_lists.length; i++) {
-        if (temp_lists[i]["r_id"].toString() === r_id.toString()) {
+        if (temp_lists[i]["list_id"].toString() === list_id.toString()) {
             list_name = temp_lists[i]["list_name"];
         }
     }
@@ -491,7 +500,8 @@ function deleteList(list_id) {
         dataType: 'text',
         success: function() {
             $.notify("Deleted List", {className: "success", position: "bottom center"});
-            deleteListFromPage(list_id)
+            deleteListFromPage(list_id);
+            
         },
         error: function(jqXHR, exception) {
             errorHandling(jqXHR, exception);
@@ -509,7 +519,8 @@ function editListRequest(list_name,list_description,list_location,lat,lon,place_
         lon: lon,
         google_place_id: place_id,
         user_id: user_id,
-        list_id: list_id
+        list_id: list_id,
+        type: 'content'
     };
     $.ajax({
         url: host_type+"://"+server_host+"/editList",
@@ -518,6 +529,71 @@ function editListRequest(list_name,list_description,list_location,lat,lon,place_
         dataType: 'json',
         success: function(list_id) {
             $.notify("Edited List", {className: "success", position: "bottom center"});
+        },
+        error: function(jqXHR, exception) {
+            errorHandling(jqXHR, exception);
+        },
+        async: false
+    });
+}
+
+function removeRecFromListController(r_id,r_name,list_name,list_id) {
+    
+    $('#myModal').modal('show');
+    $('.temp-modal-title').empty();
+    $('.temp-modal-title').append("   ");
+    $('.temp-modal-title').append(r_name);
+    $('#modal-body').empty();
+    $('#modal-body').append("Are you sure you wish to remove this recommendation from the "+list_name+" list?");
+    $('.modal-footer').empty();
+    $('.modal-footer').append("<button type=\"button\" class=\"btn btn-cancel\" data-dismiss=\"modal\" onclick=\"addRecToUserList("+r_id+")\">Cancel</button>");
+    $('.modal-footer').append("<button type=\"button\" class=\"btn btn-delete\" data-dismiss=\"modal\" onClick=\"removeRecFromList("+r_id+","+list_id+")\">Delete</button>");
+
+}
+function removeRecFromList(r_id,list_id) {
+    post_data = {
+        r_id: r_id,
+        list_id: list_id,
+        type: 'remove'
+    };
+    $.ajax({
+        url: host_type+"://"+server_host+"/editList",
+        type: 'POST',
+        data: JSON.stringify(post_data),
+        dataType: 'text',
+        success: function(ex_out) {
+            $.notify("Edited List", {className: "success", position: "bottom center"});
+            tabs = ['local','global','aroundMe','searchRecs'];
+            for (var m in tabs) {
+                for (var i = 0; i < recommendations[tabs[m]].length; i++) {
+                    if (recommendations[tabs[m]][i]['r_id'].toString() === r_id.toString()) {
+                        
+                        var index = recommendations[tabs[m]][i]['r_lists'].indexOf(list_id.toString());
+                        if (index > -1) {
+                            recommendations[tabs[m]][i]['r_lists'].splice(index,1);
+                            recommendations[tabs[m]][i]['r_list_names'].splice(index,1);                            
+                        }
+
+                    }
+                }
+            }
+            for (var i = 0; i < recommendations[active_menu].length; i++) {
+                if (recommendations[active_menu][i]['r_id'].toString() === r_id.toString()) {
+                    var list_el = document.getElementById('rec-lists-'+i.toString());
+                    list_el.innerHTML = "";
+                    var card_html = "";
+                    for (var j = 0; j < recommendations[active_menu][i]["r_lists"].length; j++) {
+                        var l_id = recommendations[active_menu][i]["r_lists"][j];
+                        var l_name = recommendations[active_menu][i]["r_list_names"][j];
+                        var u_id = recommendations[active_menu][i]["user_id"];
+                        card_html += "<a href=\"#\" onclick=\"loadList("+l_id.toString()+", '"+l_name+"', "+u_id.toString()+")\">#"+l_name+"</a>";
+                        if (j < recommendations[active_menu][i]["r_lists"].length - 1) {
+                            card_html += "<span>, </span>";
+                        }
+                    }
+                    list_el.innerHTML = card_html;
+                }
+            }
         },
         error: function(jqXHR, exception) {
             errorHandling(jqXHR, exception);
@@ -538,17 +614,28 @@ function updateListHtml(list_name, list_description, list_id) {
 }
 
 function deleteListFromPage(list_id) {
+    if (active_menu === 'local' || active_menu === 'user_list') {
+        updateProfileCounts('list',-1);
+    }
+    var ind_to_remove = null;
+    var mark_ind = null;
     for (var i = 0; i < active_user_lists.length; i++) {
         list = active_user_lists[i];
         if (list['list_id'].toString() === list_id.toString()) {
-            delete active_user_lists[i];
-            $("#list-item-"+i.toString()).remove();
+            ind_to_remove = i;
         }
         for (var j = 0; j < list_markers.length; j++) {
             if (list['list_id'].toString() === list_id.toString() && list_markers[j]['title'] === list['list_name'].toString()) {
                 list_markers[j].setMap(null);
-                delete list_markers[j];
+                mark_ind = j;
             }
         }
+    }
+    if (ind_to_remove !== null) {
+        active_user_lists.splice(ind_to_remove, 1);
+        $("#list-item-"+ind_to_remove.toString()).remove();
+    }
+    if (mark_ind !== null) {
+       list_markers.splice(mark_ind,1);
     }
 }
