@@ -213,16 +213,17 @@ function addRecToUserList(r_id) {
                 }
             }
         }
-        $('#modal-body').append("<div>Select a list for the recommendation to be added to...</div>");
-        var dropdown = "<select id=\"user-list-select\" class=\"list-select list-inputs\">";
-        for (var i = 0; i < lists.length; i++) {
-            if (temp_obj && temp_obj["r_list_names"].indexOf(lists[i]["list_name"]) === -1) {
-                dropdown += "<option value=\""+lists[i]["list_name"]+"\">"+lists[i]["list_name"]+"</option>";
+        if (temp_obj && lists.length > temp_obj["r_list_names"].length) {
+            $('#modal-body').append("<div>Select a list for the recommendation to be added to...</div>");
+            var dropdown = "<select id=\"user-list-select\" class=\"list-select list-inputs\">";
+            for (var i = 0; i < lists.length; i++) {
+                if (temp_obj && temp_obj["r_list_names"].indexOf(lists[i]["list_name"]) === -1) {
+                    dropdown += "<option value=\""+lists[i]["list_name"]+"\">"+lists[i]["list_name"]+"</option>";
+                }
             }
-        }
-        dropdown += "</select>";
-        $('#modal-body').append(dropdown);
- 
+            dropdown += "</select>";
+            $('#modal-body').append(dropdown);
+        } 
         $('.modal-footer').empty();
         $('.modal-footer').append("<button type=\"button\" class=\"btn btn-cancel\" data-dismiss=\"modal\">Cancel</button>");
         $('.modal-footer').append("<button type=\"button\" class=\"btn btn-save\" id=\"addRecToListBtn\" data-dismiss=\"modal\" onclick=\"addRecToListController("+r_id+")\">Save</button>");

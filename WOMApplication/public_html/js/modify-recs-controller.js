@@ -7,7 +7,7 @@
 
 function editRecommendationController(r_id) {
     var temp_recs = [];
-    temp_recs = recommendation[active_menu];
+    temp_recs = recommendations[active_menu];
     for (var i = 0; i < temp_recs.length; i++) {
         if (temp_recs[i]["r_id"].toString() === r_id.toString()) {
             r_name = temp_recs[i]["r_name"];
@@ -118,7 +118,7 @@ function deleteRecommendationController(r_id) {
     $('.modal-title').append(r_name);
     $('#modal-body').empty();
     $('#modal-body').append("Are you sure you wish to delete this recommendation?");
-    $('#modal-body').append("<textarea rows=\"4\" id=\"rec-comment\">"+comment+"</textarea>");
+    $('#modal-body').append("<textarea disabled rows=\"4\" id=\"rec-comment\">"+comment+"</textarea>");
     $('.modal-footer').empty();
     $('.modal-footer').append("<button type=\"button\" class=\"btn btn-cancel\" data-dismiss=\"modal\">Cancel</button>");
     $('.modal-footer').append("<button type=\"button\" class=\"btn btn-delete\" data-dismiss=\"modal\" onClick=\"deleteRecommendation("+r_id+")\">Delete</button>");

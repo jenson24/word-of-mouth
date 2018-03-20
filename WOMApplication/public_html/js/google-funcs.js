@@ -67,48 +67,23 @@ function initAutocomplete(event) {
             });
             markers = [];
             
-            /*
-            var content_string = '';
-            var like_link = "<p></p><button type=\"button\" id=\"addRec\" class=\"fa fa-thumbs-up\" data-toggle=\"modal\" data-target=\"#myModal\"> Like</button>";
-            var dislike_link = "<button type=\"button\" id=\"addRec\" class=\"fa fa-thumbs-down\" data-toggle=\"modal\" data-target=\"#myModal\"> Dislike</button><p></p>";
-            var divider = "<div class=\"divider\"/>";
-            like_link.click(function() {
-                //console.log("link clicked",self,self.getContent(),self.content);
-                rec_object["r_type"] = 1;
-                $('.temp-modal-title').empty();
-                $("<h3 class=\"modal-title fa fa-thumbs-up\" id=\"modal-title\"></h3>").appendTo(".temp-modal-title");
-                $('.modal-title').append("   ");
-                $('.modal-title').append(rec_object["g_name"]);
-                $('#modal-body').empty();
-                $('#modal-body').append("Save a comment...");
-                $('#modal-body').append("<textarea rows=\"4\" id=\"rec-comment\" placeholder=\"What do you like about this place?\">");
-                $('.modal-footer').empty();
-                $('.modal-footer').append("<button type=\"button\" class=\"btn btn-cancel\" data-dismiss=\"modal\">Cancel</button>");
-                $('.modal-footer').append("<button type=\"button\" class=\"btn btn-save\" data-dismiss=\"modal\" onClick=\"sendData()\">Send</button>");
-            });
-            dislike_link.click(function() {
-                //console.log("link clicked",self,self.getContent(),self.content);
-                rec_object["r_type"] = -1;
-                $('.temp-modal-title').empty();
-                $("<h3 class=\"modal-title fa fa-thumbs-down\" id=\"modal-title\"></h3>").appendTo(".temp-modal-title");
-                $('.modal-title').append("   ");
-                $('.modal-title').append(rec_object["g_name"]);
-                $('#modal-body').empty();
-                $('#modal-body').append("Save a comment...");
-                $('#modal-body').append("<textarea rows=\"4\" id=\"rec-comment\" placeholder=\"What don't you like about this place?\">");
-                $('.modal-footer').empty();
-                $('.modal-footer').append("<button type=\"button\" class=\"btn btn-cancel\" data-dismiss=\"modal\">Cancel</button>");
-                $('.modal-footer').append("<button type=\"button\" class=\"btn btn-save\" data-dismiss=\"modal\" onClick=\"sendData()\">Send</button>");
-            });
-            //infowindow.content.find("div.address").append($("<div>")).append(divider).append(like_link).append(divider).append(dislike_link).append($("</div>"));
+            var split = places[0].formatted_address.indexOf(',');
+            var address_1 = places[0].formatted_address.substring(1,split);
+            var address_2 = places[0].formatted_address.substring(split+1,places[0].formatted_address.length);
+            var content_string = "<div class=\"infoHeader\"><strong>"+places[0].name+"</strong><div>"+address_1+"</div><div>"+address_2+"</div></div>";
+            var like_link = "<p></p><button type=\"button\" id=\"addRec\" class=\"fa fa-thumbs-up\" onclick=\"openRecModalFromSearch(1)\"> Like</button>";
+            var dislike_link = "<button type=\"button\" id=\"addRec\" class=\"fa fa-thumbs-down\" onclick=\"openRecModalFromSearch(-1)\"> Dislike</button><p></p>";
+            var divider = "<div class=\"divider\"/></div>";
+            
             content_string += "<div>"+divider+like_link+divider+dislike_link+"</div>";
+            content_string += "<div class=\"view-link\"><a target=\"_blank\" href=\""+places[0].website+"\"><span> View on Google Maps </span></a></div>"
             
             var infowindow = new google.maps.InfoWindow({
                 content: content_string,
-                maxWidth: 250
+                maxWidth: 225
             });
             infowindow.setPosition(new google.maps.LatLng(places[0].geometry.location.lat(), places[0].geometry.location.lng()));
-            infowindow.open(map);*/
+            infowindow.open(map);
         }
 
         // For each place, get the icon, name and location.
@@ -233,3 +208,24 @@ ClickEventHandler.prototype.getPlaceInformation = function(placeId) {
         }
     });
 };
+
+function openRecModalFromSearch(r_type) {
+    rec_object["r_type"] = r_type;
+    $('#myModal').modal('show');
+    $('.temp-modal-title').empty();
+    if (r_type === 1) {
+        $("<h3 class=\"modal-title fa fa-thumbs-up\" id=\"modal-title\"></h3>").appendTo(".temp-modal-title");
+        var placeholder = "What do you like about this place?";
+    } else {
+        $("<h3 class=\"modal-title fa fa-thumbs-down\" id=\"modal-title\"></h3>").appendTo(".temp-modal-title");
+        var placeholder = "What don't you like about this place?";
+    }
+    $('.modal-title').append("   ");
+    $('.modal-title').append(rec_object["g_name"]);
+    $('#modal-body').empty();
+    $('#modal-body').append("Save a comment...");
+    $('#modal-body').append("<textarea rows=\"4\" id=\"rec-comment\" placeholder=\""+placeholder+"\">");
+    $('.modal-footer').empty();
+    $('.modal-footer').append("<button type=\"button\" class=\"btn btn-cancel\" data-dismiss=\"modal\">Cancel</button>");
+    $('.modal-footer').append("<button type=\"button\" class=\"btn btn-save\" data-dismiss=\"modal\" onClick=\"sendData()\">Send</button>");
+}

@@ -130,3 +130,16 @@ and open the template in the editor.
 .fa {
     height: 30px;
 }
+#addRec {
+    display: inline-block;
+}
+.view-link {
+    display: block;
+    font-family: Roboto,Arial;
+    font-size: 13px;
+    font-weight: bold;
+}
+.infoHeader {
+    font-family: Roboto,Arial;
+    font-size: 13px;
+}
