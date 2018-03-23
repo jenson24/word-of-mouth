@@ -64,3 +64,24 @@ and open the template in the editor.
 .tabcontent-wrapper {
     overflow: auto;
 }
+#searchHelp {
+    font-size: 11pt;
+    background-color: #4d90fe;
+    color: white;
+    border: none;
+    height: 100%;
+    border-radius: 50%;
+}
+.searchBarHelp {
+    float: right;
+    height: 24px;
+    padding-right: 6px;
+}
+.searchBarInput {
+    width: 90%;
+    float: left;
+}
+.searchBarWrapper {
+    width: 100%;
+    display: inline-block;
+}

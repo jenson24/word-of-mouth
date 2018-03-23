@@ -26,6 +26,7 @@ var term_matches = [];
 var user_matches = [];
 var list_matches = [];
 var search_data = {};
+var suggestions = [];
 var active_tab = 'terms';
 var pos = {};
 var around_me_data = {'list_matches': [], 'rec_matches': []};
@@ -408,6 +409,9 @@ function sendData() {
 };
 
 function get_recommendations(lookup_type, page) {
+    if(lookup_type === 'global') {
+        current_user = user_id;
+    }
     post_data = {
         uid: current_user,
         lookup_type: lookup_type,
@@ -833,28 +837,44 @@ function getMarkerContent(obj) {
     return marker_html;
 }
 function enableSearch() {
+    if (suggestions.length === 0) {
+        get_suggestions();
+    }
+    $('#scroll').empty();
+    addSuggestionHtml(suggestions);
+    
     getMarkerInfo({},'new');
     getListMarkerInfo({});
     active_menu = 'searchRecs';
     $('.filter-content').css('display','none');
-    $('#scroll').empty();
     $('.content-header').empty();
     $('.content-header').css("height","26px");
     $('#scroll').css("height","calc( 100% - 92px - 26px)");
-    html_search = "<input type=\"text\" autocomplete=\"off\" placeholder=\"Search Word of Mouth...\" id=\"search-input\" class=\"search-input\" onchange=searchController($(this).val())>";
+    html_search = "<div class=\"searchBarWrapper\">";
+    html_search += "<div class=\"searchBarInput\"><input type=\"text\" autocomplete=\"off\" placeholder=\"Search Word of Mouth...\" id=\"search-input\" class=\"search-input\" onchange=searchController($(this).val())></div>";
+    html_search += "<div class=\"searchBarHelp\"><button data-toggle=\"modal\" data-target=\"#searchHelpModal\" title=\"Search Help\" id=\"searchHelp\"><i class=\"fa fa-question\"></i></button></div>";
+    html_search += "</div>";
     $('.content-header').append(html_search);
-    tab_html = "<div class=\"tab\" id=\"search-tabs\">";
-    tab_html += "<button class=\"tablinks\" id=\"button-tab-terms\" onclick=\"searchTabController(event,'search-results-terms')\">Recommendations</button>";
-    tab_html += "<button class=\"tablinks\" id=\"button-tab-lists\" onclick=\"searchTabController(event,'search-results-lists')\">Lists</button>";
-    tab_html += "<button class=\"tablinks\" id=\"button-tab-users\" onclick=\"searchTabController(event,'search-results-users')\">Users</button>";
-    tab_html += "</div>";
-    tab_html += "<div class=\"tabcontent-wrapper\">";
-    tab_html += "<div id=\"search-results-terms\" class=\"tabcontent\"></div>";
-    tab_html += "<div id=\"search-results-lists\" class=\"tabcontent\"></div>";
-    tab_html += "<div id=\"search-results-users\" class=\"tabcontent\"></div>";
-    tab_html += "</div>";
-    $('#scroll').append(tab_html);
 }
+function addSuggestionHtml(sugs) {
+    html_start = "<div class=\"stream-container\"><ol class=\"follow-items\">";
+    html_body = "<h4 style=\"padding-left:12px\">Suggested followers for you...</h4>";
+    if (sugs.length > 0) {
+        for (var i = 0; i < sugs.length; i++) {
+            html_body += getFollowHtml(sugs[i],i);
+        }        
+    } else {
+        html_body = "<div class=\"empty-action\">No suggestions right now. Use the search bar above to search your network's recommendtions or find people to follow.</div>";
+    }
+    html_end = "<get/ol></div>";
+    $('.filter-bar').empty();
+    $('.filter-content').css('display','none');
+    $('#scroll').empty();
+    $('.content-header').css("height","32px");
+    $('#scroll').css("height","calc( 100% - 92px - 32px)");        
+    $('#scroll').append(html_start+html_body+html_end);
+}
+
 function searchRecs(term,page) {
     post_data = {
         uid: user_id,
@@ -884,6 +904,21 @@ function searchRecs(term,page) {
 }
 function searchController(term) {
     if (term.length > 3) {
+        $('#scroll').empty();
+        var tab_html = "<div class=\"tab\" id=\"search-tabs\">";
+        tab_html += "<button class=\"tablinks\" id=\"button-tab-terms\" onclick=\"searchTabController(event,'search-results-terms')\">Recommendations</button>";
+        tab_html += "<button class=\"tablinks\" id=\"button-tab-lists\" onclick=\"searchTabController(event,'search-results-lists')\">Lists</button>";
+        tab_html += "<button class=\"tablinks\" id=\"button-tab-users\" onclick=\"searchTabController(event,'search-results-users')\">Users</button>";
+        tab_html += "</div>";
+        tab_html += "<div class=\"tabcontent-wrapper\">";
+        tab_html += "<div id=\"search-results-terms\" class=\"tabcontent\"></div>";
+        tab_html += "<div id=\"search-results-lists\" class=\"tabcontent\"></div>";
+        tab_html += "<div id=\"search-results-users\" class=\"tabcontent\"></div>";
+        tab_html += "</div>";
+        $('#scroll').append(tab_html);
+        //tabs_html = document.getElementById("search-tabs");
+        //tabs_html.style.display = "block";
+
         $('.stream-items').empty();
         $("#button-tab-terms").text("Recommendations (0)");
         $("#button-tab-lists").text("Lists (0)");
@@ -906,6 +941,10 @@ function searchController(term) {
                 searchRecs(term,next_page);
             }
         }
+    } else {
+        enableSearch();
+        //tabs_html.style.display = "none";
+        //$('.stream-items').empty();
     }
 }
 function addSearchResultsToList() {
@@ -1336,6 +1375,25 @@ function createUser(first_name, last_name, email, uname, pwd) {
                 alert("Invalid username and password provided");
                 $('#joinModal').modal('show');
             }
+        },
+        error: function(jqXHR, exception) {
+            errorHandling(jqXHR, exception);
+        },
+        async: false
+    });
+}
+
+function get_suggestions() {
+    post_data = {
+        user_id: user_id
+    };
+    $.ajax({
+        url: host_type+"://"+server_host+"/getSuggestions",
+        type: 'POST',
+        data: JSON.stringify(post_data),
+        dataType: 'json',
+        success: function(results) {
+            suggestions = results['suggested_followers'];
         },
         error: function(jqXHR, exception) {
             errorHandling(jqXHR, exception);
