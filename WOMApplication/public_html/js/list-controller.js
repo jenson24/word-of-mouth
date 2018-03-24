@@ -204,12 +204,14 @@ function addRecToUserList(r_id) {
     
     if (lists.length > 0) {
         for (var i = 0; i < recommendations[active_menu].length; i++) {
-            if (recommendations[active_menu][i]["r_id"].toString() === r_id.toString() && recommendations[active_menu][i]["r_lists"].length > 0) {
+            if (recommendations[active_menu][i]["r_id"].toString() === r_id.toString()) {
                 temp_obj = recommendations[active_menu][i];
-                $('#modal-body').append("<div>This recommendation is already included in the following lists:</div>");
-                for (var j = 0; j < recommendations[active_menu][i]["r_lists"].length; j++) {
-                    $('#modal-body').append("<span>   "+recommendations[active_menu][i]["r_list_names"][j]+"    </span>");
-                    $('#modal-body').append("<button onclick=\"removeRecFromListController("+r_id+",'"+recommendations[active_menu][i]["r_name"].replace(/'/g, "\\'")+"','"+recommendations[active_menu][i]["r_list_names"][j]+"',"+recommendations[active_menu][i]["r_lists"][j]+")\" title=\"Remove from List\" class=\"fa fa-minus-circle remove-rec\" data-dismiss=\"modal\"></button><p></p>");
+                if (recommendations[active_menu][i]["r_lists"].length > 0) {
+                    $('#modal-body').append("<div>This recommendation is already included in the following lists:</div>");
+                    for (var j = 0; j < recommendations[active_menu][i]["r_lists"].length; j++) {
+                        $('#modal-body').append("<span>   "+recommendations[active_menu][i]["r_list_names"][j]+"    </span>");
+                        $('#modal-body').append("<button onclick=\"removeRecFromListController("+r_id+",'"+recommendations[active_menu][i]["r_name"].replace(/'/g, "\\'")+"','"+recommendations[active_menu][i]["r_list_names"][j]+"',"+recommendations[active_menu][i]["r_lists"][j]+")\" title=\"Remove from List\" class=\"fa fa-minus-circle remove-rec\" data-dismiss=\"modal\"></button><p></p>");
+                    }
                 }
             }
         }

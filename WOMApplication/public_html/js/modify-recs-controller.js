@@ -135,9 +135,11 @@ function deleteRecommendation(r_id) {
         dataType: 'text',
         success: function() {
             $.notify("Successfully Deleted Recommendation", {className: "success", position: "bottom center"});
-            //if (active_menu === 'local') {
             deleteRecFromList(r_id);
-            //}
+            if (active_menu === 'local') {
+                updateProfileCounts('recs',-1);
+            }
+            getMarkerInfo(recommendations[active_menu],'new');
         },
         error: function(jqXHR, exception) {
             errorHandling(jqXHR, exception);

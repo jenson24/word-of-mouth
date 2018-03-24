@@ -173,7 +173,7 @@ function getProfileHTML(uid) {
     profile_html += "<span class=\"full-name\">"+first_name+" "+last_name+"</span>";
     profile_html += "<span class=\"profile-follow-content\">Following: </span><a id=\"followingLink\" href=\"#\" onclick=\"showFollowing("+uid.toString()+")\">"+following_count+"</a>";
     profile_html += "<span class=\"profile-follow-content\">Followers: </span><a id=\"follwerLink\" href=\"#\" onclick=\"showFollowers("+uid.toString()+")\">"+followers_count+"</a>";
-    profile_html += "<span class=\"profile-follow-content\">Recommendations: </span><a href=\"#\" onclick=\"setRecommendations('local','new','new')\">"+rec_count.toString()+"</a>";
+    profile_html += "<span class=\"profile-follow-content\">Recommendations: </span><a id=\"recLink\" href=\"#\" onclick=\"setRecommendations('local','new','new')\">"+rec_count.toString()+"</a>";
     profile_html += "<span class=\"profile-follow-content\">Lists: </span><a id=\"listLink\" href=\"#\" onclick=\"showLists("+uid.toString()+")\">"+list_count.toString()+"</a></div>";
     return profile_html;
 }
@@ -192,8 +192,6 @@ function getMarkerInfo(temp_obj,type) {
             }
         } else {
             marker_list[temp_obj[i]["r_google_place_id"]] = {};
-            //lat = temp_obj[i]["r_geom"].slice(temp_obj[i]["r_geom"].indexOf("(")+1,temp_obj[i]["r_geom"].indexOf(" "));
-            //long = temp_obj[i]["r_geom"].slice(temp_obj[i]["r_geom"].indexOf(" ")+1,temp_obj[i]["r_geom"].indexOf(")"));
             marker_list[temp_obj[i]["r_google_place_id"]]["lat"] = temp_obj[i]["r_lat"];
             marker_list[temp_obj[i]["r_google_place_id"]]["long"] = temp_obj[i]["r_lon"];
             marker_list[temp_obj[i]["r_google_place_id"]]["name"] = temp_obj[i]["r_name"];
@@ -401,6 +399,9 @@ function sendData() {
             $.notify("Successfully Added Recommendation", {className: "success", position: "bottom center"});
             temp_obj = {r_id: rec_id, user_id: user_id, username: username, r_comment: comment, r_name: rec_object["g_name"], r_date: "Just Added...", r_lists: []};
             addRecToPage(temp_obj);
+            if (active_menu === 'local') {
+                updateProfileCounts('recs',1);
+            }
         },
         error: function(jqXHR, exception) {
             errorHandling(jqXHR, exception);
@@ -916,8 +917,6 @@ function searchController(term) {
         tab_html += "<div id=\"search-results-users\" class=\"tabcontent\"></div>";
         tab_html += "</div>";
         $('#scroll').append(tab_html);
-        //tabs_html = document.getElementById("search-tabs");
-        //tabs_html.style.display = "block";
 
         $('.stream-items').empty();
         $("#button-tab-terms").text("Recommendations (0)");
@@ -1028,6 +1027,7 @@ function addSearchResultsToList() {
     }
     if (term_matches.length > 0) {
         $("#button-tab-terms").addClass("active");
+        getMarkerInfo(term_matches,'new');
         document.getElementById('search-results-terms').style.display = "block";
     } else if (list_matches.length > 0) {
         $("#button-tab-lists").addClass("active");
@@ -1135,6 +1135,9 @@ function updateProfileCounts(type,val) {
     } else if (type === 'list') {
         var old_val = parseInt($('#listLink').text());
         $('#listLink').text(old_val + val);
+    } else if (type === 'recs') {
+        var old_val = parseInt($('#recLink').text());
+        $('#recLink').text(old_val + val);
     }
 }
 function manageFollowers(from_user,to_user,follow_type) {
