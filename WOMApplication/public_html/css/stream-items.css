@@ -69,3 +69,14 @@ ol {
 .website-footer-content {
     display: inline-block;
 }
+.card-type {
+    padding-right: 8px;
+    padding-bottom: 0px;
+    height: 18px;
+}
+.thumbs-up {
+    color: green;
+}
+.thumbs-down {
+    color: red;
+}

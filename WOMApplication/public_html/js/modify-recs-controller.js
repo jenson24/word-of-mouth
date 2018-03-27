@@ -80,22 +80,31 @@ function editRecommendation(r_id, val, type) {
 
 function updateRecHtml(r_id, val, type) {
     recs = recommendations[active_menu];
+    var cards = document.getElementsByClassName("recName");
+    
     for (var i = 0; i < recs.length; i++) {
-        rec = recs[i];
-        if (rec['r_id'] === r_id) {
-            if (type === 'comment') {
-                $(".rec-comment:eq("+i.toString()+")").text(val);
-                $(".rec-date:eq("+i.toString()+")").text("Just now...");                    
-            } else if (type === 'list') {
-                list_id = val[0];
-                list_name = val[1];
-                if (rec['r_lists'] !== null && rec['r_lists'].length > 0) {
-                    $(".rec-lists:eq("+i.toString()+")").append("<span>, </span>");
-                }
-                $(".rec-lists:eq("+i.toString()+")").append("<a href=\"#\" onclick=\"loadList("+list_id.toString()+", '"+list_name+"', "+user_id.toString()+")\">#"+list_name+"</a>");
-                $(".rec-date:eq("+i.toString()+")").text("Just now...");                    
-            }
+        if (recs[i]['r_id'].toString() === r_id.toString()) {
+            var rec = recs[i];
         }
+    }
+    for (var c = 0; c < cards.length; c++) {
+        var disp_name = cards.item(c).innerText;
+        if (disp_name === rec["r_name"]) {
+            var index = c;
+        }
+    }
+
+    if (type === 'comment') {
+        $(".rec-comment:eq("+index.toString()+")").text(val);
+        $(".rec-date:eq("+index.toString()+")").text("Just now...");                    
+    } else if (type === 'list') {
+        list_id = val[0];
+        list_name = val[1];
+        if (rec['r_lists'] !== null && rec['r_lists'].length > 0) {
+            $(".rec-lists:eq("+index.toString()+")").append("<span>, </span>");
+        }
+        $(".rec-lists:eq("+index.toString()+")").append("<a href=\"#\" onclick=\"loadList("+list_id.toString()+", '"+list_name+"', "+user_id.toString()+")\">#"+list_name+"</a>");
+        $(".rec-date:eq("+index.toString()+")").text("Just now...");                    
     }
 }
 
@@ -139,7 +148,6 @@ function deleteRecommendation(r_id) {
             if (active_menu === 'local') {
                 updateProfileCounts('recs',-1);
             }
-            getMarkerInfo(recommendations[active_menu],'new');
         },
         error: function(jqXHR, exception) {
             errorHandling(jqXHR, exception);
@@ -149,18 +157,37 @@ function deleteRecommendation(r_id) {
 
 function deleteRecFromList(r_id) {
     temp_recs = recommendations[active_menu];
-
+    // Remove Map Marker
     for (var i = 0; i < temp_recs.length; i++) {
-        rec = temp_recs[i];
-        if (rec['r_id'] === r_id) {
-            delete recommendations[active_menu]['r_id'];
-            $(".js-stream-item:eq("+i.toString()+")").remove();
-        }
         for (var j = 0; j < markers.length; j++) {
-            if (rec['r_id'].toString() === r_id && markers[j]['title'] === rec['r_name'].toString()) {
+            if (temp_recs[i]['r_id'].toString() === r_id.toString() && markers[j]['title'] === temp_recs[i]['r_name']) {
                 markers[j].setMap(null);
-                delete markers[j];
+                var index = j;
+                markers.splice(index,1);
+                break;
             }
         }
+    }
+
+    // Remove recommendation card
+    var cards = document.getElementsByClassName("recName");
+    for (var i = 0; i < cards.length; i++) {
+        var disp_name = cards.item(i).innerText;
+        for (var j = 0; j < temp_recs.length; j++) {
+            if (disp_name === temp_recs[j]["r_name"] && temp_recs[j]["r_id"].toString() === r_id.toString()) {
+                $(".js-stream-item:eq("+i.toString()+")").remove();
+            }
+        }
+    }
+
+    // Remove recommendation from backend array
+    tabs = ['local','global','aroundMe','searchRecs'];
+    for (var m in tabs) {
+        for (var i = 0; i < recommendations[tabs[m]].length; i++) {
+            if (recommendations[tabs[m]][i]['r_id'].toString() === r_id.toString()) {
+                var index = i;
+            }
+        }
+        recommendations[tabs[m]].splice(index,1);
     }
 }

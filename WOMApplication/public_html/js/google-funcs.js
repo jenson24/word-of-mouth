@@ -84,6 +84,7 @@ function initAutocomplete(event) {
             });
             infowindow.setPosition(new google.maps.LatLng(places[0].geometry.location.lat(), places[0].geometry.location.lng()));
             infowindow.open(map);
+            infoWindows.push(infowindow);
         }
 
         // For each place, get the icon, name and location.
