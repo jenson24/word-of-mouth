@@ -112,9 +112,10 @@ function login() {
                 user_id = result['user_id'].toString();
                 current_user = user_id;
                 username = result['username'];
+                user_role = result['user_role'];
                 document.cookie = "username="+username+"; path=/;";
                 document.cookie = "user_id="+user_id+"; path=/;";
-                console.log("Set cookie to: "+document.cookie);
+                document.cookie = "user_role="+user_role+"; path=/;";
                 page = 1;
                 login_html = "<span>Logged in as </span><a href=\"#\" class=\"login-link\">"+username+"</a><span>. </span><a href=\"#\" class=\"login-link\" onClick=\"logout()\">Logout</a>"
                 setRecommendations('global','new','new');

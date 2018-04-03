@@ -32,25 +32,7 @@ html, body {
     display: inline-block;
     height: 92px;
 }
-.login-info-bar {
-    height: 16px;
-    background-color: #555; /* Dark-grey background */
-    color: white;
-    font-size: 11pt;
-    width: 100%;
-    float: right;
-    padding-right: 6px;
-    text-align: right;
-}
-.login-link {
-    color: white;
-}
-.login-link:visited {
-    color: white;
-}
-.login-link:hover {
-    color: #58D68D;
-}
+
 .icon-bar {
     width: 100%; /* Full-width */
     height: 76px;

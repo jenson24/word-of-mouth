@@ -1,228 +1,249 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <link rel="stylesheet" href="css/style.css" type="text/css"/>
-    <link rel="stylesheet" href="css/addRecModal.css" type="text/css"/>
-    <link rel="stylesheet" href="css/stream-items.css" type="text/css"/>
-    <link rel="stylesheet" href="css/map-items.css" type="text/css"/>
-    <link rel="stylesheet" href="css/messages.css" type="text/css"/>
-    <link rel="stylesheet" href="css/search.css" type="text/css"/>
-    <link rel="stylesheet" href="css/lists.css" type="text/css"/>
-    <link rel="stylesheet" href="css/login.css" type="text/css"/>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
-    <link rel="icon" type="image/png" href="img/favicon-32x32.png" sizes="32x32" />
-    <link rel="icon" type="image/png" href="img/favicon-16x16.png" sizes="16x16" />
-    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
-    <meta charset="utf-8">
-    <title>Word of Mouth</title>
-    <script src="vendor/jquery-3.2.1.min.js"></script>
-    <script src="js/main-controller.js"></script>
-    <script src="js/login.js"></script>
-    <script src="js/google-funcs.js"></script>
-    <script src="js/modify-recs-controller.js"></script>
-    <script src="js/list-controller.js"></script>
-    <script src="js/message-controller.js"></script>
-    <script src="js/follow-controller.js"></script>
-    <script src="js/map-controller.js"></script>
-    <script src="js/profile-controller.js"></script>
-    <script src="js/filter-controller.js"></script>
-    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.4/angular.min.js"></script>
-    <script src="https://npmcdn.com/tether@1.2.4/dist/js/tether.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
-    <script src="src/notify.min.js"></script>
-  </head>
-  <body>
-    <input id="pac-input" class="controls" type="text" placeholder="Search Box">
-    <div id="wrapper">
-        <div id="map">
-        </div>
-        <div id="rec-panel">
-            <div id="header">
-                <div class="login-info-bar"></div>
-                <div class="icon-bar">
-                    <a href="#" class="icon-select around-me" title="Around Me"><i class="fa fa-map-marker" onClick="selectAroundMe()"></i></a>
-                    <a href="#" class="icon-select global" title="My Feed"><i class="fa fa-globe" onClick="setRecommendations('global','new','new')"></i></a>
-                    <a href="#" class="icon-select" title="Search"><i class="fa fa-search" onClick="enableSearch()"></i></a> 
-                    <a href="#" class="icon-select" title="Messages"><i class="fa fa-envelope" onClick="messageController()"></i></a> 
-                    <a href="#" class="icon-select local" title="My Profile"><i class="fa fa-user" onClick="loadDefaultProfile()"></i></a>
-                </div>
+    <head>
+        <link rel="stylesheet" href="css/style.css" type="text/css"/>
+        <link rel="stylesheet" href="css/addRecModal.css" type="text/css"/>
+        <link rel="stylesheet" href="css/stream-items.css" type="text/css"/>
+        <link rel="stylesheet" href="css/map-items.css" type="text/css"/>
+        <link rel="stylesheet" href="css/messages.css" type="text/css"/>
+        <link rel="stylesheet" href="css/search.css" type="text/css"/>
+        <link rel="stylesheet" href="css/lists.css" type="text/css"/>
+        <link rel="stylesheet" href="css/login.css" type="text/css"/>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+        <link rel="icon" type="image/png" href="img/favicon-32x32.png" sizes="32x32" />
+        <link rel="icon" type="image/png" href="img/favicon-16x16.png" sizes="16x16" />
+        <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+        <meta charset="utf-8">
+        <title>Word of Mouth</title>
+        <script src="vendor/jquery-3.2.1.min.js"></script>
+        <script src="js/main-controller.js"></script>
+        <script src="js/login.js"></script>
+        <script src="js/google-funcs.js"></script>
+        <script src="js/modify-recs-controller.js"></script>
+        <script src="js/list-controller.js"></script>
+        <script src="js/message-controller.js"></script>
+        <script src="js/follow-controller.js"></script>
+        <script src="js/map-controller.js"></script>
+        <script src="js/profile-controller.js"></script>
+        <script src="js/filter-controller.js"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.4/angular.min.js"></script>
+        <script src="https://npmcdn.com/tether@1.2.4/dist/js/tether.min.js"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+        <script src="src/notify.min.js"></script>
+    </head>
+    <body>
+        <input id="pac-input" class="controls" type="text" placeholder="Search Box">
+        <div id="wrapper">
+            <div id="map">
             </div>
-            <div class="scroll-wrapper">
-                <div class="content-header"></div>
-                <div class="filter-content" id="filter-content">
-                    <div class="price-filter">
-                        <span class="price-filter-label">Price: </span>
-                        <fieldset class="price">
-                            <input type="radio" id="dollar4" class="price-radio" name="price" value="4" onchange="filter_controller(4,'','')"/><label class = "full" for="dollar4" title="$$$$"></label>
-                            <input type="radio" id="dollar3" class="price-radio" name="price" value="3" onchange="filter_controller(3,'','')"/><label class = "full" for="dollar3" title="$$$"></label>
-                            <input type="radio" id="dollar2" class="price-radio" name="price" value="2" onchange="filter_controller(2,'','')"/><label class = "full" for="dollar2" title="$$"></label>
-                            <input type="radio" id="dollar1" class="price-radio" name="price" value="1" onchange="filter_controller(1,'','')"/><label class = "full" for="dollar1" title="$"></label>
-                        </fieldset>
-                    </div>
-                    <div class="rating-filter">
-                        <span class="rating-filter-label">Rating: </span>
-                        <fieldset class="rating">
-                            <input type="radio" class="rating-radio" id="star5" name="rating" value="5" onchange="filter_controller('',5.0,'')"/><label class = "full" for="star5" title="Awesome!"></label>
-                            <input type="radio" class="rating-radio" id="star4half" name="rating" value="4 and a half" onchange="filter_controller('',4.5,'')"/><label class="half" for="star4half" title="Pretty good!"></label>
-                            <input type="radio" class="rating-radio" id="star4" name="rating" value="4" onchange="filter_controller('',4.0,'')"/><label class = "full" for="star4" title="Pretty good!"></label>
-                            <input type="radio" class="rating-radio" id="star3half" name="rating" value="3 and a half" onchange="filter_controller('',3.5,'')"/><label class="half" for="star3half" title="Meh..."></label>
-                            <input type="radio" class="rating-radio" id="star3" name="rating" value="3" onchange="filter_controller('',3.0,'')"/><label class = "full" for="star3" title="Meh..."></label>
-                            <input type="radio" class="rating-radio" id="star2half" name="rating" value="2 and a half" onchange="filter_controller('',2.5,'')"/><label class="half" for="star2half" title="Kinda bad"></label>
-                            <input type="radio" class="rating-radio" id="star2" name="rating" value="2" onchange="filter_controller('',2.0,'')"/><label class = "full" for="star2" title="Kinda bad"></label>
-                            <input type="radio" class="rating-radio" id="star1half" name="rating" value="1 and a half" onchange="filter_controller('',1.5,'')"/><label class="half" for="star1half" title="Not good"></label>
-                            <input type="radio" class="rating-radio" id="star1" name="rating" value="1" onchange="filter_controller('',1.0,'')"/><label class = "full" for="star1" title="Not good"></label>
-                            <input type="radio" class="rating-radio" id="starhalf" name="rating" value="half" onchange="filter_controller('',0.5,'')"/><label class="half" for="starhalf" title="Really bad"></label>
-                        </fieldset>
-                    </div>
-                    <div class="type-filter">
-                        <form>
-                            <span class="type-list-label">Type: </span>
-                            <select class="type-list" id="type-list" onchange="filter_controller('','',this.value)">
-                            </select>
-                        </form>
+            <div id="rec-panel">
+                <div id="header">
+                    <div class="login-info-bar"></div>
+                    <div class="icon-bar">
+                        <a href="#" class="icon-select around-me" title="Around Me"><i class="fa fa-map-marker" onClick="selectAroundMe()"></i></a>
+                        <a href="#" class="icon-select global" title="My Feed"><i class="fa fa-globe" onClick="setRecommendations('global','new','new')"></i></a>
+                        <a href="#" class="icon-select" title="Search"><i class="fa fa-search" onClick="enableSearch()"></i></a> 
+                        <a href="#" class="icon-select" title="Messages"><i class="fa fa-envelope" onClick="messageController()"></i></a> 
+                        <a href="#" class="icon-select local" title="My Profile"><i class="fa fa-user" onClick="loadDefaultProfile()"></i></a>
                     </div>
                 </div>
-            </div>
-            <div id="scroll"></div>
-        </div>
-    </div>
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCvpkSYUQfRv429WodZqb9L9BtLgPPhUuY&libraries=places&callback=initAutocomplete"
-            async defer>
-    </script>
-    <div id="myModal" class="modal fade" role="dialog">
-        <div class="modal-dialog">
-            <!-- Modal content-->
-            <div class="modal-content">
-                <div class="modal-header" id="modal-header">
-                    <button type="button" class="close-modal" data-dismiss="modal">&times;</button>
-                    <div id="temp-modal-title" class="temp-modal-title"></div>
-                </div>
-                <div class="modal-body" id="modal-body">
-                    <h4 id="place-name"></h4>
-                </div>
-                <div class="modal-footer">
-                    <!--<button type="button" class="btn btn-cancel" data-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-save" data-dismiss="modal" onClick="sendData()">Save</button>
-                    -->
-                </div>
-            </div>
-        </div>
-    </div>
-    <div id="splashModal" class="modal fade" role="dialog">
-        <div class="modal-dialog">
-            <!-- Modal content-->
-            <div class="modal-content">
-                <div class="modal-header" id="splash-modal-header">
-                    <!--<button type="button" class="close-modal" data-dismiss="splash-modal">&times;</button>-->
-                    <div id="splash-modal-title" class="temp-modal-title">What would you like to do?</div>
-                </div>
-                <div class="modal-body" id="splash-modal-body">
-                    <div class="splash-button-wrapper">
-                        <div id="splash-around-me" class="splash-option">
-                            <button class="splash-button" data-dismiss="modal" onClick="selectAroundMe()">See what's around me<br><i class="fa fa-map-marker"></i></button>
+                <div class="scroll-wrapper">
+                    <div class="content-header"></div>
+                    <div class="filter-content" id="filter-content">
+                        <div class="price-filter">
+                            <span class="price-filter-label">Price: </span>
+                            <fieldset class="price">
+                                <input type="radio" id="dollar4" class="price-radio" name="price" value="4" onchange="filter_controller(4,'','')"/><label class = "full" for="dollar4" title="$$$$"></label>
+                                <input type="radio" id="dollar3" class="price-radio" name="price" value="3" onchange="filter_controller(3,'','')"/><label class = "full" for="dollar3" title="$$$"></label>
+                                <input type="radio" id="dollar2" class="price-radio" name="price" value="2" onchange="filter_controller(2,'','')"/><label class = "full" for="dollar2" title="$$"></label>
+                                <input type="radio" id="dollar1" class="price-radio" name="price" value="1" onchange="filter_controller(1,'','')"/><label class = "full" for="dollar1" title="$"></label>
+                            </fieldset>
                         </div>
-                        <div id="splash-global-feed" class="splash-option">
-                            <button class="splash-button" data-dismiss="modal" onClick="setRecommendations('global','new','new')">Go to my feed<br><i class="fa fa-globe"></i></button>
+                        <div class="rating-filter">
+                            <span class="rating-filter-label">Rating: </span>
+                            <fieldset class="rating">
+                                <input type="radio" class="rating-radio" id="star5" name="rating" value="5" onchange="filter_controller('',5.0,'')"/><label class = "full" for="star5" title="Awesome!"></label>
+                                <input type="radio" class="rating-radio" id="star4half" name="rating" value="4 and a half" onchange="filter_controller('',4.5,'')"/><label class="half" for="star4half" title="Pretty good!"></label>
+                                <input type="radio" class="rating-radio" id="star4" name="rating" value="4" onchange="filter_controller('',4.0,'')"/><label class = "full" for="star4" title="Pretty good!"></label>
+                                <input type="radio" class="rating-radio" id="star3half" name="rating" value="3 and a half" onchange="filter_controller('',3.5,'')"/><label class="half" for="star3half" title="Meh..."></label>
+                                <input type="radio" class="rating-radio" id="star3" name="rating" value="3" onchange="filter_controller('',3.0,'')"/><label class = "full" for="star3" title="Meh..."></label>
+                                <input type="radio" class="rating-radio" id="star2half" name="rating" value="2 and a half" onchange="filter_controller('',2.5,'')"/><label class="half" for="star2half" title="Kinda bad"></label>
+                                <input type="radio" class="rating-radio" id="star2" name="rating" value="2" onchange="filter_controller('',2.0,'')"/><label class = "full" for="star2" title="Kinda bad"></label>
+                                <input type="radio" class="rating-radio" id="star1half" name="rating" value="1 and a half" onchange="filter_controller('',1.5,'')"/><label class="half" for="star1half" title="Not good"></label>
+                                <input type="radio" class="rating-radio" id="star1" name="rating" value="1" onchange="filter_controller('',1.0,'')"/><label class = "full" for="star1" title="Not good"></label>
+                                <input type="radio" class="rating-radio" id="starhalf" name="rating" value="half" onchange="filter_controller('',0.5,'')"/><label class="half" for="starhalf" title="Really bad"></label>
+                            </fieldset>
                         </div>
-                        <div id="splash-search" class="splash-option">
-                            <button class="splash-button" data-dismiss="modal" onClick="enableSearch()">Search my network<br><i class="fa fa-search"></i></button>
-                        </div>
-                    </div>
-                    <div class="splash-button-wrapper">
-                        <div id="splash-messages" class="splash-option">
-                            <button class="splash-button" data-dismiss="modal" onClick="messageController()">Go to messages<br><i class="fa fa-envelope"></i></button>
-                        </div>
-                        <div id="splash-global-profile" class="splash-option">
-                            <button class="splash-button" data-dismiss="modal" onClick="loadDefaultProfile()">Check out my profile<br><i class="fa fa-user"></i></button>
+                        <div class="type-filter">
+                            <form>
+                                <span class="type-list-label">Type: </span>
+                                <select class="type-list" id="type-list" onchange="filter_controller('','',this.value)">
+                                </select>
+                            </form>
                         </div>
                     </div>
                 </div>
+                <div id="scroll"></div>
             </div>
         </div>
-    </div>
-    <div id="loginModal" class="modal fade" role="dialog">
-        <div class="modal-dialog">
-            <!-- Modal content-->
-            <div class="modal-content">
-                <div class="modal-header" id="login-modal-header">
-                    <div id="login-modal-title" class="temp-modal-title">Word of Mouth</div>
-                </div>
-                <div class="modal-body" id="login-modal-body">
-                    <p style="text-align:center">Enter login information for <strong>existing users</strong> or click <strong>Join</strong> below for new users</p>
-                    <div class="login-container">
-                        <label><b>Username</b></label>
-                        <input type="text" placeholder="Enter Username" name="uname" required class="login-input" id="login-uname">
-
-                        <label><b>Password</b></label>
-                        <input type="password" placeholder="Enter Password" name="psw" required id="login-pwd">
-
-                        <button type="submit" class="login-button" onclick="login()" data-dismiss="modal">Login</button>
-                        <input type="checkbox" checked="checked"> Remember me
+        <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCvpkSYUQfRv429WodZqb9L9BtLgPPhUuY&libraries=places&callback=initAutocomplete"
+                async defer>
+        </script>
+        <div id="myModal" class="modal fade" role="dialog">
+            <div class="modal-dialog">
+                <!-- Modal content-->
+                <div class="modal-content">
+                    <div class="modal-header" id="modal-header">
+                        <button type="button" class="close-modal" data-dismiss="modal">&times;</button>
+                        <div id="temp-modal-title" class="temp-modal-title"></div>
                     </div>
-
-                    <div class="login-container" style="background-color:#f1f1f1">
-                        <button type="button" class="join-btn" onClick="enableJoin()" data-dismiss="modal">Join</button>
-                        <span class="psw">Forgot <a href="#">password?</a></span>
+                    <div class="modal-body" id="modal-body">
+                        <h4 id="place-name"></h4>
+                    </div>
+                    <div class="modal-footer">
+                        <!--<button type="button" class="btn btn-cancel" data-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-save" data-dismiss="modal" onClick="sendData()">Save</button>
+                        -->
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-    <div id="joinModal" class="modal fade" role="dialog">
-        <div class="modal-dialog">
-            <!-- Modal content-->
-            <div class="modal-content">
-                <div class="modal-header" id="join-modal-header">
-                    <div id="join-modal-title" class="temp-modal-title">Join Word of Mouth</div>
-                </div>
-                <div class="modal-body" id="join-modal-body">
-                    <div class="join-container" id="join-container">
-                        <label><b>First Name</b></label>
-                        <input id="join-fname" type="text" placeholder="Enter First Name" name="firstName" required class="join-input">
-                        <label><b>Last Name</b></label>
-                        <input id="join-lname" type="text" placeholder="Enter Last Name" name="lastName" required class="join-input">
-                        <label><b>Email</b></label>
-                        <input id="join-email" type="text" placeholder="Enter Email" name="email" required class="join-input">
-                        <label><b>Username</b></label>
-                        <input id="join-uname" type="text" placeholder="Enter Username (no spaces)" name="uname" required class="join-input">
-                        <label><b>Password</b></label>
-                        <input id="join-pwd1" type="password" placeholder="Enter Password" name="psw" required class="join-input">
-                        <label><b>Re-Enter Password</b></label>
-                        <input id="join-pwd2" type="password" placeholder="Enter Password" name="psw" required class="join-input">
+        <div id="splashModal" class="modal fade" role="dialog">
+            <div class="modal-dialog">
+                <!-- Modal content-->
+                <div class="modal-content">
+                    <div class="modal-header" id="splash-modal-header">
+                        <!--<button type="button" class="close-modal" data-dismiss="splash-modal">&times;</button>-->
+                        <div id="splash-modal-title" class="temp-modal-title">What would you like to do?</div>
                     </div>
-
-                    <div class="login-container" style="background-color:#f1f1f1">
-                        <button type="button" class="join-btn" id="join-btn" onClick="joinWom()" data-dismiss="modal" disabled="disabled">Join</button>
-                        <button type="button" class="cancel-btn" onClick="cancelJoin()" data-dismiss="modal">Cancel</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div id="searchHelpModal" class="modal fade" role="dialog">
-        <div class="modal-dialog">
-            <!-- Modal content-->
-            <div class="modal-content">
-                <div class="modal-header" id="join-modal-header">
-                    <div id="help-modal-title" class="temp-modal-title"><strong>Search Help</strong></div>
-                </div>
-                <div class="modal-body" id="help-modal-body">
-                    <div class="help-container" id="help-container">
-                        <p>Use Search to find people to follow or places within your network's recommendations.</p>
-                        <p>To <strong>find people</strong>, simply enter the first, last, or username of the person you are looking for.</p>
-                        <p>You can also <strong>search your network's recommendations</strong>.</p>
-                        <p>In the mood for a good burger? Just search for "burger".</p>
-                        <p>Want to see what your friends think about Cafe Rio? Just search "Cafe Rio".</p>
-                        <p>Want to see what your network likes around Salt Lake City? Just search "Salt Lake City".</p>
-                    </div>
-
-                    <div class="help-container" style="background-color:white">
-                        <button type="button" class="close-help-btn" id="close-help-btn" data-dismiss="modal">Close</button>
+                    <div class="modal-body" id="splash-modal-body">
+                        <div class="splash-button-wrapper">
+                            <div id="splash-around-me" class="splash-option">
+                                <button class="splash-button" data-dismiss="modal" onClick="selectAroundMe()">See what's around me<br><i class="fa fa-map-marker"></i></button>
+                            </div>
+                            <div id="splash-global-feed" class="splash-option">
+                                <button class="splash-button" data-dismiss="modal" onClick="setRecommendations('global','new','new')">Go to my feed<br><i class="fa fa-globe"></i></button>
+                            </div>
+                            <div id="splash-search" class="splash-option">
+                                <button class="splash-button" data-dismiss="modal" onClick="enableSearch()">Search my network<br><i class="fa fa-search"></i></button>
+                            </div>
+                        </div>
+                        <div class="splash-button-wrapper">
+                            <div id="splash-messages" class="splash-option">
+                                <button class="splash-button" data-dismiss="modal" onClick="messageController()">Go to messages<br><i class="fa fa-envelope"></i></button>
+                            </div>
+                            <div id="splash-global-profile" class="splash-option">
+                                <button class="splash-button" data-dismiss="modal" onClick="loadDefaultProfile()">Check out my profile<br><i class="fa fa-user"></i></button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-  </body>
+        <div id="loginModal" class="modal fade" role="dialog">
+            <div class="modal-dialog">
+                <!-- Modal content-->
+                <div class="modal-content">
+                    <div class="modal-header" id="login-modal-header">
+                        <div id="login-modal-title" class="temp-modal-title">Word of Mouth</div>
+                    </div>
+                    <div class="modal-body" id="login-modal-body">
+                        <p style="text-align:center">Enter login information for <strong>existing users</strong> or click <strong>Join</strong> below for new users</p>
+                        <div class="login-container">
+                            <label><b>Username</b></label>
+                            <input type="text" placeholder="Enter Username" name="uname" required class="login-input" id="login-uname">
+
+                            <label><b>Password</b></label>
+                            <input type="password" placeholder="Enter Password" name="psw" required id="login-pwd">
+
+                            <button type="submit" class="login-button" onclick="login()" data-dismiss="modal">Login</button>
+                            <input type="checkbox" checked="checked"> Remember me
+                        </div>
+
+                        <div class="login-container" style="background-color:#f1f1f1">
+                            <button type="button" class="join-btn" onClick="enableJoin()" data-dismiss="modal">Join</button>
+                            <span class="psw">Forgot <a href="#">password?</a></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="joinModal" class="modal fade" role="dialog">
+            <div class="modal-dialog">
+                <!-- Modal content-->
+                <div class="modal-content">
+                    <div class="modal-header" id="join-modal-header">
+                        <div id="join-modal-title" class="temp-modal-title">Join Word of Mouth</div>
+                    </div>
+                    <div class="modal-body" id="join-modal-body">
+                        <div class="join-container" id="join-container">
+                            <label><b>First Name</b></label>
+                            <input id="join-fname" type="text" placeholder="Enter First Name" name="firstName" required class="join-input">
+                            <label><b>Last Name</b></label>
+                            <input id="join-lname" type="text" placeholder="Enter Last Name" name="lastName" required class="join-input">
+                            <label><b>Email</b></label>
+                            <input id="join-email" type="text" placeholder="Enter Email" name="email" required class="join-input">
+                            <label><b>Username</b></label>
+                            <input id="join-uname" type="text" placeholder="Enter Username (no spaces)" name="uname" required class="join-input">
+                            <label><b>Password</b></label>
+                            <input id="join-pwd1" type="password" placeholder="Enter Password" name="psw" required class="join-input">
+                            <label><b>Re-Enter Password</b></label>
+                            <input id="join-pwd2" type="password" placeholder="Enter Password" name="psw" required class="join-input">
+                        </div>
+
+                        <div class="login-container" style="background-color:#f1f1f1">
+                            <button type="button" class="join-btn" id="join-btn" onClick="joinWom()" data-dismiss="modal" disabled="disabled">Join</button>
+                            <button type="button" class="cancel-btn" onClick="cancelJoin()" data-dismiss="modal">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="searchHelpModal" class="modal fade" role="dialog">
+            <div class="modal-dialog">
+                <!-- Modal content-->
+                <div class="modal-content">
+                    <div class="modal-header" id="join-modal-header">
+                        <div id="help-modal-title" class="temp-modal-title"><strong>Search Help</strong></div>
+                    </div>
+                    <div class="modal-body" id="help-modal-body">
+                        <div class="help-container" id="help-container">
+                            <p>Use Search to find people to follow or places within your network's recommendations.</p>
+                            <p>To <strong>find people</strong>, simply enter the first, last, or username of the person you are looking for.</p>
+                            <p>You can also <strong>search your network's recommendations</strong>.</p>
+                            <p>In the mood for a good burger? Just search for "burger".</p>
+                            <p>Want to see what your friends think about Cafe Rio? Just search "Cafe Rio".</p>
+                            <p>Want to see what your network likes around Salt Lake City? Just search "Salt Lake City".</p>
+                        </div>
+
+                        <div class="help-container" style="background-color:white">
+                            <button type="button" class="close-help-btn" id="close-help-btn" data-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="adminModal" class="modal fade" role="dialog">
+            <div class="modal-dialog">
+                <!-- Modal content-->
+                <div class="modal-content">
+                    <div class="modal-header" id="admin-modal-header">
+                        <div id="admin-modal-title" class="temp-modal-title"><strong>Word of Mouth Metrics</strong></div>
+                    </div>
+                    <div class="modal-body" id="admin-modal-body">
+                        <div>
+                            <span id="admin_num_users">Total number of users:</span>
+                        </div>
+                        <div>
+                            <span id="admin_num_recs">Total number of recommendations:</span>
+                        </div>
+                        <div class="help-container" style="background-color:white">
+                            <button type="button" class="close-help-btn" id="close-help-btn" data-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
 </html>

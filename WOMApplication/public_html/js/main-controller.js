@@ -28,6 +28,7 @@ var suggestions = [];
 var active_tab = 'terms';
 var pos = {};
 var infoWindows = [];
+var user_role = 'user';
 var around_me_data = {'list_matches': [], 'rec_matches': []};
 //var server_host = 'word-of-mouth-test.com/api';
 var server_host = 'localhost:8080/api';
@@ -39,9 +40,13 @@ window.onload = function(){
     user_id = getCookie('user_id');
     current_user = user_id;
     username = getCookie('username');
+    user_role = getCookie('user_role');
     if (user_id !== "") {
         page = 1;
         login_html = "<span>Logged in as </span><a href=\"#\" class=\"login-link\">"+username+"</a><span>. </span><a href=\"#\" class=\"login-link\" onClick=\"logout()\">Logout</a>"
+        if (user_role === 'admin') {
+            login_html += "<button id=\"open-admin\" onclick=\"openAdminConsole()\"><i class=\"fa fa-cog\"></button>";
+        }
         setRecommendations('global','new','new');
         $('a.icon-select.global').addClass('active')
         $('.login-info-bar').empty();
@@ -256,7 +261,7 @@ function getCardHtml(recObj,ind) {
         card_html += "<div id=\"rec-tools-collapse-"+ind.toString()+"\" class=\"collapse\">";
         card_html += "<div class=\"edit-rec-button\"><button title=\"Edit Recommendation\" class=\"fa fa-pencil-square-o rec-tool-icons\" data-toggle=\"modal\" data-target=\"#myModal\" onClick=\"editRecommendationController('"+recObj["r_id"]+"')\"></button></div>";
         card_html += "<div class=\"delete-rec-button\"><button title=\"Delete Recommendation\" class=\"fa fa-trash-o rec-tool-icons\" data-toggle=\"modal\" data-target=\"#myModal\" onClick=\"deleteRecommendationController('"+recObj["r_id"]+"')\"></button></div>";
-        card_html += "<div class=\"list-button\"><button title=\"Add to List\" class=\"fa fa-list rec-tool-icons\" data-toggle=\"modal\" data-target=\"#myModal\" onClick=\"addRecToUserList("+recObj["r_id"]+")\"></button></div>";
+        card_html += "<div class=\"list-button\"><button title=\"Update Lists\" class=\"fa fa-list rec-tool-icons\" data-toggle=\"modal\" data-target=\"#myModal\" onClick=\"addRecToUserList("+recObj["r_id"]+")\"></button></div>";
         card_html += "</div></div>";
     } else {
         card_html += "<div class=\"message-button\"><button title=\"Send Message\" class=\"fa fa-envelope rec-tool-icons\" data-toggle=\"modal\" data-target=\"#myModal\" onClick=\"composeMessage("+user_id.toString()+","+recObj["user_id"]+",'"+recObj["username"]+"',"+recObj["r_id"]+")\"></button></div>";    
@@ -603,64 +608,78 @@ function searchTabController(evt,tabName) {
 }
 
 function searchAroundMe(type) {
-    if (type === 'geo') {
-        page = 1;
-    } else if (type === 'geo-rec') {
-        page = (around_me_data['rec_matches'].length / page_size) + 1;
-    } else if (type === 'geo-list') {
-        page = (around_me_data['list_matches'].length / page_size) + 1;
+    console.log(pos);
+    if (jQuery.isEmptyObject(pos)) {
+        navigator.geolocation.getCurrentPosition(function(position) {
+            pos = {
+                lat: position.coords.latitude,
+                lng: position.coords.longitude
+            };
+            searchAroundMe(type);
+        });
+        if (jQuery.isEmptyObject(pos)) {
+            alert("You need to allow access to your location to see what is around you!");
+        }
+    } else {
+        if (type === 'geo') {
+            page = 1;
+        } else if (type === 'geo-rec') {
+            page = (around_me_data['rec_matches'].length / page_size) + 1;
+        } else if (type === 'geo-list') {
+            page = (around_me_data['list_matches'].length / page_size) + 1;
+        }
+        dist = 25;
+        post_data = {
+            uid: user_id,
+            term: 'null',
+            page: page,
+            type: type,
+            dist: dist,
+            lat: pos.lat,
+            lon: pos.lng
+        };
+        $.ajax({
+            url: host_type+"://"+server_host+"/search",
+            type: 'POST',
+            data: JSON.stringify(post_data),
+            dataType: 'json',
+            success: function(search_results) {
+                for (i=0; i<search_results['list_matches'].length; i++) {
+                    in_list = false;
+                    for (j=0; j<around_me_data['list_matches'].length; j++) {
+                        if (around_me_data['list_matches'][j]['list_id'] === search_results['list_matches'][i]['list_id']) {
+                            in_list = true;
+                        }
+                    }
+                    if (!in_list) {
+                        around_me_data['list_matches'].push(search_results['list_matches'][i]);
+                    }
+                }
+                for (i=0; i<search_results['rec_matches'].length; i++) {
+                    in_list = false;
+                    for (j=0; j<around_me_data['rec_matches'].length; j++) {
+                        if (around_me_data['rec_matches'][j]['r_id'] === search_results['rec_matches'][i]['r_id']) {
+                            in_list = true;
+                        }
+                    }
+                    if (!in_list) {
+                        around_me_data['rec_matches'].push(search_results['rec_matches'][i]);
+                    }
+                }
+                around_me_data['list_count'] = search_results['list_count'];
+                around_me_data['rec_count'] = search_results['rec_count'];
+                if (type !== 'geo') {
+                    $(".load-more-around-me").remove();
+                    addSearchResultsToList();
+                }
+                $.notify("Found search results", {className: "success", position: "bottom center"});
+            },
+            error: function(jqXHR, exception) {
+                errorHandling(jqXHR, exception);
+            },
+            async: false
+        });
     }
-    dist = 25;
-    post_data = {
-        uid: user_id,
-        term: 'null',
-        page: page,
-        type: type,
-        dist: dist,
-        lat: pos.lat,
-        lon: pos.lng
-    };
-    $.ajax({
-        url: host_type+"://"+server_host+"/search",
-        type: 'POST',
-        data: JSON.stringify(post_data),
-        dataType: 'json',
-        success: function(search_results) {
-            for (i=0; i<search_results['list_matches'].length; i++) {
-                in_list = false;
-                for (j=0; j<around_me_data['list_matches'].length; j++) {
-                    if (around_me_data['list_matches'][j]['list_id'] === search_results['list_matches'][i]['list_id']) {
-                        in_list = true;
-                    }
-                }
-                if (!in_list) {
-                    around_me_data['list_matches'].push(search_results['list_matches'][i]);
-                }
-            }
-            for (i=0; i<search_results['rec_matches'].length; i++) {
-                in_list = false;
-                for (j=0; j<around_me_data['rec_matches'].length; j++) {
-                    if (around_me_data['rec_matches'][j]['r_id'] === search_results['rec_matches'][i]['r_id']) {
-                        in_list = true;
-                    }
-                }
-                if (!in_list) {
-                    around_me_data['rec_matches'].push(search_results['rec_matches'][i]);
-                }
-            }
-            around_me_data['list_count'] = search_results['list_count'];
-            around_me_data['rec_count'] = search_results['rec_count'];
-            if (type !== 'geo') {
-                $(".load-more-around-me").remove();
-                addSearchResultsToList();
-            }
-            $.notify("Found search results", {className: "success", position: "bottom center"});
-        },
-        error: function(jqXHR, exception) {
-            errorHandling(jqXHR, exception);
-        },
-        async: false
-    });
 }
 function selectAroundMe() {
     searchAroundMe('geo');
@@ -740,4 +759,26 @@ function errorHandling(jqXHR, exception) {
     } else {
         $.notify("Error: Unknown Error" + jqXHR.responseText, {className: "error", position: "bottom center"});
     }
+}
+
+function openAdminConsole() {
+    $.ajax({
+        url: host_type+"://"+server_host+"/getMetrics",
+        type: 'GET',
+        dataType: 'json',
+        success: function(results) {
+            metrics = results;
+            num_users = metrics['users'];
+            num_recs = metrics['recommendations'];
+            var temp_users = document.getElementById("admin_num_users");
+            temp_users.innerHTML = "<span>Total number of users: "+num_users.toString()+"</span>";
+            var temp_recs = document.getElementById("admin_num_recs");
+            temp_recs.innerHTML = "<span>Total number of recommendations: "+num_recs.toString()+"</span>";
+            $('#adminModal').modal('show');
+        },
+        error: function(jqXHR, exception) {
+            errorHandling(jqXHR, exception);
+        },
+        async: false
+    });
 }

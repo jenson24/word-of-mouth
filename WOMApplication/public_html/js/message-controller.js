@@ -52,8 +52,6 @@ function addMessagesToPage(messages) {
             html_body += "<div class=\"message-expand-container\">";
             html_body += "<div class=\"message-expand-icon\"><button id=\message-expand-button-"+ind.toString()+"\" class=\"message-expand-button fa fa-angle-double-down\" title=\"Show/Hide Thread\" onClick=\"messageExpandController("+ind.toString()+")\"></button></div>";
             html_body += "<div class=\"message-expand-summary\" id=\"message-expand-summary-"+ind.toString()+"\">";
-            console.log(messages[rec]["messages"][0]["from_id"]);
-            console.log(messages[rec]["messages"][0]["to_id"]);
             if (messages[rec]["messages"][0]["from_id"].toString() === user_id.toString()) {
                 html_body += "<a href=\"#\" onclick=\"changeUser("+messages[rec]["messages"][0]["to_id"].toString()+")\">@"+messages[rec]["messages"][0]["to_name"]+"</a>";
             } else {
