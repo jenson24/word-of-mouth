@@ -6,14 +6,17 @@
 
 function showLists(uid) {
     current_user = uid;
-    temp_lists = get_lists(uid);
-    list_data = temp_lists["responseJSON"];
-    var lists = list_data["lists"];
+    if (current_user.toString() !== user_id.toString()) {
+        temp_lists = get_lists(uid);
+        list_data = temp_lists["responseJSON"];
+        current_user_lists = list_data["lists"];
+    } else {
+        current_user_lists = user_lists;
+    }
     getMarkerInfo({},"new");
-    getListMarkerInfo(lists);
-    active_user_lists = lists;
+    getListMarkerInfo(current_user_lists);
     $('.rec-section-header').empty();
-    if (lists.length > 0) {
+    if (current_user_lists.length > 0) {
         $('.rec-section-header').append("<span>Recommendation Lists...</span>");    
     } else {
         if (uid.toString() === user_id.toString()) {
@@ -32,8 +35,8 @@ function showLists(uid) {
     $('.filter-content').css('display','none');
     html_start = "<div class=\"list-container\"><ol class=\"list-items\">";
     html_body = "";
-    for (var i = 0; i < lists.length; i++) {
-        html_body += getListHtml(lists[i],i,uid);
+    for (var i = 0; i < current_user_lists.length; i++) {
+        html_body += getListHtml(current_user_lists[i],i,uid);
     }
     html_end = "</ol></div>";
     $('#scroll').empty();
@@ -358,7 +361,7 @@ function createNewList(list_name,list_description,list_location,lat,lon,place_id
             if (r_id !== 'None') {
                 editRecommendation(r_id, [list_id,list_name], 'list')
             } else {
-                active_user_lists.push(post_data);
+                user_lists.push(post_data);
                 post_data['list_id'] = list_id;
                 post_data['rec_count'] = 0;
                 addListToPage(post_data);
@@ -384,7 +387,7 @@ function loadList(list_id,list_name,uid) {
 }
 
 function addListToPage(list) {
-    var lists = active_user_lists;
+    var lists = user_lists;
     new_list_html = getListHtml(list,lists.length-1,user_id);
     $('.list-items').prepend(card_html);
     getMarkerInfo({},"new");
@@ -394,7 +397,11 @@ function addListToPage(list) {
 
 function editListController(list_id) {
     if (active_menu === 'local') {
-        temp_lists = active_user_lists;
+        if (current_user.toString() === user_id.toString()) {
+            temp_lists = user_lists;
+        } else {
+            temp_lists = current_user_lists;
+        }
     } else if (active_menu === 'around_me') {
         temp_lists = around_me_data['list_matches'];
     } else if (active_menu === 'searchRecs') {
@@ -468,7 +475,11 @@ function editListController(list_id) {
 
 function deleteListController(list_id) {
     if (active_menu === 'local') {
-        temp_lists = active_user_lists;
+        if (current_user.toString() === user_id.toString()) {
+            temp_lists = user_lists;
+        } else {
+            temp_lists = current_user_lists;
+        }
     } else if (active_menu === 'around_me') {
         temp_lists = around_me_data['list_matches'];
     } else if (active_menu === 'searchRecs') {
@@ -606,8 +617,8 @@ function removeRecFromList(r_id,list_id) {
 }
 
 function updateListHtml(list_name, list_description, list_id) {
-    for (var i = 0; i < active_user_lists.length; i++) {
-        list = active_user_lists[i];
+    for (var i = 0; i < user_lists.length; i++) {
+        list = user_lists[i];
         if (list['list_id'].toString() == list_id.toString()) {
             document.getElementById('list-name-'+i.toString()).text = list_name;
             document.getElementById('list-name-'+i.toString()).setAttribute("onClick", "loadList("+list_id.toString()+", '"+list_name+"', "+user_id.toString()+")");
@@ -622,8 +633,8 @@ function deleteListFromPage(list_id) {
     }
     var ind_to_remove = null;
     var mark_ind = null;
-    for (var i = 0; i < active_user_lists.length; i++) {
-        list = active_user_lists[i];
+    for (var i = 0; i < user_lists.length; i++) {
+        list = user_lists[i];
         if (list['list_id'].toString() === list_id.toString()) {
             ind_to_remove = i;
         }
@@ -635,7 +646,7 @@ function deleteListFromPage(list_id) {
         }
     }
     if (ind_to_remove !== null) {
-        active_user_lists.splice(ind_to_remove, 1);
+        user_lists.splice(ind_to_remove, 1);
         $("#list-item-"+ind_to_remove.toString()).remove();
     }
     if (mark_ind !== null) {

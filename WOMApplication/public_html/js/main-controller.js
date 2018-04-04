@@ -19,7 +19,8 @@ var marker_list = {};
 var search_rec_results = [];
 var profile_info = {};
 var list_info = {};
-var active_user_lists = [];
+var user_lists = [];
+var current_user_lists = [];
 var term_matches = [];
 var user_matches = [];
 var list_matches = [];
@@ -51,6 +52,11 @@ window.onload = function(){
         $('a.icon-select.global').addClass('active')
         $('.login-info-bar').empty();
         $('.login-info-bar').append(login_html);
+        
+        var temp_lists = get_lists(user_id);
+        var list_data = temp_lists["responseJSON"];
+        user_lists = list_data["lists"];
+
         $('#splashModal').modal('show');
     } else {
         $('#loginModal').modal('show');
@@ -276,6 +282,11 @@ function sendData() {
     rec_object["comment"] = comment;
     rec_object["user_id"] = user_id;
     rec_object["username"] = username;
+    list_id = document.getElementById('user-list-select').value;
+    if (list_id !== 'null') {
+        rec_object["r_lists"] = list_id;
+        list_name = $('#user-list-select option:selected').text();
+    }
     $.ajax({
         url: host_type+"://"+server_host+"/createRec",
         type: 'POST',
@@ -294,9 +305,12 @@ function sendData() {
                 username: username, 
                 r_comment: comment, 
                 r_name: rec_object["g_name"], 
-                r_date: "Just Added...", 
-                r_lists: []
+                r_date: "Just Added..."
             };
+            if (list_id !== 'null') {
+                temp_obj["r_lists"] = list_id;
+                temp_obj["r_list_names"] = [list_name];
+            }
 
             addRecToPage(temp_obj);
             if (active_menu === 'local') {
@@ -326,6 +340,23 @@ function get_recommendations(lookup_type, page) {
         success: function(recommendation_data) {
             temp_obj = recommendation_data["recommendations"];
             recommendations['latest_pull'] = temp_obj;
+            if (current_user !== user_id) {
+                if (Object.keys(recommendations).indexOf(current_user) > -1) {
+                    for (i = 0; i < temp_obj.length; i++) {
+                        var already_pulled = false;
+                        for (var j = 0; j < recommendations[current_user].length; j++) {
+                            if (temp_obj[i]["r_id"] === recommendations[current_user][j]["r_id"]) {
+                                already_pulled = true;
+                            }
+                        }
+                        if (already_pulled === false) {
+                            recommendations[current_user].push(temp_obj[i]);
+                        }
+                    }
+                } else {
+                    recommendations[current_user] = temp_obj;
+                }
+            }
             for (var i = 0; i < recommendations["latest_pull"].length; i++) {
                 var already_pulled = false;
                 for (var j = 0; j < recommendations[active_menu].length; j++) {
@@ -363,11 +394,13 @@ function getTypes() {
 
 function getPage() {
     if (active_menu === 'global') {
-        rec_length = recommendations['global'].length;
-        //rec_length = fetched_all_recommendations.length;
+        if (current_user !== user_id) {
+            rec_length = recommendations[current_user].length;
+        } else {
+            rec_length = recommendations['global'].length;
+        }
     } else if (active_menu === 'local') {
         rec_length = recommendations['local'].length;
-        //rec_length = fetched_my_recommendations.length;
     } else if (active_menu === 'searchRecs') {
         /*if (active_tab === 'terms') {
             rec_length = term_matches.length;

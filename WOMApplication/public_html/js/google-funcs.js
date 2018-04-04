@@ -160,6 +160,7 @@ function fixInfoWindow() {
                     $('#modal-body').empty();
                     $('#modal-body').append("Save a comment...");
                     $('#modal-body').append("<textarea rows=\"4\" id=\"rec-comment\" placeholder=\"What do you like about this place?\">");
+                    
                     $('.modal-footer').empty();
                     $('.modal-footer').append("<button type=\"button\" class=\"btn btn-cancel\" data-dismiss=\"modal\">Cancel</button>");
                     $('.modal-footer').append("<button type=\"button\" class=\"btn btn-save\" data-dismiss=\"modal\" onClick=\"sendData()\">Send</button>");
@@ -226,6 +227,16 @@ function openRecModalFromSearch(r_type) {
     $('#modal-body').empty();
     $('#modal-body').append("Save a comment...");
     $('#modal-body').append("<textarea rows=\"4\" id=\"rec-comment\" placeholder=\""+placeholder+"\">");
+    $('#modal-body').append("<div><strong>Optional:</strong> Select one of your lists for the recommendation to be added to...</div>");
+    if (user_lists.length > 0) {
+        var dropdown = "<select id=\"user-list-select\" class=\"list-select list-inputs\">";
+        dropdown += "<option value=\"null\"></option>";
+        for (var i = 0; i < user_lists.length; i++) {
+            dropdown += "<option value=\""+user_lists[i]["list_id"]+"\">"+user_lists[i]["list_name"]+"</option>";
+        }
+        dropdown += "</select>";
+        $('#modal-body').append(dropdown);
+    }
     $('.modal-footer').empty();
     $('.modal-footer').append("<button type=\"button\" class=\"btn btn-cancel\" data-dismiss=\"modal\">Cancel</button>");
     $('.modal-footer').append("<button type=\"button\" class=\"btn btn-save\" data-dismiss=\"modal\" onClick=\"sendData()\">Send</button>");
