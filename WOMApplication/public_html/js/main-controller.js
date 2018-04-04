@@ -394,13 +394,13 @@ function getTypes() {
 
 function getPage() {
     if (active_menu === 'global') {
+        rec_length = recommendations['global'].length;
+    } else if (active_menu === 'local') {
         if (current_user !== user_id) {
             rec_length = recommendations[current_user].length;
         } else {
-            rec_length = recommendations['global'].length;
+            rec_length = recommendations['local'].length;
         }
-    } else if (active_menu === 'local') {
-        rec_length = recommendations['local'].length;
     } else if (active_menu === 'searchRecs') {
         /*if (active_tab === 'terms') {
             rec_length = term_matches.length;
