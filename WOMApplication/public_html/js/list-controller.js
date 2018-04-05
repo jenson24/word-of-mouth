@@ -209,7 +209,7 @@ function addRecToUserList(r_id) {
         for (var i = 0; i < recommendations[active_menu].length; i++) {
             if (recommendations[active_menu][i]["r_id"].toString() === r_id.toString()) {
                 temp_obj = recommendations[active_menu][i];
-                if (recommendations[active_menu][i]["r_lists"].length > 0) {
+                if (recommendations[active_menu][i]["r_lists"] && recommendations[active_menu][i]["r_lists"].length > 0) {
                     $('#modal-body').append("<div>This recommendation is already included in the following lists:</div>");
                     for (var j = 0; j < recommendations[active_menu][i]["r_lists"].length; j++) {
                         $('#modal-body').append("<span>   "+recommendations[active_menu][i]["r_list_names"][j]+"    </span>");
@@ -218,11 +218,11 @@ function addRecToUserList(r_id) {
                 }
             }
         }
-        if (temp_obj && lists.length > temp_obj["r_list_names"].length) {
+        if (temp_obj && (!temp_obj["r_list_names"] || lists.length > temp_obj["r_list_names"].length)) {
             $('#modal-body').append("<div>Select a list for the recommendation to be added to...</div>");
             var dropdown = "<select id=\"user-list-select\" class=\"list-select list-inputs\">";
             for (var i = 0; i < lists.length; i++) {
-                if (temp_obj && temp_obj["r_list_names"].indexOf(lists[i]["list_name"]) === -1) {
+                if (!temp_obj["r_list_names"] || temp_obj["r_list_names"].indexOf(lists[i]["list_name"]) === -1) {
                     dropdown += "<option value=\""+lists[i]["list_name"]+"\">"+lists[i]["list_name"]+"</option>";
                 }
             }

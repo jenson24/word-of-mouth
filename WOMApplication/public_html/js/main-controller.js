@@ -122,6 +122,21 @@ $(document).ready(function() {
             $('#join-btn').removeAttr('disabled');
         }
     });
+    $('.reset-input').on('keyup', function () {
+        var empty = false;
+        empty_count = 0;
+        $('.reset-input').each(function() {
+            if ($(this).val() === '') {
+                empty = true;
+                empty_count += 1;
+            }
+        });
+        if (empty) {
+            $('#reset-btn').attr('disabled', 'disabled');
+        } else {
+            $('#reset-btn').removeAttr('disabled');
+        }
+    });
 
  });
 
@@ -135,6 +150,7 @@ function setRecommendations(rec_type, temp_obj, marker_flag) {
         clearFilters();
     }
     if (rec_type === 'global') {
+        current_user = user_id;
         html_head = "<div class=\"rec-section-header\"><span>What people are recommending...</span></div><div class=\"filter-bar\"><a href=\"#\"><i class=\"fa fa-ban\" onClick=\"removeFilters()\"></i></a><a href=\"#\"><i class=\"fa fa-filter\" onClick=\"showFilters()\"></i></a></div>";
         $('.content-header').css("height","32px");
         $('#scroll').css("height","calc( 100% - 92px - 32px)");        
@@ -220,7 +236,7 @@ function getCardHtml(recObj,ind) {
     card_html += "<span class=\"rec-name\"><strong class=\"recName\">"+recObj["r_name"]+"</strong></span>";
     card_html += "<span class=\"rec-comment\">"+recObj["r_comment"]+"</span>";
     card_html += "<div id=\"rec-lists-"+ind.toString()+"\" class=\"rec-lists\">";
-    if (recObj["r_lists"] !== null && recObj["r_lists"].length > 0) {
+    if (recObj["r_lists"] && recObj["r_lists"] !== null && recObj["r_lists"].length > 0) {
         list_ids = recObj["r_lists"];
         list_names = recObj["r_list_names"];
         for (i = 0; i < list_ids.length; i++) {
@@ -424,6 +440,7 @@ function getPage() {
 }
 
 function enableSearch() {
+    current_user = user_id;
     if (suggestions.length === 0) {
         get_suggestions();
     }
@@ -715,6 +732,7 @@ function searchAroundMe(type) {
     }
 }
 function selectAroundMe() {
+    current_user = user_id;
     searchAroundMe('geo');
     getListMarkerInfo(around_me_data['list_matches']);
     getMarkerInfo(around_me_data['rec_matches'],'new');

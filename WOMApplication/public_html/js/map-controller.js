@@ -116,7 +116,9 @@ function getMarkerContent(obj) {
     marker_html += "<div class=\"marker-item-header\">";
     marker_html += "<span class=\"loc-info\"><strong>"+obj["name"]+"</strong></span>";
     marker_html += "<span class=\"loc-info\">"+obj["address"].replace(',', '<br>')+"</span>";
-    marker_html += "<a target=\"_blank\" href=\""+obj["website"]+"\" class=\"website-footer-content\">"+obj["website"]+"</a>";
+    if (obj["website"] !== null) {
+        marker_html += "<a target=\"_blank\" href=\""+obj["website"]+"\" class=\"website-footer-content\">"+obj["website"]+"</a>";
+    }
     marker_html += "</div>";
     marker_html += "<div class=\"marker-item-container\">";
     for (var i=0; i<obj["comment"].length; i++) {

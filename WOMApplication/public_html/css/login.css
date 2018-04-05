@@ -29,7 +29,14 @@ form {
     border: 1px solid #ccc;
     box-sizing: border-box;
 }
-
+.reset-input[type=text], input[type=password] {
+    width: 100%;
+    padding: 12px 20px;
+    margin-bottom: 8px;
+    display: inline-block;
+    border: 1px solid #ccc;
+    box-sizing: border-box;
+}
 .login-button {
     background-color: #4CAF50;
     color: white;
@@ -55,6 +62,8 @@ form {
     padding: 10px 18px;
     color: #fff;
     background-color: #337ab7;
+    vertical-align: middle;
+    margin: 16px;
 }
 .imgcontainer {
     text-align: center;
@@ -66,13 +75,17 @@ img.avatar {
     border-radius: 50%;
 }
 
-.login-container {
+.login-content {
     padding: 16px;
+}
+.login-container {
+    margin: 16px;
 }
 
 span.psw {
     float: right;
-    padding-top: 16px;
+    margin: 24px;
+    vertical-align: middle;
 }
 
 h2 {

@@ -5,6 +5,7 @@
  */
 
 function messageController() {
+    current_user = user_id;
     getMarkerInfo({},'new');
     getListMarkerInfo({});
     active_menu = 'messages';

@@ -161,3 +161,78 @@ function deleteCookie( name ) {
     cookie_str = name + '=; expires=Thu, 01 Jan 1970 00:00:01 GMT; path=/;';
     document.cookie = cookie_str;
 }
+function toggleForgotPassword() {
+    console.log("click");
+    var x = document.getElementById("forgot-password-text");
+    if (x.style.display === "none") {
+        x.style.display = "block";
+    } else {
+        x.style.display = "none";
+    }
+}
+function checkNewPassword() {
+    var uname = $("#reset-uname").val().trim();
+    var temp_pwd = $("#reset-pwd").val().trim();
+    var pwd1 = $("#reset-pwd1").val().trim();
+    var pwd2 = $("#reset-pwd2").val().trim();
+    bad_chars = ['<','>','%','=',' '];
+    valid_fields = true;
+    for (i=0; i < bad_chars.length; i++) {
+        if (uname.indexOf(bad_chars[i]) > -1) {
+            $.notify("Bad username", {className: "failure", position: "bottom center"});
+            valid_fields = false;
+        }
+        if (temp_pwd.indexOf(bad_chars[i]) > -1) {
+            $.notify("Incorrect Temporary Password", {className: "failure", position: "bottom center"});
+            valid_fields = false;
+        }
+        if (pwd1.indexOf(bad_chars[i]) > -1) {
+            $.notify("Bad Password", {className: "failure", position: "bottom center"});
+            valid_fields = false;
+        }
+        if (pwd2.indexOf(bad_chars[i]) > -1) {
+            $.notify("Bad Password", {className: "failure", position: "bottom center"});
+            valid_fields = false;
+        }
+    }
+    if (pwd1 !== pwd2) {
+        valid_fields = false;
+        alert("Passwords do not match");
+        $('#resetPasswordModal').modal('show');
+    }
+    if (valid_fields) {
+        result = resetPassword(uname, temp_pwd, pwd1);
+    }
+}
+function resetPassword(uname, temp_pwd, pwd) {
+    post_data = {
+        uname: uname,
+        temp_pwd: temp_pwd,
+        password: pwd
+    };
+    //console.log(post_data);
+    $.ajax({
+        url: host_type+"://"+server_host+"/resetPassword",
+        type: 'POST',
+        data: JSON.stringify(post_data),
+        dataType: 'text',
+        success: function(result) {
+            //console.log(create_result);
+            if (result !== 'invalid') {
+                $.notify("Successfully Changed Password", {className: "success", position: "bottom center"});
+                $.notify("Please login with the new password", {className: "success", position: "bottom center"});
+                $('#loginModal').modal('show');
+            } else {
+                alert("Invalid username and password provided");
+                $('#joinModal').modal('show');
+            }
+        },
+        error: function(jqXHR, exception) {
+            errorHandling(jqXHR, exception);
+        },
+        async: false
+    });
+}
+function enableResetPwdModal() {
+    $('#resetPasswordModal').modal('show');
+}

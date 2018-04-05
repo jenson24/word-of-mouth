@@ -150,7 +150,7 @@
                     </div>
                     <div class="modal-body" id="login-modal-body">
                         <p style="text-align:center">Enter login information for <strong>existing users</strong> or click <strong>Join</strong> below for new users</p>
-                        <div class="login-container">
+                        <div class="login-content">
                             <label><b>Username</b></label>
                             <input type="text" placeholder="Enter Username" name="uname" required class="login-input" id="login-uname">
 
@@ -163,7 +163,12 @@
 
                         <div class="login-container" style="background-color:#f1f1f1">
                             <button type="button" class="join-btn" onClick="enableJoin()" data-dismiss="modal">Join</button>
-                            <span class="psw">Forgot <a href="#">password?</a></span>
+                            <span class="psw">Forgot <a href="#" onclick="toggleForgotPassword()">password?</a></span>
+                            <br>
+                            <div id="forgot-password-text" style="display: none">
+                                <span>To get your password reset, please contact Nick Jenson @ nickjenson24@gmail.com</span>
+                                <span>Once you have a temporary password, <a href="#" onclick="enableResetPwdModal()" data-dismiss="modal">click here.</a></span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -194,6 +199,33 @@
 
                         <div class="login-container" style="background-color:#f1f1f1">
                             <button type="button" class="join-btn" id="join-btn" onClick="joinWom()" data-dismiss="modal" disabled="disabled">Join</button>
+                            <button type="button" class="cancel-btn" onClick="cancelJoin()" data-dismiss="modal">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="resetPasswordModal" class="modal fade" role="dialog">
+            <div class="modal-dialog">
+                <!-- Modal content-->
+                <div class="modal-content">
+                    <div class="modal-header" id="reset-modal-header">
+                        <div id="reset-modal-title" class="temp-modal-title">Reset Password</div>
+                    </div>
+                    <div class="modal-body" id="reset-modal-body">
+                        <div class="join-container" id="reset-container">
+                            <label><b>Username</b></label>
+                            <input id="reset-uname" type="text" placeholder="Enter Username (no spaces)" name="uname" required class="reset-input">
+                            <label><b>Temporary Password</b></label>
+                            <input id="reset-pwd" type="password" placeholder="Enter Password" name="psw" required class="reset-input">
+                            <label><b>New Password</b></label>
+                            <input id="reset-pwd1" type="password" placeholder="Enter Password" name="psw" required class="reset-input">
+                            <label><b>Re-Enter New Password</b></label>
+                            <input id="reset-pwd2" type="password" placeholder="Enter Password" name="psw" required class="reset-input">
+                        </div>
+
+                        <div class="login-container" style="background-color:#f1f1f1">
+                            <button type="button" class="join-btn" id="reset-btn" onClick="checkNewPassword()" data-dismiss="modal" disabled="disabled">Save</button>
                             <button type="button" class="cancel-btn" onClick="cancelJoin()" data-dismiss="modal">Cancel</button>
                         </div>
                     </div>
