@@ -96,7 +96,7 @@
                 <div class="modal-content">
                     <div class="modal-header" id="modal-header">
                         <button type="button" class="close-modal" data-dismiss="modal">&times;</button>
-                        <div id="temp-modal-title" class="temp-modal-title"></div>
+                        <div id="modal-title" class="modal-title"></div>
                     </div>
                     <div class="modal-body" id="modal-body">
                         <h4 id="place-name"></h4>
@@ -115,7 +115,7 @@
                 <div class="modal-content">
                     <div class="modal-header" id="splash-modal-header">
                         <!--<button type="button" class="close-modal" data-dismiss="splash-modal">&times;</button>-->
-                        <div id="splash-modal-title" class="temp-modal-title">What would you like to do?</div>
+                        <div id="splash-modal-title" class="modal-title">What would you like to do?</div>
                     </div>
                     <div class="modal-body" id="splash-modal-body">
                         <div class="splash-button-wrapper">
@@ -123,7 +123,7 @@
                                 <button class="splash-button" data-dismiss="modal" onClick="selectAroundMe()">See what's around me<br><i class="fa fa-map-marker"></i></button>
                             </div>
                             <div id="splash-global-feed" class="splash-option">
-                                <button class="splash-button" data-dismiss="modal" onClick="setRecommendations('global','new','new')">Go to my feed<br><i class="fa fa-globe"></i></button>
+                                <button class="splash-button" data-dismiss="modal">Go to my feed<br><i class="fa fa-globe"></i></button>
                             </div>
                             <div id="splash-search" class="splash-option">
                                 <button class="splash-button" data-dismiss="modal" onClick="enableSearch()">Search my network<br><i class="fa fa-search"></i></button>
@@ -146,7 +146,7 @@
                 <!-- Modal content-->
                 <div class="modal-content">
                     <div class="modal-header" id="login-modal-header">
-                        <div id="login-modal-title" class="temp-modal-title">Word of Mouth</div>
+                        <div id="login-modal-title" class="modal-title">Word of Mouth</div>
                     </div>
                     <div class="modal-body" id="login-modal-body">
                         <p style="text-align:center">Enter login information for <strong>existing users</strong> or click <strong>Join</strong> below for new users</p>
@@ -179,7 +179,7 @@
                 <!-- Modal content-->
                 <div class="modal-content">
                     <div class="modal-header" id="join-modal-header">
-                        <div id="join-modal-title" class="temp-modal-title">Join Word of Mouth</div>
+                        <div id="join-modal-title" class="modal-title">Join Word of Mouth</div>
                     </div>
                     <div class="modal-body" id="join-modal-body">
                         <div class="join-container" id="join-container">
@@ -210,7 +210,7 @@
                 <!-- Modal content-->
                 <div class="modal-content">
                     <div class="modal-header" id="reset-modal-header">
-                        <div id="reset-modal-title" class="temp-modal-title">Reset Password</div>
+                        <div id="reset-modal-title" class="modal-title">Reset Password</div>
                     </div>
                     <div class="modal-body" id="reset-modal-body">
                         <div class="join-container" id="reset-container">
@@ -237,7 +237,7 @@
                 <!-- Modal content-->
                 <div class="modal-content">
                     <div class="modal-header" id="join-modal-header">
-                        <div id="help-modal-title" class="temp-modal-title"><strong>Search Help</strong></div>
+                        <div id="help-modal-title" class="modal-title"><strong>Search Help</strong></div>
                     </div>
                     <div class="modal-body" id="help-modal-body">
                         <div class="help-container" id="help-container">
@@ -261,7 +261,7 @@
                 <!-- Modal content-->
                 <div class="modal-content">
                     <div class="modal-header" id="admin-modal-header">
-                        <div id="admin-modal-title" class="temp-modal-title"><strong>Word of Mouth Metrics</strong></div>
+                        <div id="admin-modal-title" class="modal-title"><strong>Word of Mouth Metrics</strong></div>
                     </div>
                     <div class="modal-body" id="admin-modal-body">
                         <div>
@@ -269,6 +269,26 @@
                         </div>
                         <div>
                             <span id="admin_num_recs">Total number of recommendations:</span>
+                        </div>
+                        <div class="help-container" style="background-color:white">
+                            <button type="button" class="close-help-btn" id="close-help-btn" data-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="tourGuideModal" class="modal fade" role="dialog">
+            <div class="modal-dialog">
+                <!-- Modal content-->
+                <div class="modal-content">
+                    <div class="modal-header" id="guide-modal-header">
+                        <div id="guide-modal-title" class="modal-title"><strong>Welcome to Word of Mouth!</strong></div>
+                    </div>
+                    <div class="modal-body" id="help-modal-body">
+                        <div class="guide-container" id="guide-container">
+                            <p>Get started with Word of Mouth by either finding people to follow or adding your own recommendations.</p>
+                            <p>To <strong>find people to follow</strong>, click on the <i class="fa fa-search"></i> icon on the right.</p>
+                            <p>To <strong>add a recommendation</strong>, just use the map. Either zoom in on a place and click on it or begin typing the name of the place in the search bar above the map.</p>
                         </div>
                         <div class="help-container" style="background-color:white">
                             <button type="button" class="close-help-btn" id="close-help-btn" data-dismiss="modal">Close</button>

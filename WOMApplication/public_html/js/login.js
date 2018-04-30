@@ -18,7 +18,7 @@ function joinWom() {
     var pwd2 = $("#join-pwd2").val().trim();
     bad_chars = ['<','>','%','=',' '];
     valid_fields = true;
-    for (i=0; i < bad_chars.length; i++) {
+    for (var i=0; i < bad_chars.length; i++) {
         if (bad_chars[i] !== ' ' && first_name.indexOf(bad_chars[i]) > -1) {
             $.notify("Bad first name", {className: "failure", position: "bottom center"});
             valid_fields = false;
@@ -78,7 +78,12 @@ function createUser(first_name, last_name, email, uname, pwd) {
                 user_id = parseInt(create_result);
                 current_user = user_id;
                 username = uname;
-                loadDefaultProfile();
+                createNewList(save_list_name,"A list of all the places that I have saved that I want to try.",null,null,null,null,'None');
+                var temp_lists = get_lists(user_id);
+                var list_data = temp_lists["responseJSON"];
+                user_lists = list_data["lists"];
+                //loadDefaultProfile();
+                $('#splashModal').modal('show');
             } else {
                 alert("Invalid username and password provided");
                 $('#joinModal').modal('show');
@@ -122,6 +127,22 @@ function login() {
                 $('a.icon-select.global').addClass('active');
                 $('.login-info-bar').empty();
                 $('.login-info-bar').append(login_html);
+                var temp_lists = get_lists(user_id);
+                var list_data = temp_lists["responseJSON"];
+                user_lists = list_data["lists"];
+
+                var try_list_exists = false;
+                for (var i = 0; i < user_lists.length; i++) {
+                    if (user_lists[i]["list_name"] === save_list_name) {
+                        try_list_exists = true;
+                    }
+                }
+                if (!try_list_exists) {
+                    createNewList(save_list_name,"A list of all the places that I have saved that I want to try.",null,null,null,null,'None');
+                    var temp_lists = get_lists(user_id);
+                    var list_data = temp_lists["responseJSON"];
+                    user_lists = list_data["lists"];
+                }
                 $('#splashModal').modal('show');
             } else {
                 error_msg = result['status'];
@@ -139,14 +160,14 @@ function logout() {
     username = '';
     deleteCookie('user_id');
     deleteCookie('username');
-    console.log(document.cookie);
+    //console.log(document.cookie);
     location.reload();
 }
 function getCookie(cname) {
     var name = cname + "=";
     var decodedCookie = decodeURIComponent(document.cookie);
     var ca = decodedCookie.split(';');
-    for(var i = 0; i <ca.length; i++) {
+    for (var i = 0; i <ca.length; i++) {
         var c = ca[i];
         while (c.charAt(0) === ' ') {
             c = c.substring(1);
@@ -162,7 +183,6 @@ function deleteCookie( name ) {
     document.cookie = cookie_str;
 }
 function toggleForgotPassword() {
-    console.log("click");
     var x = document.getElementById("forgot-password-text");
     if (x.style.display === "none") {
         x.style.display = "block";
@@ -177,7 +197,7 @@ function checkNewPassword() {
     var pwd2 = $("#reset-pwd2").val().trim();
     bad_chars = ['<','>','%','=',' '];
     valid_fields = true;
-    for (i=0; i < bad_chars.length; i++) {
+    for (var i=0; i < bad_chars.length; i++) {
         if (uname.indexOf(bad_chars[i]) > -1) {
             $.notify("Bad username", {className: "failure", position: "bottom center"});
             valid_fields = false;

@@ -46,20 +46,17 @@ function showLists(uid) {
 function getListMarkerInfo(lists) {
     marker_list = {};
     for (var i = 0; i < lists.length; i++) {
-        marker_list[lists[i]["list_id"]] = {};
         if (lists[i]["list_lat"]) {
+            marker_list[lists[i]["list_id"]] = {};
             lat = lists[i]["list_lat"];
             lon = lists[i]["list_lon"];
-        } else {
-            //lat = lists[i]["list_geom"].slice(lists[i]["list_geom"].indexOf("(")+1,lists[i]["list_geom"].indexOf(" "));
-            //lon = lists[i]["list_geom"].slice(lists[i]["list_geom"].indexOf(" ")+1,lists[i]["list_geom"].indexOf(")"));
+            marker_list[lists[i]["list_id"]]["lat"] = lat;
+            marker_list[lists[i]["list_id"]]["long"] = lon;
+            marker_list[lists[i]["list_id"]]["name"] = lists[i]["list_name"];
+            marker_list[lists[i]["list_id"]]["description"] = [lists[i]["list_description"]];
+            marker_list[lists[i]["list_id"]]["location"] = [lists[i]["list_location"]];
+            marker_list[lists[i]["list_id"]]["rec_count"] = lists[i]["rec_count"];
         }
-        marker_list[lists[i]["list_id"]]["lat"] = lat;
-        marker_list[lists[i]["list_id"]]["long"] = lon;
-        marker_list[lists[i]["list_id"]]["name"] = lists[i]["list_name"];
-        marker_list[lists[i]["list_id"]]["description"] = [lists[i]["list_description"]];
-        marker_list[lists[i]["list_id"]]["location"] = [lists[i]["list_location"]];
-        marker_list[lists[i]["list_id"]]["rec_count"] = lists[i]["rec_count"];
     }
     if (Object.keys(marker_list).length > 0) {
         addListMarkers(marker_list);    
@@ -139,7 +136,7 @@ function getListHtml(list,i,uid) {
     card_html += "<li class=\"js-stream-item\" id=\"list-item-"+i.toString()+"\"><div class=\"list-item\">";
     card_html += "<div class=\"list-header\">";
     card_html += "<a href=\"#\" id=\"list-name-"+i.toString()+"\" onClick=\"loadList("+list["list_id"].toString()+", '"+list["list_name"]+"', "+list["user_id"]+")\">"+list["list_name"]+"</a>";
-    if (active_menu === 'searchRecs' && uid.toString() !== list["user_id"]) {
+    if ((active_menu === 'searchRecs' || active_menu === 'aroundMe') && uid.toString() !== list["user_id"].toString()) {
         card_html += "<span> (</span><a href=\"#\" onClick=\"changeUser("+uid.toString()+")\">"+list["username"]+"</a><span>)</span>";
     }
     card_html +="</div>";
@@ -148,7 +145,7 @@ function getListHtml(list,i,uid) {
     card_html += "</div>";
 
     // Only have the edit and delete tools if you're looking at your own lists
-    if (uid.toString() === user_id.toString()) {
+    if (uid.toString() === user_id.toString() && list["list_name"] !== save_list_name) {
         card_html += "<div class=\"rec-tools-container\">";
         card_html += "<button class=\"fa fa-wrench tool-container\" data-toggle=\"collapse\" data-target=\"#list-tools-collapse-"+i.toString()+"\"></button>";
         card_html += "<div id=\"list-tools-collapse-"+i.toString()+"\" class=\"collapse\">";
@@ -172,13 +169,19 @@ function get_recs_for_list(list_id,list_name,user_id) {
         dataType: 'json',
         success: function(list_rec_obj) {
             var list_recs = list_rec_obj["recommendations"];
+            recommendations["user_list"] = list_recs;
             getMarkerInfo(list_recs,"new");
-            html_start = "<div class=\"list-container\"><ol class=\"follow-items\">";
-            html_body = "";
-            for (var i = 0; i < list_recs.length; i++) {
-                html_body += getCardHtml(list_recs[i],i);
+            html_start = "<div class=\"list-container\">";
+            if (list_recs.length > 0) {
+                html_body = "<ol class=\"follow-items\">";
+                for (var i = 0; i < list_recs.length; i++) {
+                    html_body += getCardHtml(list_recs[i],i);
+                }
+                html_end = "</ol></div>";
+            } else {
+                html_body = "<div class=\"empty-action\">This list doesn't have any recommendations added to it yet.</div>";
+                html_end = "</div>";
             }
-            html_end = "</ol></div>";
             $('.rec-section-header').empty();
             $('.rec-section-header').append("<span>Recommendations for "+list_name+"...</span>");
             $('.filter-bar').empty();
@@ -193,15 +196,101 @@ function get_recs_for_list(list_id,list_name,user_id) {
     });
 }
 
+function updateTryList(r_id,type) {
+    for (var i = 0; i < user_lists.length; i++) {
+        if (user_lists[i]["list_name"] === save_list_name) {
+            list_id = user_lists[i]["list_id"];
+        }
+    }
+    if (type === 'add') {
+        post_data = {
+            r_id: r_id,
+            list_id: list_id
+        }
+        $.ajax({
+            url: host_type+"://"+server_host+"/editRec",
+            type: 'POST',
+            data: JSON.stringify(post_data),
+            dataType: 'text',
+            success: function() {
+                $.notify("Successfully Added Recommendation", {className: "success", position: "bottom center"});
+                var tabs = Object.keys(recommendations);
+                for (var m in tabs) {
+                    for (var i = 0; i < recommendations[tabs[m]].length; i++) {
+                        if (recommendations[tabs[m]][i]['r_id'].toString() === r_id.toString()) {
+                            recommendations[tabs[m]][i]['r_lists'].push(list_id);
+                            recommendations[tabs[m]][i]['r_list_names'].push(save_list_name);
+                            if (tabs[m] === active_menu) {
+                                var element = document.getElementById("add-to-try-list-"+i.toString());
+                                element.innerHTML = "";
+                                element.innerHTML = "<button title=\"Remove from my Lists\" class=\"fa fa-star added-to-try-list\" onClick=\"updateTryList("+r_id.toString()+",'remove')\"></button>";
+                            }
+                        }
+                    }
+                }
+                for (var i = 0; i < user_lists.length; i++) {
+                    if (user_lists[i]["list_id"] === list_id) {
+                        user_lists[i]["rec_count"] += 1;
+                    }
+                }
+            },
+            error: function(jqXHR, exception) {
+                errorHandling(jqXHR, exception);
+            }
+        });
+    } else {
+        post_data = {
+            r_id: r_id,
+            list_id: list_id,
+            type: 'remove'
+        };
+        $.ajax({
+            url: host_type+"://"+server_host+"/editList",
+            type: 'POST',
+            data: JSON.stringify(post_data),
+            dataType: 'text',
+            success: function(ex_out) {
+                $.notify("Edited List", {className: "success", position: "bottom center"});
+                var tabs = Object.keys(recommendations);
+                for (var m in tabs) {
+                    for (var i = 0; i < recommendations[tabs[m]].length; i++) {
+                        if (recommendations[tabs[m]][i]['r_id'].toString() === r_id.toString()) {
+                            var index = recommendations[tabs[m]][i]['r_lists'].indexOf(list_id);
+                            if (index > -1) {
+                                recommendations[tabs[m]][i]['r_lists'].splice(index,1);
+                                recommendations[tabs[m]][i]['r_list_names'].splice(index,1);                            
+                            }
+                            if (tabs[m] === active_menu) {
+                                var element = document.getElementById("add-to-try-list-"+i.toString());
+                                element.innerHTML = "";
+                                element.innerHTML = "<button title=\"Save to my Lists\" class=\"fa fa-star rec-tool-icons\" onClick=\"updateTryList("+r_id.toString()+",'add')\"></button>";
+                            }
+                        }
+                    }
+                }
+                for (var i = 0; i < user_lists.length; i++) {
+                    if (user_lists[i]["list_id"] === list_id) {
+                        user_lists[i]["rec_count"] -= 1;
+                    }
+                }
+            },
+            error: function(jqXHR, exception) {
+                errorHandling(jqXHR, exception);
+            },
+            async: false
+        });
+        
+    }
+}
 function addRecToUserList(r_id) {
     temp_lists = get_lists(user_id);
     list_data = temp_lists["responseJSON"];
     var lists = list_data["lists"];
 
-    $('.temp-modal-title').empty();
-    $("<h3 class=\"modal-title fa fa-list\" id=\"modal-title\"></h3>").appendTo(".temp-modal-title");
-    $('.modal-title').append("   ");
-    $('.modal-title').append("Add Recommendation to List");
+    $('#modal-title').empty();
+    $("<h3 class=\"modal-title-header fa fa-list\" id=\"modal-title-header\"></h3>").appendTo("#modal-title");
+    $('#modal-title-header').append("   ");
+    $('#modal-title-header').append("Add Recommendation to List");
     $('#modal-body').empty();
     var temp_obj;
     
@@ -255,15 +344,15 @@ function addRecToListController(r_id) {
 }
 
 function openNewListModal(r_id) {
-    $('.temp-modal-title').empty();
-    $("<h3 class=\"modal-title fa fa-list\" id=\"modal-title\"></h3>").appendTo(".temp-modal-title");
-    $('.modal-title').append("   ");
-    $('.modal-title').append("Create New List");
+    $('#modal-title').empty();
+    $("<h3 class=\"modal-title-header fa fa-list\" id=\"modal-title-header\"></h3>").appendTo("#modal-title");
+    $('#modal-title-header').append("   ");
+    $('#modal-title-header').append("Create New List");
     $('#modal-body').empty();
     $('#modal-body').append("<div>Provide a Name for the New List</div>");
     $('#modal-body').append("<div><input type=\"text\" placeholder=\"New List...\" id=\"list-name\" class=\"list-inputs\"></div>");
     $('#modal-body').append("<div>Provide a Description for the New List</div>");
-    $('#modal-body').append("<textarea rows=\"3\" placeholder=\"Description...\" id=\"list-description\" class=\"list-inputs\">");
+    $('#modal-body').append("<textarea rows=\"3\" maxlength=\"360\" placeholder=\"Description...\" id=\"list-description\" class=\"list-inputs\">");
     $('#modal-body').append("<div>Input a Location Associated with this List</div>");
     $('#modal-body').append("<input id=\"list-geo\" class=\"list-geo list-inputs\" type=\"text\" list=\"predictionList\" placeholder=\"Enter a Location (City, State or ZIP)\">");
     $('#modal-body').append("<datalist id=\"predictionList\"></datalist>");
@@ -307,8 +396,13 @@ function openNewListModal(r_id) {
     document.getElementById("save-list").addEventListener("click", function() {
         verifyListConditions('all');
         if (list_info['status'] === 'OK') {
-            //console.log(list_info);
-            createNewList(list_info['list_name'],list_info['list_description'],list_info['list_location'],list_info['lat'],list_info['lon'],list_info['place_id'],r_id);
+            if (list_info['lat']) {
+                createNewList(list_info['list_name'],list_info['list_description'],list_info['list_location'],list_info['lat'],list_info['lon'],list_info['place_id'],r_id);
+            } else {
+                createNewList(list_info['list_name'],list_info['list_description'],null,null,null,null,r_id);                
+            }
+        } else {
+            alert("List details incomplete...");
         }
     });
 
@@ -318,13 +412,20 @@ function verifyListConditions(input) {
     var list_name = document.getElementById('list-name').value;
     var list_description = document.getElementById('list-description').value;
     var list_location = document.getElementById('list-geo').value;
-    list_info['list_name'] = list_name;
-    list_info['list_description'] = list_description;
-    list_info['list_location'] = list_location;
-    if ((list_name.length > 0 && list_description.length > 0 && list_location.length > 0) || (list_name.length > 0 && list_description.length > 0 && input === 'geo')) {
+    if (list_name.length > 0 && list_description.length > 0 && list_name !== save_list_name) {
+        document.getElementById('save-list').disabled=false;
+        list_info['list_name'] = list_name;
+        list_info['list_description'] = list_description;
+        list_info['status'] = 'OK';
+    } else {
+        document.getElementById('save-list').disabled=true;
+        list_info['status'] = 'check';
+    }
+    if (input === 'geo') {
         geocoder = new google.maps.Geocoder();
         geocoder.geocode( { 'address': list_location}, function(results, status) {
             if (status === 'OK') {
+                list_info['list_location'] = list_location;
                 list_info['lat'] = results[0].geometry.location.lat();
                 list_info['lon'] = results[0].geometry.location.lng();
                 list_info['place_id'] = results[0].place_id;
@@ -332,23 +433,27 @@ function verifyListConditions(input) {
                 document.getElementById('save-list').disabled=false;
             } else {
                 list_info['status'] = 'check';
+                list_info['list_location'] = null;
+                list_info['lat'] = null;
+                list_info['lon'] = null;
+                list_info['place_id'] = null;
+                document.getElementById('save-list').disabled=true;
             }
         });
-    } else {
-        document.getElementById('save-list').disabled=true;
-        list_info['status'] = 'check';
-    }
+    } 
 }
 
 function createNewList(list_name,list_description,list_location,lat,lon,place_id,r_id) {
     post_data = {
         list_name: list_name,
         list_description: list_description,
-        list_location: list_location,
-        lat: lat,
-        lon: lon,
-        google_place_id: place_id,
         user_id: user_id
+    };
+    if (lat !== null) {
+        post_data['list_location'] = list_location;
+        post_data['lat'] = lat;
+        post_data['lon'] = lon;
+        post_data['google_place_id'] = place_id;
     };
     $.ajax({
         url: host_type+"://"+server_host+"/createList",
@@ -362,6 +467,7 @@ function createNewList(list_name,list_description,list_location,lat,lon,place_id
                 editRecommendation(r_id, [list_id,list_name], 'list')
             } else {
                 user_lists.push(post_data);
+                user_list_ids.push(list_id);
                 post_data['list_id'] = list_id;
                 post_data['rec_count'] = 0;
                 addListToPage(post_data);
@@ -414,15 +520,15 @@ function editListController(list_id) {
         }
     }
  
-    $('.temp-modal-title').empty();
-    $("<h3 class=\"modal-title fa fa-list\" id=\"modal-title\"></h3>").appendTo(".temp-modal-title");
-    $('.modal-title').append("   ");
-    $('.modal-title').append("Edit List");
+    $('#modal-title').empty();
+    $("<h3 class=\"modal-title-header fa fa-list\" id=\"modal-title-header\"></h3>").appendTo("#modal-title");
+    $('#modal-title-header').append("   ");
+    $('#modal-title-header').append("Edit List");
     $('#modal-body').empty();
     $('#modal-body').append("<div>Provide a List Name</div>");
     $('#modal-body').append("<div><input type=\"text\" id=\"list-name\" class=\"list-inputs\" value=\""+list_name+"\"></div>");
     $('#modal-body').append("<div>Provide a List Description</div>");
-    $('#modal-body').append("<textarea rows=\"3\" id=\"list-description\" class=\"list-inputs\">"+list_description+"</textarea>");
+    $('#modal-body').append("<textarea rows=\"3\" maxlength=\"360\" id=\"list-description\" class=\"list-inputs\">"+list_description+"</textarea>");
     $('#modal-body').append("<div>Provide a Location Associated with this List</div>");
     $('#modal-body').append("<input id=\"list-geo\" class=\"list-geo list-inputs\" type=\"text\" list=\"predictionList\" placeholder=\"Enter a Location (City, State or ZIP)\">");
     $('#modal-body').append("<datalist id=\"predictionList\"></datalist>");
@@ -466,8 +572,14 @@ function editListController(list_id) {
     document.getElementById("save-list").addEventListener("click", function() {
         verifyListConditions('all');
         if (list_info['status'] === 'OK') {
-            editListRequest(list_info['list_name'],list_info['list_description'],list_info['list_location'],list_info['lat'],list_info['lon'],list_info['place_id'],list_id);
+            if (list_info['lat']) {
+                editListRequest(list_info['list_name'],list_info['list_description'],list_info['list_location'],list_info['lat'],list_info['lon'],list_info['place_id'],list_id);
+            } else {
+                editListRequest(list_info['list_name'],list_info['list_description'],null,null,null,null,list_id);
+            }
             updateListHtml(list_info['list_name'],list_info['list_description'],list_id);
+        } else {
+            alert("List details incomplete...");
         }
     });
 
@@ -491,10 +603,10 @@ function deleteListController(list_id) {
         }
     }
 
-    $('.temp-modal-title').empty();
-    $("<h3 class=\"modal-title fa fa-list\" id=\"modal-title\"></h3>").appendTo(".temp-modal-title");    
-    $('.modal-title').append("   ");
-    $('.modal-title').append(list_name);
+    $('#modal-title').empty();
+    $("<h3 class=\"modal-title-header fa fa-list\" id=\"modal-title-header\"></h3>").appendTo("#modal-title");    
+    $('#modal-title-header').append("   ");
+    $('#modal-title-header').append(list_name);
     $('#modal-body').empty();
     $('#modal-body').append("<p>Are you sure you wish to delete this list?</p><p>Note: This will not delete any recommendations that have been added to this list.</p>");
     $('.modal-footer').empty();
@@ -515,7 +627,7 @@ function deleteList(list_id) {
         success: function() {
             $.notify("Deleted List", {className: "success", position: "bottom center"});
             deleteListFromPage(list_id);
-            
+            user_list_ids.splice(user_list_ids.indexOf(list_id),1);
         },
         error: function(jqXHR, exception) {
             errorHandling(jqXHR, exception);
@@ -528,20 +640,39 @@ function editListRequest(list_name,list_description,list_location,lat,lon,place_
     post_data = {
         list_name: list_name,
         list_description: list_description,
-        list_location: list_location,
-        lat: lat,
-        lon: lon,
-        google_place_id: place_id,
         user_id: user_id,
         list_id: list_id,
         type: 'content'
     };
+    if (lat !== null) {
+        post_data['list_location'] = list_location;
+        post_data['lat'] = lat;
+        post_data['lon'] = lon;
+        post_data['google_place_id'] = place_id;
+    }
     $.ajax({
         url: host_type+"://"+server_host+"/editList",
         type: 'POST',
         data: JSON.stringify(post_data),
         dataType: 'json',
         success: function(list_id) {
+            for (var i = 0; i < user_lists.length; i++) {
+                if (user_lists[i]["list_id"].toString() === list_id.toString()) {
+                    user_lists[i]["list_name"] = list_name;
+                    user_lists[i]["list_name"] = list_description;
+                    if (lat !== null) {
+                        user_lists[i]['list_location'] = list_location;
+                        user_lists[i]['lat'] = lat;
+                        user_lists[i]['lon'] = lon;
+                        user_lists[i]['google_place_id'] = place_id;
+                    } else {
+                        user_lists[i]['list_location'] = null;
+                        user_lists[i]['lat'] = null;
+                        user_lists[i]['lon'] = null;
+                        user_lists[i]['google_place_id'] = null;
+                    }
+                }
+            }
             $.notify("Edited List", {className: "success", position: "bottom center"});
         },
         error: function(jqXHR, exception) {
@@ -554,9 +685,9 @@ function editListRequest(list_name,list_description,list_location,lat,lon,place_
 function removeRecFromListController(r_id,r_name,list_name,list_id) {
     
     $('#myModal').modal('show');
-    $('.temp-modal-title').empty();
-    $('.temp-modal-title').append("   ");
-    $('.temp-modal-title').append(r_name);
+    $('#modal-title').empty();
+    $('#modal-title').append("   ");
+    $('#modal-title').append(r_name);
     $('#modal-body').empty();
     $('#modal-body').append("Are you sure you wish to remove this recommendation from the "+list_name+" list?");
     $('.modal-footer').empty();
@@ -577,7 +708,7 @@ function removeRecFromList(r_id,list_id) {
         dataType: 'text',
         success: function(ex_out) {
             $.notify("Edited List", {className: "success", position: "bottom center"});
-            tabs = ['local','global','aroundMe','searchRecs'];
+            var tabs = Object.keys(recommendations);
             for (var m in tabs) {
                 for (var i = 0; i < recommendations[tabs[m]].length; i++) {
                     if (recommendations[tabs[m]][i]['r_id'].toString() === r_id.toString()) {

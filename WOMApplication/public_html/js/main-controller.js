@@ -7,19 +7,20 @@
 var user_id = 0;
 var current_user = 0;
 var username = '';
-var recommendations = {'local':[],'global':[],'aroundMe':[],'searchRecs':[]};
+var recommendations = {'local':[],'global':[],'aroundMe':[],'searchRecs':[],'user_list':[]};
 var fetched_messages = [];
 var active_menu = 'global';
 var markers = [];
 var list_markers = [];
 var infos = [];
 var typeSelection = '';
-var page_size = 25;
+var page_size = 100;
 var marker_list = {};
 var search_rec_results = [];
 var profile_info = {};
 var list_info = {};
 var user_lists = [];
+var user_list_ids = [];
 var current_user_lists = [];
 var term_matches = [];
 var user_matches = [];
@@ -31,6 +32,7 @@ var pos = {};
 var infoWindows = [];
 var user_role = 'user';
 var around_me_data = {'list_matches': [], 'rec_matches': []};
+var save_list_name = "Want to Try";
 //var server_host = 'word-of-mouth-test.com/api';
 var server_host = 'localhost:8080/api';
 var host_type = 'http';
@@ -48,17 +50,36 @@ window.onload = function(){
         if (user_role === 'admin') {
             login_html += "<button id=\"open-admin\" onclick=\"openAdminConsole()\"><i class=\"fa fa-cog\"></button>";
         }
+
+        var temp_lists = get_lists(user_id);
+        var list_data = temp_lists["responseJSON"];
+        user_lists = list_data["lists"];
+        
+        var try_list_exists = false;
+        for (var i = 0; i < user_lists.length; i++) {
+            if (user_list_ids.indexOf(user_lists[i]["list_id"]) === -1) {
+                user_list_ids.push(user_lists[i]["list_id"]);
+            }
+            if (user_lists[i]["list_name"] === save_list_name) {
+                try_list_exists = true;
+            }
+        }
+        
         setRecommendations('global','new','new');
         $('a.icon-select.global').addClass('active')
         $('.login-info-bar').empty();
         $('.login-info-bar').append(login_html);
         
-        var temp_lists = get_lists(user_id);
-        var list_data = temp_lists["responseJSON"];
-        user_lists = list_data["lists"];
+        if (!try_list_exists) {
+            createNewList(save_list_name,"A list of all the places that I have saved that I want to try.",null,null,null,null,'None');
+            var temp_lists = get_lists(user_id);
+            var list_data = temp_lists["responseJSON"];
+            user_lists = list_data["lists"];
+        }
 
         $('#splashModal').modal('show');
     } else {
+        //$('#tourGuideModal').modal('show');
         $('#loginModal').modal('show');
         login_html = "<a href=\"#\" class=\"login-link\" onClick=\"showLoginModal()\">Login</a>"
         $('.login-info-bar').empty();
@@ -142,6 +163,7 @@ $(document).ready(function() {
 
 function setRecommendations(rec_type, temp_obj, marker_flag) {
     recs = temp_obj;
+    recommendations['searchRecs'] = [];
     if (temp_obj === 'new') {
         page = 1;
         get_recommendations(rec_type, page);
@@ -168,7 +190,11 @@ function setRecommendations(rec_type, temp_obj, marker_flag) {
         }
     } else {
         if (rec_type === 'local') {
-            html_body = "<div class=\"empty-action\">You haven't added any recommendations yet! Use the map (and the search bar above the map) to find places to recommend.</div>";
+            if (current_user !== user_id) {
+                html_body = "<div class=\"empty-action\">This user has not added any recommendations yet! Tell them to get on it!</div>";
+            } else {
+                html_body = "<div class=\"empty-action\">You haven't added any recommendations yet! Use the map (and the search bar above the map) to find places to recommend.</div>";
+            }
         } else {
             html_body = "<div class=\"empty-action\">Your network hasn't made any recommendations yet! Click on the Search icon above to find people to follow or use the map to the left (and the search bar above the map) to find places to recommend.</div>";
         }
@@ -229,8 +255,10 @@ function getCardHtml(recObj,ind) {
     card_html += "<div class=\"stream-item-header\">";
     if (recObj['r_type'] === 1) {
         card_html += "<i class=\"fa fa-thumbs-up card-type thumbs-up\"/><a href=\"#\" onclick=\"changeUser("+recObj["user_id"].toString()+")\">"+recObj["username"]+"</a>";
-    } else {
+    } else if (recObj['r_type'] === -1) {
         card_html += "<i class=\"fa fa-thumbs-down card-type thumbs-down\"/><a href=\"#\" onclick=\"changeUser("+recObj["user_id"].toString()+")\">"+recObj["username"]+"</a>";
+    } else {
+        card_html += "<a href=\"#\" onclick=\"changeUser("+recObj["user_id"].toString()+")\">"+recObj["username"]+"</a>";
     }
     card_html += "<div class=\"stream-item-container\">";
     card_html += "<span class=\"rec-name\"><strong class=\"recName\">"+recObj["r_name"]+"</strong></span>";
@@ -239,10 +267,24 @@ function getCardHtml(recObj,ind) {
     if (recObj["r_lists"] && recObj["r_lists"] !== null && recObj["r_lists"].length > 0) {
         list_ids = recObj["r_lists"];
         list_names = recObj["r_list_names"];
-        for (i = 0; i < list_ids.length; i++) {
-            card_html += "<a href=\"#\" onclick=\"loadList("+list_ids[i].toString()+", '"+list_names[i]+"', "+recObj["user_id"]+")\">#"+list_names[i]+"</a>";
-            if (i < list_ids.length - 1) {
-                card_html += "<span>, </span>";
+        for (var i = 0; i < list_ids.length; i++) {
+            if (recObj["user_id"].toString() === user_id.toString()) {
+                if (user_list_ids.indexOf(list_ids[i]) > -1) {
+                    card_html += "<a href=\"#\" onclick=\"loadList("+list_ids[i].toString()+", '"+list_names[i]+"', "+recObj["user_id"]+")\">#"+list_names[i]+"</a>";
+                    if (i < list_ids.length - 1) {
+                        card_html += "<span>, </span>";
+                    }
+                } 
+            } else {
+                var already_added = false;
+                if (user_list_ids.indexOf(list_ids[i]) === -1) {
+                    card_html += "<a href=\"#\" onclick=\"loadList("+list_ids[i].toString()+", '"+list_names[i]+"', "+recObj["user_id"]+")\">#"+list_names[i]+"</a>";
+                    if (i < list_ids.length - 1) {
+                        card_html += "<span>, </span>";
+                    }
+                } else {
+                    already_added = true;
+                }
             }
         }
     }
@@ -281,32 +323,48 @@ function getCardHtml(recObj,ind) {
         card_html += "<div class=\"rec-tools-container\">";
         card_html += "<button class=\"fa fa-wrench tool-container\" data-toggle=\"collapse\" data-target=\"#rec-tools-collapse-"+ind.toString()+"\"></button>";
         card_html += "<div id=\"rec-tools-collapse-"+ind.toString()+"\" class=\"collapse\">";
-        card_html += "<div class=\"edit-rec-button\"><button title=\"Edit Recommendation\" class=\"fa fa-pencil-square-o rec-tool-icons\" data-toggle=\"modal\" data-target=\"#myModal\" onClick=\"editRecommendationController('"+recObj["r_id"]+"')\"></button></div>";
-        card_html += "<div class=\"delete-rec-button\"><button title=\"Delete Recommendation\" class=\"fa fa-trash-o rec-tool-icons\" data-toggle=\"modal\" data-target=\"#myModal\" onClick=\"deleteRecommendationController('"+recObj["r_id"]+"')\"></button></div>";
-        card_html += "<div class=\"list-button\"><button title=\"Update Lists\" class=\"fa fa-list rec-tool-icons\" data-toggle=\"modal\" data-target=\"#myModal\" onClick=\"addRecToUserList("+recObj["r_id"]+")\"></button></div>";
+        card_html += "<div class=\"edit-rec-button\"><button title=\"Edit Recommendation\" class=\"fa fa-pencil-square-o rec-tool-icons\" data-toggle=\"modal\" data-target=\"#myModal\" onClick=\"editRecommendationController('"+recObj["r_id"].toString()+"')\"></button></div>";
+        card_html += "<div class=\"delete-rec-button\"><button title=\"Delete Recommendation\" class=\"fa fa-trash-o rec-tool-icons\" data-toggle=\"modal\" data-target=\"#myModal\" onClick=\"deleteRecommendationController('"+recObj["r_id"].toString()+"')\"></button></div>";
+        card_html += "<div class=\"list-button\"><button title=\"Update Lists\" class=\"fa fa-list rec-tool-icons\" data-toggle=\"modal\" data-target=\"#myModal\" onClick=\"addRecToUserList("+recObj["r_id"].toString()+")\"></button></div>";
         card_html += "</div></div>";
     } else {
-        card_html += "<div class=\"message-button\"><button title=\"Send Message\" class=\"fa fa-envelope rec-tool-icons\" data-toggle=\"modal\" data-target=\"#myModal\" onClick=\"composeMessage("+user_id.toString()+","+recObj["user_id"]+",'"+recObj["username"]+"',"+recObj["r_id"]+")\"></button></div>";    
+        card_html += "<div class=\"message-button\"><button title=\"Send Message\" class=\"fa fa-envelope rec-tool-icons\" data-toggle=\"modal\" data-target=\"#myModal\" onClick=\"composeMessage("+user_id.toString()+","+recObj["user_id"].toString()+",'"+recObj["username"]+"',"+recObj["r_id"].toString()+")\"></button></div>";
+        if (already_added) {
+            card_html += "<div id=\"add-to-try-list-"+ind.toString()+"\" class=\"list-button\"><button title=\"Remove from my Lists\" class=\"fa fa-star added-to-try-list\" onClick=\"updateTryList("+recObj["r_id"].toString()+",'remove')\"></button></div>";
+        } else {
+            card_html += "<div id=\"add-to-try-list-"+ind.toString()+"\" class=\"list-button\"><button title=\"Save to my Lists\" class=\"fa fa-star rec-tool-icons\" onClick=\"updateTryList("+recObj["r_id"].toString()+",'add')\"></button></div>";
+        }
     }
     card_html += "</div>";
     card_html += "</li>";
     return card_html;
 }    
 
-function sendData() {
+function sendData(type) {
     var comment = document.getElementById("rec-comment").value;
     rec_object["comment"] = comment;
     rec_object["user_id"] = user_id;
     rec_object["username"] = username;
-    list_id = document.getElementById('user-list-select').value;
-    if (list_id !== 'null') {
-        rec_object["r_lists"] = list_id;
-        list_name = $('#user-list-select option:selected').text();
+    post_data = rec_object;
+    if (type !== 'save') {
+        list_id = document.getElementById('user-list-select').value;
+        if (list_id !== 'null') {
+            post_data["list_id"] = list_id;
+            list_name = $('#user-list-select option:selected').text();
+        }
+    } else {
+        for (var i = 0; i < user_lists.length; i++) {
+            if (user_lists[i]["list_name"] === save_list_name) {
+                list_id = user_lists[i]["list_id"];
+                post_data["list_id"] = list_id;
+                list_name = user_lists[i]["list_name"];
+            }
+        }
     }
     $.ajax({
         url: host_type+"://"+server_host+"/createRec",
         type: 'POST',
-        data: JSON.stringify(rec_object),
+        data: JSON.stringify(post_data),
         dataType: 'text',
         success: function(rec_id) {
             $.notify("Successfully Added Recommendation", {className: "success", position: "bottom center"});
@@ -345,6 +403,7 @@ function get_recommendations(lookup_type, page) {
     }
     post_data = {
         uid: current_user,
+        logged_in_user: user_id,
         lookup_type: lookup_type,
         page: page
     };
@@ -373,16 +432,20 @@ function get_recommendations(lookup_type, page) {
                     recommendations[current_user] = temp_obj;
                 }
             }
-            for (var i = 0; i < recommendations["latest_pull"].length; i++) {
-                var already_pulled = false;
-                for (var j = 0; j < recommendations[active_menu].length; j++) {
-                    if (recommendations["latest_pull"][i]["r_id"] === recommendations[active_menu][j]["r_id"]) {
-                        already_pulled = true;
+            if (recommendations[active_menu].length > 0) {
+                for (var i = 0; i < recommendations["latest_pull"].length; i++) {
+                    var already_pulled = false;
+                    for (var j = 0; j < recommendations[active_menu].length; j++) {
+                        if (recommendations["latest_pull"][i]["r_id"] === recommendations[active_menu][j]["r_id"]) {
+                            already_pulled = true;
+                        }
+                    }
+                    if (already_pulled === false) {
+                        recommendations[active_menu].push(recommendations["latest_pull"][i]);
                     }
                 }
-                if (already_pulled === false) {
-                    recommendations[active_menu].push(recommendations["latest_pull"][i]);
-                }
+            } else {
+                recommendations[active_menu] = temp_obj;
             }
             $.notify("Found data", {className: "success", position: "bottom center"});
         },
@@ -478,6 +541,18 @@ function searchRecs(term,page) {
             term_matches = search_results['term_matches'];
             user_matches = search_results['users'];
             list_matches = search_results['lists'];
+            
+            for (var i = 0; i < term_matches.length; i++) {
+                var in_array = false;
+                for (var j = 0; j < recommendations['searchRecs'].length; j++) {
+                    if (recommendations['searchRecs'][j]['r_id'] === term_matches[i]['r_id']) {
+                        in_array = true;
+                    }
+                }
+                if (!in_array) {
+                    recommendations['searchRecs'].push(term_matches[i]);
+                }
+            }
 
             addSearchResultsToList();
             $.notify("Found search results", {className: "success", position: "bottom center"});
@@ -658,7 +733,6 @@ function searchTabController(evt,tabName) {
 }
 
 function searchAroundMe(type) {
-    console.log(pos);
     if (jQuery.isEmptyObject(pos)) {
         navigator.geolocation.getCurrentPosition(function(position) {
             pos = {
@@ -694,6 +768,7 @@ function searchAroundMe(type) {
             data: JSON.stringify(post_data),
             dataType: 'json',
             success: function(search_results) {
+                recommendations['aroundMe'] = search_results["rec_matches"];
                 for (i=0; i<search_results['list_matches'].length; i++) {
                     in_list = false;
                     for (j=0; j<around_me_data['list_matches'].length; j++) {
@@ -733,6 +808,7 @@ function searchAroundMe(type) {
 }
 function selectAroundMe() {
     current_user = user_id;
+    recommendations['searchRecs'] = [];
     searchAroundMe('geo');
     getListMarkerInfo(around_me_data['list_matches']);
     getMarkerInfo(around_me_data['rec_matches'],'new');

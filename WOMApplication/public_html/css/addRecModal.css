@@ -51,7 +51,7 @@ and open the template in the editor.
     position: relative;
     font-family: inherit;
 }
-.temp-modal-title {
+.modal-title {
     text-align: center;
     font-size: 28px;
     font-family: inherit;
@@ -122,16 +122,31 @@ and open the template in the editor.
     resize: vertical;
     padding: 2px;
 }
-.divider {
-    width:5px;
-    height:auto;
-    display:inline-block;
-}
 .fa {
     height: 30px;
 }
-#addRec {
+.addRec {
     display: inline-block;
+    height: 30px;
+    margin: 3px;
+}
+#like-btn {
+    color: white;
+    background-color: green;
+    border-radius: 4px;
+    border-color: green;
+}
+#dislike-btn {
+    color: white;
+    background-color: red;
+    border-radius: 4px;
+    border-color: red;
+}
+#try-btn {
+    color: white;
+    background-color: #337ab7;
+    border-radius: 4px;
+    border-color: #337ab7;
 }
 .view-link {
     display: block;
@@ -142,4 +157,6 @@ and open the template in the editor.
 .infoHeader {
     font-family: Roboto,Arial;
     font-size: 13px;
+    width: 225px;
+    display: inline-block;
 }

@@ -232,7 +232,7 @@ html, body {
     color: white;
 }
 .message-button {
-    float:right;
+
 }
 #message-comment {
     width: 100%;
@@ -254,7 +254,11 @@ html, body {
     border-style: none;
     color: #4d90fe;
 }
-
+.added-to-try-list {
+    background-color: #ffffff;
+    border-style: none;
+    color: gold;    
+}
 #splashModal {
     display: none; /* Hidden by default */
     position: fixed; /* Stay in place */

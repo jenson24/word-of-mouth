@@ -8,6 +8,7 @@ function messageController() {
     current_user = user_id;
     getMarkerInfo({},'new');
     getListMarkerInfo({});
+    recommendations['searchRecs'] = [];
     active_menu = 'messages';
     $('.filter-content').css('display','none');
     $('#scroll').empty();
@@ -136,10 +137,10 @@ $(document).one('focus.autoExpand', 'textarea.autoExpand', function(){
 });
 
 function composeMessage(from_user,to_user,to_username,r_id) {
-    $('.temp-modal-title').empty();
-    $("<h3 class=\"modal-title fa fa-envelope\" id=\"modal-title\"></h3>").appendTo(".temp-modal-title");
-    $('.modal-title').append("   ");
-    $('.modal-title').append("Send Message");
+    $('#modal-title').empty();
+    $("<h3 class=\"modal-title-header fa fa-envelope\" id=\"modal-title-header\"></h3>").appendTo("#modal-title");
+    $('#modal-title-header').append("   ");
+    $('#modal-title-header').append("Send Message");
     $('#modal-body').empty();
     $('#modal-body').append("Replying to "+to_username);
     $('#modal-body').append("<textarea rows=\"4\" id=\"message-comment\" placeholder=\"Compose your message\">");

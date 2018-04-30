@@ -71,16 +71,16 @@ function initAutocomplete(event) {
             var address_1 = places[0].formatted_address.substring(1,split);
             var address_2 = places[0].formatted_address.substring(split+1,places[0].formatted_address.length);
             var content_string = "<div class=\"infoHeader\"><strong>"+places[0].name+"</strong><div>"+address_1+"</div><div>"+address_2+"</div></div>";
-            var like_link = "<p></p><button type=\"button\" id=\"addRec\" class=\"fa fa-thumbs-up\" onclick=\"openRecModalFromSearch(1)\"> Like</button>";
-            var dislike_link = "<button type=\"button\" id=\"addRec\" class=\"fa fa-thumbs-down\" onclick=\"openRecModalFromSearch(-1)\"> Dislike</button><p></p>";
-            var divider = "<div class=\"divider\"/></div>";
+            var like_link = "<p></p><button type=\"button\" id=\"like-btn\" class=\"addRec fa fa-thumbs-up\" onclick=\"openRecModalFromSearch(1)\"> Like</button>";
+            var dislike_link = "<button type=\"button\" id=\"dislike-btn\" class=\"addRec fa fa-thumbs-down\" onclick=\"openRecModalFromSearch(-1)\"> Dislike</button>";
+            var try_link = "<button type=\"button\" id=\"try-btn\" class=\"addRec\" onclick=\"openRecModalFromSearch(0)\">"+save_list_name+"</button><p></p>";
             
-            content_string += "<div>"+divider+like_link+divider+dislike_link+"</div>";
+            content_string += "<div style=\"display:inline-block\">"+like_link+dislike_link+try_link+"</div>";
             content_string += "<div class=\"view-link\"><a target=\"_blank\" href=\""+places[0].website+"\"><span> View on Google Maps </span></a></div>"
             
             var infowindow = new google.maps.InfoWindow({
                 content: content_string,
-                maxWidth: 225
+                maxWidth: 230
             });
             infowindow.setPosition(new google.maps.LatLng(places[0].geometry.location.lat(), places[0].geometry.location.lng()));
             infowindow.open(map);
@@ -147,39 +147,64 @@ function fixInfoWindow() {
         //var self = this;
         if (key === "map") {
             if (!this.get("noSupress") && !this.get("externalLinkAlreadyAdded")) {
-                var like_link = $("<p></p><button type=\"button\" id=\"addRec\" class=\"fa fa-thumbs-up\" data-toggle=\"modal\" data-target=\"#myModal\"> Like</button>");
-                var dislike_link = $("<button type=\"button\" id=\"addRec\" class=\"fa fa-thumbs-down\" data-toggle=\"modal\" data-target=\"#myModal\"> Dislike</button><p></p>");
-                var divider = $("<div class=\"divider\"/>");
+                var like_link = $("<p></p><button type=\"button\" id=\"like-btn\" class=\"addRec fa fa-thumbs-up\" data-toggle=\"modal\" data-target=\"#myModal\"> Like</button>");
+                var dislike_link = $("<button type=\"button\" id=\"dislike-btn\" class=\"addRec fa fa-thumbs-down\" data-toggle=\"modal\" data-target=\"#myModal\"> Dislike</button>");
+                var try_link = $("<button type=\"button\" id=\"try-btn\" class=\"addRec\" data-toggle=\"modal\" data-target=\"#myModal\">"+save_list_name+"</button><p></p>");
+                var add_list_html = "";
+                if (user_lists.length > 1) {
+                    add_list_html += "<div><strong>Optional:</strong> Select one of your lists for the recommendation to be added to...</div>";
+                    add_list_html += "<select id=\"user-list-select\" class=\"list-select list-inputs\">";
+                    add_list_html += "<option value=\"null\"></option>";
+                    for (var i = 0; i < user_lists.length; i++) {
+                        if (user_lists[i]["list_name"] !== save_list_name) {
+                            add_list_html += "<option value=\""+user_lists[i]["list_id"]+"\">"+user_lists[i]["list_name"]+"</option>";
+                        }
+                    }
+                    add_list_html += "</select>";
+                }
                 like_link.click(function() {
                     //console.log("link clicked",self,self.getContent(),self.content);
                     rec_object["r_type"] = 1;
-                    $('.temp-modal-title').empty();
-                    $("<h3 class=\"modal-title fa fa-thumbs-up\" id=\"modal-title\"></h3>").appendTo(".temp-modal-title");
-                    $('.modal-title').append("   ");
-                    $('.modal-title').append(rec_object["g_name"]);
+                    $('#modal-title').empty();
+                    $("<h3 class=\"modal-title-header fa fa-thumbs-up\" id=\"modal-title-header\"></h3>").appendTo("#modal-title");
+                    $('#modal-title-header').append("   ");
+                    $('#modal-title-header').append(rec_object["g_name"]);
                     $('#modal-body').empty();
                     $('#modal-body').append("Save a comment...");
-                    $('#modal-body').append("<textarea rows=\"4\" id=\"rec-comment\" placeholder=\"What do you like about this place?\">");
-                    
+                    $('#modal-body').append("<textarea rows=\"4\" maxlength=\"1000\" id=\"rec-comment\" placeholder=\"What do you like about this place?\">");
+                    $('#modal-body').append(add_list_html);
                     $('.modal-footer').empty();
                     $('.modal-footer').append("<button type=\"button\" class=\"btn btn-cancel\" data-dismiss=\"modal\">Cancel</button>");
-                    $('.modal-footer').append("<button type=\"button\" class=\"btn btn-save\" data-dismiss=\"modal\" onClick=\"sendData()\">Send</button>");
+                    $('.modal-footer').append("<button type=\"button\" class=\"btn btn-save\" data-dismiss=\"modal\" onClick=\"sendData('like')\">Send</button>");
                 });
                 dislike_link.click(function() {
                     //console.log("link clicked",self,self.getContent(),self.content);
                     rec_object["r_type"] = -1;
-                    $('.temp-modal-title').empty();
-                    $("<h3 class=\"modal-title fa fa-thumbs-down\" id=\"modal-title\"></h3>").appendTo(".temp-modal-title");
-                    $('.modal-title').append("   ");
-                    $('.modal-title').append(rec_object["g_name"]);
+                    $('#modal-title').empty();
+                    $("<h3 class=\"modal-title-header fa fa-thumbs-down\" id=\"modal-title-header\"></h3>").appendTo("#modal-title");
+                    $('#modal-title-header').append("   ");
+                    $('#modal-title-header').append(rec_object["g_name"]);
                     $('#modal-body').empty();
                     $('#modal-body').append("Save a comment...");
-                    $('#modal-body').append("<textarea rows=\"4\" id=\"rec-comment\" placeholder=\"What don't you like about this place?\">");
+                    $('#modal-body').append("<textarea rows=\"4\" maxlength=\"1000\" id=\"rec-comment\" placeholder=\"What don't you like about this place?\">");
+                    $('#modal-body').append(add_list_html);
                     $('.modal-footer').empty();
                     $('.modal-footer').append("<button type=\"button\" class=\"btn btn-cancel\" data-dismiss=\"modal\">Cancel</button>");
-                    $('.modal-footer').append("<button type=\"button\" class=\"btn btn-save\" data-dismiss=\"modal\" onClick=\"sendData()\">Send</button>");
+                    $('.modal-footer').append("<button type=\"button\" class=\"btn btn-save\" data-dismiss=\"modal\" onClick=\"sendData('dislike')\">Send</button>");
                 });
-                $(this.content).find("div.address").append($("<div>")).append(divider).append(like_link).append(divider).append(dislike_link).append($("</div>"));
+                try_link.click(function() {
+                    rec_object["r_type"] = 0;
+                    $('#modal-title').empty();
+                    $("<h3 class=\"modal-title-header\" id=\"modal-title-header\"></h3>").appendTo("#modal-title");
+                    $('#modal-title-header').append(rec_object["g_name"]);
+                    $('#modal-body').empty();
+                    $('#modal-body').append("Add a comment and click 'Save' to store this in your '"+save_list_name+"' list.");
+                    $('#modal-body').append("<textarea rows=\"4\" maxlength=\"1000\" id=\"rec-comment\" placeholder=\"Save a comment...\">");
+                    $('.modal-footer').empty();
+                    $('.modal-footer').append("<button type=\"button\" class=\"btn btn-cancel\" data-dismiss=\"modal\">Cancel</button>");
+                    $('.modal-footer').append("<button type=\"button\" class=\"btn btn-save\" data-dismiss=\"modal\" onClick=\"sendData('save')\">Save</button>");
+                });
+                $(this.content).find("div.address").append($("<div>")).append(like_link).append(dislike_link).append(try_link).append($("</div>"));
                 this.set("externalLinkAlreadyAdded",true);
             }
         }
@@ -192,7 +217,6 @@ var ClickEventHandler = function(map, origin, infoWindow) {
     this.map = map;
     this.infowindow = infoWindow;
     this.placesService = new google.maps.places.PlacesService(map);
-
     // Listen for clicks on the map.
     this.map.addListener('click', this.handleClick.bind(this));
 };
@@ -214,30 +238,41 @@ ClickEventHandler.prototype.getPlaceInformation = function(placeId) {
 function openRecModalFromSearch(r_type) {
     rec_object["r_type"] = r_type;
     $('#myModal').modal('show');
-    $('.temp-modal-title').empty();
+    $('#modal-title').empty();
     if (r_type === 1) {
-        $("<h3 class=\"modal-title fa fa-thumbs-up\" id=\"modal-title\"></h3>").appendTo(".temp-modal-title");
+        $("<h3 class=\"modal-title-header fa fa-thumbs-up\" id=\"modal-title-header\"></h3>").appendTo("#modal-title");
+        var input_header = "Save a comment...";
         var placeholder = "What do you like about this place?";
-    } else {
-        $("<h3 class=\"modal-title fa fa-thumbs-down\" id=\"modal-title\"></h3>").appendTo(".temp-modal-title");
+        var type = 'like';
+    } else if (r_type === -1) {
+        $("<h3 class=\"modal-title-header fa fa-thumbs-down\" id=\"modal-title-header\"></h3>").appendTo("#modal-title");
+        var input_header = "Save a comment...";
         var placeholder = "What don't you like about this place?";
+        var type = 'dislike';
+    } else {
+        $("<h3 class=\"modal-title-header\" id=\"modal-title-header\"></h3>").appendTo("#modal-title");
+        var input_header = "Add a comment and click 'Save' to store this in your '"+save_list_name+"' list.";
+        var placeholder = "Save a comment...";
+        var type = 'save';
     }
-    $('.modal-title').append("   ");
-    $('.modal-title').append(rec_object["g_name"]);
+    $('#modal-title-header').append("   ");
+    $('#modal-title-header').append(rec_object["g_name"]);
     $('#modal-body').empty();
-    $('#modal-body').append("Save a comment...");
-    $('#modal-body').append("<textarea rows=\"4\" id=\"rec-comment\" placeholder=\""+placeholder+"\">");
-    $('#modal-body').append("<div><strong>Optional:</strong> Select one of your lists for the recommendation to be added to...</div>");
-    if (user_lists.length > 0) {
+    $('#modal-body').append(input_header);
+    $('#modal-body').append("<textarea rows=\"4\" maxlength=\"1000\" id=\"rec-comment\" placeholder=\""+placeholder+"\">");
+    if (user_lists.length > 1) {
+        $('#modal-body').append("<div><strong>Optional:</strong> Select one of your lists for the recommendation to be added to...</div>");
         var dropdown = "<select id=\"user-list-select\" class=\"list-select list-inputs\">";
         dropdown += "<option value=\"null\"></option>";
         for (var i = 0; i < user_lists.length; i++) {
-            dropdown += "<option value=\""+user_lists[i]["list_id"]+"\">"+user_lists[i]["list_name"]+"</option>";
+            if (user_lists[i]["list_name"] !== save_list_name) {
+                dropdown += "<option value=\""+user_lists[i]["list_id"]+"\">"+user_lists[i]["list_name"]+"</option>";
+            }
         }
         dropdown += "</select>";
         $('#modal-body').append(dropdown);
     }
     $('.modal-footer').empty();
     $('.modal-footer').append("<button type=\"button\" class=\"btn btn-cancel\" data-dismiss=\"modal\">Cancel</button>");
-    $('.modal-footer').append("<button type=\"button\" class=\"btn btn-save\" data-dismiss=\"modal\" onClick=\"sendData()\">Send</button>");
+    $('.modal-footer').append("<button type=\"button\" class=\"btn btn-save\" data-dismiss=\"modal\" onClick=\"sendData('"+type+"')\">Send</button>");
 }
