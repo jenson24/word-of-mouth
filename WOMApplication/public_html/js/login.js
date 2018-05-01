@@ -82,10 +82,10 @@ function createUser(first_name, last_name, email, uname, pwd) {
                 var temp_lists = get_lists(user_id);
                 var list_data = temp_lists["responseJSON"];
                 user_lists = list_data["lists"];
-                //loadDefaultProfile();
-                $('#splashModal').modal('show');
+                loadDefaultProfile();
+                showGuide();
             } else {
-                alert("Invalid username and password provided");
+                alert("An account already exists for that username or email, please try again.");
                 $('#joinModal').modal('show');
             }
         },
@@ -122,7 +122,7 @@ function login() {
                 document.cookie = "user_id="+user_id+"; path=/;";
                 document.cookie = "user_role="+user_role+"; path=/;";
                 page = 1;
-                login_html = "<span>Logged in as </span><a href=\"#\" class=\"login-link\">"+username+"</a><span>. </span><a href=\"#\" class=\"login-link\" onClick=\"logout()\">Logout</a>"
+                login_html = "<a href=\"#\" style=\"float:left;margin-left:5px\" class=\"login-link\" onClick=\"showGuide()\">Tutorial</a><span>Logged in as </span><a href=\"#\" class=\"login-link\">"+username+"</a><span>. </span><a href=\"#\" class=\"login-link\" onClick=\"logout()\">Logout</a>";
                 setRecommendations('global','new','new');
                 $('a.icon-select.global').addClass('active');
                 $('.login-info-bar').empty();
@@ -255,4 +255,7 @@ function resetPassword(uname, temp_pwd, pwd) {
 }
 function enableResetPwdModal() {
     $('#resetPasswordModal').modal('show');
+}
+function showGuide() {
+    $('#tourGuideModal').modal('show');
 }

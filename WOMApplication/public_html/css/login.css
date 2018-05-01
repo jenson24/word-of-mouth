@@ -132,3 +132,19 @@ h2 {
 #open-admin:hover {
     color: black;
 }
+
+#guide-modal-content {
+    width: 60%;
+    overflow: auto;
+}
+.modal-vid {
+    width: 90%;
+}
+.vid-container {
+    align-content: center;
+    text-align: center;
+}
+#tourGuideModal {
+    overflow-y: auto;
+    overflow-x: hidden;
+}

@@ -278,17 +278,27 @@
             </div>
         </div>
         <div id="tourGuideModal" class="modal fade" role="dialog">
-            <div class="modal-dialog">
+            <div id="guide-modal-content" class="modal-dialog">
                 <!-- Modal content-->
                 <div class="modal-content">
                     <div class="modal-header" id="guide-modal-header">
                         <div id="guide-modal-title" class="modal-title"><strong>Welcome to Word of Mouth!</strong></div>
                     </div>
-                    <div class="modal-body" id="help-modal-body">
+                    <div class="modal-body" id="guide-modal-body">
                         <div class="guide-container" id="guide-container">
                             <p>Get started with Word of Mouth by either finding people to follow or adding your own recommendations.</p>
-                            <p>To <strong>find people to follow</strong>, click on the <i class="fa fa-search"></i> icon on the right.</p>
+                            <p>To <strong>find people to follow</strong>, click on the <i class="fa fa-search"></i> icon on the right and use the search bar.</p>
+                            <div class="vid-container">
+                                <video class="modal-vid" id="follower-vid" controls>
+                                    <source src="src/follow.mp4" type="video/mp4">
+                                </video>
+                            </div>
                             <p>To <strong>add a recommendation</strong>, just use the map. Either zoom in on a place and click on it or begin typing the name of the place in the search bar above the map.</p>
+                            <div class="vid-container">
+                                <video class="modal-vid" id="add-rec-vid" controls>
+                                    <source src="src/add_rec.mp4" type="video/mp4">
+                                </video>
+                            </div>
                         </div>
                         <div class="help-container" style="background-color:white">
                             <button type="button" class="close-help-btn" id="close-help-btn" data-dismiss="modal">Close</button>

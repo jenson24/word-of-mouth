@@ -46,7 +46,7 @@ window.onload = function(){
     user_role = getCookie('user_role');
     if (user_id !== "") {
         page = 1;
-        login_html = "<span>Logged in as </span><a href=\"#\" class=\"login-link\">"+username+"</a><span>. </span><a href=\"#\" class=\"login-link\" onClick=\"logout()\">Logout</a>"
+        login_html = "<a href=\"#\" style=\"float:left;margin-left:5px\" class=\"login-link\" onClick=\"showGuide()\">Tutorial</a><span>Logged in as </span><a href=\"#\" class=\"login-link\">"+username+"</a><span>. </span><a href=\"#\" class=\"login-link\" onClick=\"logout()\">Logout</a>";
         if (user_role === 'admin') {
             login_html += "<button id=\"open-admin\" onclick=\"openAdminConsole()\"><i class=\"fa fa-cog\"></button>";
         }
@@ -66,7 +66,7 @@ window.onload = function(){
         }
         
         setRecommendations('global','new','new');
-        $('a.icon-select.global').addClass('active')
+        $('a.icon-select.global').addClass('active');
         $('.login-info-bar').empty();
         $('.login-info-bar').append(login_html);
         
@@ -81,7 +81,7 @@ window.onload = function(){
     } else {
         //$('#tourGuideModal').modal('show');
         $('#loginModal').modal('show');
-        login_html = "<a href=\"#\" class=\"login-link\" onClick=\"showLoginModal()\">Login</a>"
+        login_html = "<a href=\"#\" style=\"float:left;margin-left:5px\" class=\"login-link\" onClick=\"showGuide()\">Tutorial</a><a href=\"#\" class=\"login-link\" onClick=\"showLoginModal()\">Login</a>";
         $('.login-info-bar').empty();
         $('.login-info-bar').append(login_html);
     };
