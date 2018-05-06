@@ -27,6 +27,8 @@ var user_matches = [];
 var list_matches = [];
 var search_data = {};
 var suggestions = [];
+var my_followers = [];
+var my_following = [];
 var active_tab = 'terms';
 var pos = {};
 var infoWindows = [];
@@ -55,6 +57,11 @@ window.onload = function(){
         var list_data = temp_lists["responseJSON"];
         user_lists = list_data["lists"];
         
+        temp_profile_info = getProfile(user_id);
+        profile_info = temp_profile_info["responseJSON"];
+        my_followers = profile_info['followers'];
+        my_following = profile_info['following'];
+
         var try_list_exists = false;
         for (var i = 0; i < user_lists.length; i++) {
             if (user_list_ids.indexOf(user_lists[i]["list_id"]) === -1) {
@@ -504,9 +511,7 @@ function getPage() {
 
 function enableSearch() {
     current_user = user_id;
-    if (suggestions.length === 0) {
-        get_suggestions();
-    }
+    get_suggestions();
     $('#scroll').empty();
     addSuggestionHtml(suggestions);
     
@@ -834,16 +839,26 @@ function selectAroundMe() {
 }
 
 function get_suggestions() {
-    post_data = {
-        user_id: user_id
-    };
+    if (jQuery.isEmptyObject(pos)) {
+        post_data = {
+            user_id: user_id
+        };        
+    } else {
+        post_data = {
+            user_id: user_id,
+            lat: pos['lat'],
+            lon: pos['lng']
+        };
+    }
+    
     $.ajax({
         url: host_type+"://"+server_host+"/getSuggestions",
         type: 'POST',
         data: JSON.stringify(post_data),
         dataType: 'json',
         success: function(results) {
-            suggestions = results['suggested_followers'];
+            //suggestions = results['suggested_followers'].concat(results['nearby_users']);
+            suggestions = results;
         },
         error: function(jqXHR, exception) {
             errorHandling(jqXHR, exception);
@@ -852,13 +867,25 @@ function get_suggestions() {
     });
 }
 function addSuggestionHtml(sugs) {
-    html_start = "<div class=\"stream-container\"><ol class=\"follow-items\">";
-    html_body = "<h4 style=\"padding-left:12px\">Suggested followers for you...</h4>";
-    if (sugs.length > 0) {
-        for (var i = 0; i < sugs.length; i++) {
-            html_body += getFollowHtml(sugs[i],i);
+    var html_start = "<div class=\"stream-container\"><ol class=\"follow-items\">";
+    //html_body = "<h4 style=\"padding-left:12px\">Suggested followers for you...</h4>";
+    var html_body = "";
+    var num = 0;
+    if (sugs['suggested_followers'].length > 0) {
+        html_body += "<h4 style=\"padding-left:12px\">Suggested for you based on your network...</h4>";
+        for (var i = 0; i < sugs['suggested_followers'].length; i++) {
+            html_body += getFollowHtml(sugs['suggested_followers'][i],num);
+            num += 1;
         }        
-    } else {
+    } 
+    if (sugs['nearby_users'].length > 0) {
+        html_body += "<h4 style=\"padding-left:12px\">Users with recommendations around you...</h4>";
+        for (var i = 0; i < sugs['nearby_users'].length; i++) {
+            html_body += getFollowHtml(sugs['nearby_users'][i],num);
+            num += 1;
+        }        
+    } 
+    if (sugs['suggested_followers'].length === 0 && sugs['nearby_users'].length === 0) {
         html_body = "<div class=\"empty-action\">No suggestions right now. Use the search bar above to search your network's recommendtions or find people to follow.</div>";
     }
     html_end = "<get/ol></div>";

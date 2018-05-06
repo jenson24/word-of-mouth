@@ -32,6 +32,7 @@ function initAutocomplete(event) {
                 lat: position.coords.latitude,
                 lng: position.coords.longitude
             };
+            console.log(pos);
             map.setCenter(pos);
         }, function() {
             handleLocationError(true, infoWindow, map.getCenter());

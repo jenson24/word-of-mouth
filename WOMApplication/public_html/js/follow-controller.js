@@ -141,7 +141,12 @@ function manageFollowers(from_user,to_user,follow_type) {
         data: JSON.stringify(post_data),
         dataType: 'text',
         success: function(result) {
-            //console.log(result);
+            if (follow_type === 'follow') {
+                my_following.push(to_user);
+            } else {
+                my_following.splice(my_following.indexOf(to_user),1);
+            }
+            console.log(my_following);
         },
         error: function(jqXHR, exception) {
             errorHandling(jqXHR, exception);
